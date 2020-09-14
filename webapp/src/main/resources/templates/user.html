@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+
+    <script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <link crossorigin="anonymous"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          rel="stylesheet">
+
+    <title th:text="#{app.title}">Finance</title>
+</head>
+<body>
+<h1><span th:text="#{hello}"/>, <span th:text="${username}"/>!</h1>
+
+
+<form method="get">
+    <div class="form-group">
+        <label for="numero">Reporte por Numero de Cedula</label>
+        <input aria-describedby="emailHelp" class="form-control" id="numero" name="numero" placeholder="<cedula>"
+               type="text">
+        <small class="form-text text-muted" id="emailHelp">Ingrese el numero de cedula.</small>
+        <button class="btn btn-primary" formaction="./compras" type="submit">Compras</button>
+        <button class="btn btn-primary" formaction="./ventas" type="submit">Ventas</button>
+    </div>
+</form>
+
+<form enctype="text/csv" id="subir_reporte_banco" method="get" target="_blank">
+    <div class="form-group">
+        <label for="cuenta">Subir Reporte de bancos</label>
+        <input aria-describedby="emailHelp" class="form-control" formmethod="get" id="cuenta" name="cuenta"
+               placeholder="<cuenta>" type="text">
+        <small class="form-text text-muted" id="cuentaHelp">Ingrese el numero de cedula.</small>
+        <div class="form-check">
+            <input checked class="form-check-input" id="BNCR_SAVINGS" name="reportType" type="radio"
+                   value="BNCR_SAVINGS">
+            <label class="form-check-label" for="BNCR_SAVINGS">
+                BNCR Ahorro
+            </label>
+        </div>
+        <div class="form-check disabled">
+            <input class="form-check-input" disabled id="BNCR_CREDIT_CARD" name="reportType"
+                   type="radio" value="BNCR_CREDIT_CARD">
+            <label class="form-check-label" for="BNCR_CREDIT_CARD">
+                BNCR Tarjeta de credito
+            </label>
+        </div>
+        <div class="form-check disabled">
+            <input class="form-check-input" disabled id="BNCR_BNFONDOS" name="reportType" type="radio"
+                   value="BNCR_BNFONDOS">
+            <label class="form-check-label" for="BNCR_BNFONDOS">
+                BN Fondos
+            </label>
+        </div>
+        <div class="custom-file">
+            <input class="custom-file-input" formmethod="post" id="validatedCustomFile" required type="file">
+            <label class="custom-file-label" for="validatedCustomFile">Buscar archivo</label>
+            <div class="invalid-feedback">Example invalid custom file feedback</div>
+        </div>
+    </div>
+    <button class="btn btn-primary" type="submit">Subir Reporte</button>
+</form>
+
+<script>
+    $(function () {
+        $("#subir_reporte_banco").on("submit", function (e) {
+            e.preventDefault();
+            var f = $(this);
+            var formData = new FormData(document.getElementById("subir_reporte_banco"));
+            var file_data = $('#validatedCustomFile').prop('files')[0];
+            formData.append("file", file_data);
+            $.ajax({
+                url: "./subir/bncr/BNCR_SAVINGS/2168",
+                method: "POST",
+                type: "POST",
+                dataType: "multipart/form-data",
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+            }).done(function (res) {
+                $("#mensaje").html("Respuesta: " + res);
+            });
+        });
+    });
+</script>
+
+
+<script crossorigin="anonymous"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script crossorigin="anonymous"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+
+</html>
