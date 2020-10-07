@@ -2,8 +2,8 @@ package name.julatec.ekonomi.report;
 
 import name.julatec.ekonomi.accounting.BankOperationRepository;
 import name.julatec.ekonomi.accounting.BankTransactionRepository;
-import name.julatec.ekonomi.accounting.PaperVoucher;
-import name.julatec.ekonomi.accounting.TransactionRepository;
+import name.julatec.ekonomi.accounting.Voucher;
+import name.julatec.ekonomi.accounting.VoucherRepository;
 import name.julatec.ekonomi.report.bank.BankOperation;
 import name.julatec.ekonomi.report.bank.BankTransaction;
 import name.julatec.ekonomi.security.ImportBankOperation;
@@ -48,7 +48,7 @@ public class ReportService {
 
     BankTransactionRepository bankTransactionRepository;
 
-    TransactionRepository transactionRepository;
+    VoucherRepository voucherRepository;
 
     BankOperationRepository bankOperationRepository;
 
@@ -83,7 +83,7 @@ public class ReportService {
 //                .collect(Collectors.toCollection(TreeSet::new));
 //    }
 
-    public SortedSet<PaperVoucher> purchases(String numero, Workspace workspace) {
+    public SortedSet<Voucher> purchases(String numero, Workspace workspace) {
         Interval<Date> range = workspace.getDateInterval();
         return new PaperVoucherSetBuilder(numero, range.lower, range.upper, isPurchase(numero))
                 .add(facturaRepository::searchByRepecetor)
@@ -119,7 +119,7 @@ public class ReportService {
         };
     }
 
-    public SortedSet<PaperVoucher> sales(String numero, Workspace workspace) {
+    public SortedSet<Voucher> sales(String numero, Workspace workspace) {
         Interval<Date> range = workspace.getDateInterval();
         return new PaperVoucherSetBuilder(numero, range.lower, range.upper, isSale(numero))
                 .add(facturaRepository::searchByEmisor)
@@ -164,11 +164,11 @@ public class ReportService {
         }
     }
 
-    public long upload(Workspace workspace, ImportManualTransaction account, Stream<PaperVoucher> stream) {
+    public long upload(Workspace workspace, ImportManualTransaction account, Stream<Voucher> stream) {
         try {
             return stream
                     .filter(transaction -> transaction.getClave() != null)
-                    .map(transactionRepository::saveAndFlush)
+                    .map(voucherRepository::saveAndFlush)
                     .map(transaction -> {
                         logger.info("Imported {}", transaction);
                         return transaction;
@@ -225,8 +225,8 @@ public class ReportService {
     }
 
     @Autowired
-    ReportService setTransactionRepository(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
+    ReportService setTransactionRepository(VoucherRepository voucherRepository) {
+        this.voucherRepository = voucherRepository;
         return this;
     }
 
@@ -240,13 +240,13 @@ public class ReportService {
         UnableToUploadReport
     }
 
-    private class PaperVoucherSetBuilder implements Builder<SortedSet<PaperVoucher>> {
+    private class PaperVoucherSetBuilder implements Builder<SortedSet<Voucher>> {
 
         private final String id;
         private final Date lower;
         private final Date upper;
         private final Predicate<InformacionReferencia> notaFilter;
-        private final SortedSet<PaperVoucher> result = new TreeSet<>();
+        private final SortedSet<Voucher> result = new TreeSet<>();
 
         private Documento adapt(ElectronicReceipt electronicReceipt) {
             logger.info("Adapting {}", electronicReceipt.getClave());
@@ -279,13 +279,13 @@ public class ReportService {
                     .stream()
                     .map(this::adapt)
                     .filter(this::filterNotas)
-                    .map(PaperVoucher::of)
+                    .map(Voucher::of)
                     .forEach(result::add);
             return this;
         }
 
         @Override
-        public SortedSet<PaperVoucher> build() {
+        public SortedSet<Voucher> build() {
             return result;
         }
     }

@@ -1,12 +1,10 @@
 package name.julatec.ekonomi.accounting;
 
 
+import name.julatec.ekonomi.storage.UuidConverter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
@@ -17,17 +15,18 @@ import static java.lang.String.format;
 import static name.julatec.ekonomi.tribunet.UuidFormatter.*;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
-@Entity(name = "bank_transaction")
+@Entity(name = BankTransaction.EXPORT_NAME)
 public class BankTransaction implements
         name.julatec.ekonomi.report.bank.BankTransaction<BankTransaction>,
         RecordComparable,
         Comparable<BankTransaction> {
 
-    public static final String EXPORT_NAME = "bankVoucher";
+    public static final String EXPORT_NAME = "bank_transaction";
 
     @Id
     @Column(name = "guid", nullable = false, length = 32)
-    private String guid;
+    @Convert(converter = UuidConverter.class)
+    private UUID guid;
 
     private Date date;
 
@@ -111,15 +110,18 @@ public class BankTransaction implements
 
     @Override
     public UUID getId() {
-        return uuidFromString(format("%s%s%s",
-                toHexString(getDate().getTime()),
-                Integer.toHexString(String.valueOf(getDocumentNumber()).hashCode()),
-                Integer.toHexString(String.valueOf(getAccount()).hashCode())
-        ));
+        if (this.guid == null) {
+            return uuidFromString(format("%s%s%s",
+                    toHexString(getDate().getTime()),
+                    Integer.toHexString(String.valueOf(getDocumentNumber()).hashCode()),
+                    Integer.toHexString(String.valueOf(getAccount()).hashCode())
+            ));
+        }
+        return guid;
     }
 
     public BankTransaction setId(UUID uuid) {
-        this.guid = uuidToString(uuid);
+        this.guid = uuid;
         return this;
     }
 
@@ -146,7 +148,8 @@ public class BankTransaction implements
         return key.compareTo(that.key);
     }
 
-    public static BankTransaction of(name.julatec.ekonomi.report.bank.BankTransaction<? extends name.julatec.ekonomi.report.bank.BankTransaction> bankTransaction) {
+    public static BankTransaction of(
+            name.julatec.ekonomi.report.bank.BankTransaction<? extends name.julatec.ekonomi.report.bank.BankTransaction> bankTransaction) {
         return new BankTransaction()
                 .setAccount(bankTransaction.getAccount())
                 .setAmount(bankTransaction.getAmount())

@@ -29,14 +29,14 @@ public class Record implements RecordComparable, Comparable<Record> {
     private static final SortMergeJoin<Record, ElectronicReceipt, Record> RECORD_ELECTRONIC_RECEIPT_RECORD_MERGE_SORT_JOIN =
             SortMergeJoin.of(RecordComparable::compareTo, Record::new, Record::new, RecordComparable::compareTo, ElectronicReceipt::compareTo);
 
-    private static final SortMergeJoin<Record, PaperVoucher, Record> RECORD_TRANSACTION_RECORD_MERGE_SORT_JOIN =
-            SortMergeJoin.of(RecordComparable::compareTo, Record::new, Record::new, RecordComparable::compareTo, PaperVoucher::compareTo);
+    private static final SortMergeJoin<Record, Voucher, Record> RECORD_TRANSACTION_RECORD_MERGE_SORT_JOIN =
+            SortMergeJoin.of(RecordComparable::compareTo, Record::new, Record::new, RecordComparable::compareTo, Voucher::compareTo);
 
     private static final SortMergeJoin<Record, BankOperation, Record> RECORD_BANK_OPERATION_RECORD_MERGE_SORT_JOIN =
             SortMergeJoin.of(RecordComparable::compareTo, Record::new, Record::new, RecordComparable::compareTo, BankOperation::compareTo);
 
     private final Key key;
-    private final Optional<PaperVoucher> paperReceipt;
+    private final Optional<Voucher> paperReceipt;
     private final Optional<ElectronicReceipt> electronicReceipt;
     private final Optional<BankTransaction> bankReceipt;
     private final Optional<BankOperation> bankOperation;
@@ -48,7 +48,7 @@ public class Record implements RecordComparable, Comparable<Record> {
     private Optional<String> receptorName = empty();
     private transient long id = 0;
 
-    public Record(PaperVoucher receipt) {
+    public Record(Voucher receipt) {
         Objects.requireNonNull(receipt);
         this.paperReceipt = Optional.of(receipt);
         this.electronicReceipt = empty();
@@ -84,7 +84,7 @@ public class Record implements RecordComparable, Comparable<Record> {
         this.key = receipt.getKey();
     }
 
-    public Record(Optional<Record> record, PaperVoucher receipt) {
+    public Record(Optional<Record> record, Voucher receipt) {
         Objects.requireNonNull(record);
         Objects.requireNonNull(receipt);
         this.paperReceipt = Optional.of(receipt);
@@ -146,7 +146,7 @@ public class Record implements RecordComparable, Comparable<Record> {
         return RECORD_ELECTRONIC_RECEIPT_RECORD_MERGE_SORT_JOIN.merge(recordIterator, iterator);
     }
 
-    public static Stream<Record> mergeWithPaper(Stream<Record> recordIterator, Stream<PaperVoucher> iterator) {
+    public static Stream<Record> mergeWithPaper(Stream<Record> recordIterator, Stream<Voucher> iterator) {
         return RECORD_TRANSACTION_RECORD_MERGE_SORT_JOIN.merge(recordIterator, iterator);
     }
 
@@ -162,7 +162,7 @@ public class Record implements RecordComparable, Comparable<Record> {
         return bankReceipt;
     }
 
-    public Optional<PaperVoucher> getPaperReceipt() {
+    public Optional<Voucher> getPaperReceipt() {
         return paperReceipt;
     }
 

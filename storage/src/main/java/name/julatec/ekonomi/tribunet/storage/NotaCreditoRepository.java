@@ -23,7 +23,6 @@ public interface NotaCreditoRepository extends MultiTenantRepository<NotaCredito
     default Stream<NotaCredito> search(
             String numero,
             Interval<Date> interval) {
-        return search(numero, interval.lower, interval.upper)
-                .stream();
+        return search(numero, interval.lower, interval.upper).stream();
     }
 }

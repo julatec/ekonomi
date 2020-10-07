@@ -2,7 +2,7 @@ package name.julatec.ekonomi.report;
 
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-import name.julatec.ekonomi.accounting.PaperVoucher;
+import name.julatec.ekonomi.accounting.Voucher;
 import name.julatec.ekonomi.accounting.Record;
 import name.julatec.ekonomi.security.ImportTransaction;
 import name.julatec.ekonomi.session.Workspace;
@@ -50,7 +50,7 @@ public class ReportController {
         final String reportName = workspace.getLocalizedMessage(PurchasesReportName,
                 id, workspace.getDateInterval().lower, workspace.getDateInterval().upper);
         try {
-            final Iterable<PaperVoucher> transactionList = service.purchases(id, workspace);
+            final Iterable<Voucher> transactionList = service.purchases(id, workspace);
             generateTransactionReport(response, reportName, transactionList);
         } catch (Exception ex) {
             final String message = workspace.getLocalizedMessage(ReportNotGenerated, ex.getMessage());
@@ -69,7 +69,7 @@ public class ReportController {
         final String reportName = workspace.getLocalizedMessage(SalesReportName,
                 id, workspace.getDateInterval().lower, workspace.getDateInterval().upper).replace('/', '-');
         try {
-            final Iterable<PaperVoucher> transactionList = service.sales(id, workspace);
+            final Iterable<Voucher> transactionList = service.sales(id, workspace);
             generateTransactionReport(response, reportName, transactionList);
         } catch (Exception ex) {
             final String message = workspace.getLocalizedMessage(ReportNotGenerated, ex.getMessage());
@@ -105,9 +105,9 @@ public class ReportController {
 //        }
     }
 
-    private void generateTransactionReport(HttpServletResponse response, String reportName, Iterable<PaperVoucher> transactionList)
+    private void generateTransactionReport(HttpServletResponse response, String reportName, Iterable<Voucher> transactionList)
             throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-        final Workbook workbook = PaperVoucher.toWorkbook(transactionList);
+        final Workbook workbook = Voucher.toWorkbook(transactionList);
         response.addHeader("Content-Disposition", String.format("attachment; filename=%s", reportName));
         workbook.write(response.getOutputStream());
     }

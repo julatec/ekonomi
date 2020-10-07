@@ -1,6 +1,5 @@
 package name.julatec.ekonomi.accounting;
 
-
 import com.opencsv.bean.*;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
@@ -8,6 +7,7 @@ import name.julatec.ekonomi.report.csv.CsvBindByNameOrder;
 import name.julatec.ekonomi.report.csv.CsvCurrencyConverter;
 import name.julatec.ekonomi.report.csv.DefaultSeparator;
 import name.julatec.ekonomi.report.csv.MappingStrategy;
+import name.julatec.ekonomi.tribunet.CodigoTipoMoneda;
 import name.julatec.ekonomi.tribunet.DetailedDocument;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 import static name.julatec.ekonomi.tribunet.DetailedDocument.TaxAccumulated.empty;
 import static name.julatec.ekonomi.tribunet.FactorIVA.*;
@@ -55,11 +54,11 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
         "Moneda"
 })
 @DefaultSeparator('\t')
-@Entity(name = "manual_transaction")
-public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
+@Entity(name = Voucher.EXPORT_NAME)
+public class Voucher implements RecordComparable, Comparable<Voucher> {
 
-    public static final MappingStrategy MAPPING_STRATEGY = new MappingStrategy<>(PaperVoucher.class);
-    public static final String EXPORT_NAME = "paperVoucher";
+    public static final MappingStrategy MAPPING_STRATEGY = new MappingStrategy<>(Voucher.class);
+    public static final String EXPORT_NAME = "manual_transaction";
     public static final String LOCALE_CODE = "es_CR";
     public static final String CRC = "CRC";
     public static final Currency CRC_CURRENCY = Currency.getInstance(CRC);
@@ -151,41 +150,11 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
     @CsvIgnore
     private transient Optional<UUID> electronicTransaction = Optional.empty();
 
-    private static BigDecimal getExchageRate(name.julatec.ekonomi.tribunet.Documento documento) {
-
-        final String currency = Optional.ofNullable(documento
-                .getResumenFactura()
-                .getCodigoTipoMoneda()
-                .getCodigoMoneda())
-                .orElse(CRC);
-
-        if (CRC.equals(currency)) {
-            return ONE;
-        }
-
-        final BigDecimal exchangeRate = documento.getResumenFactura().getCodigoTipoMoneda().getTipoCambio();
-        if (exchangeRate == null) {
-            return ONE;
-        }
-        if (ONE.compareTo(exchangeRate)  == 0) {
-            return ONE;
-        }
-        if (ZERO.compareTo(exchangeRate)  == 0) {
-            return ONE;
-        }
-        return exchangeRate;
-    }
-
-    public static PaperVoucher of(name.julatec.ekonomi.tribunet.Documento documento) {
+    public static Voucher of(name.julatec.ekonomi.tribunet.Documento documento) {
         final DetailedDocument detailedDocument = DetailedDocument.of(documento);
         final boolean preserve = !(documento instanceof name.julatec.ekonomi.tribunet.NotaCredito);
-        final Currency currency = Optional.ofNullable(documento
-                .getResumenFactura()
-                .getCodigoTipoMoneda()
-                .getCodigoMoneda())
-                .map(Currency::getInstance)
-                .orElse(CRC_CURRENCY);
-        final BigDecimal exchangeRate = getExchageRate(documento);
+        final CodigoTipoMoneda codigoTipoMoneda = documento.getResumenFactura().getCodigoTipoMoneda().cannonical();
+        final BigDecimal exchangeRate = codigoTipoMoneda.getTipoCambio();
         final DetailedDocument.TaxAccumulated otros = detailedDocument.getTaxes().getOrElse(Otros, empty);
         final DetailedDocument.TaxAccumulated excento = detailedDocument.getTaxes().getOrElse(Excento, empty);
         final DetailedDocument.TaxAccumulated exonerado = detailedDocument.getTaxes().getOrElse(Exonerado, empty);
@@ -200,11 +169,8 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         final BigDecimal otrosCargos = Optional.ofNullable(detailedDocument.getResumenFactura().getTotalOtrosCargos())
                 .orElse(ZERO)
                 .add(otros.taxed);
-        if (totalLineas.subtract(totalComprobante).abs().compareTo(BigDecimal.TEN) > 0) {
-            System.out.println("Lineas " + totalLineas + " != " + totalComprobante);
-        }
 
-        return new PaperVoucher()
+        return new Voucher()
                 .setClave(detailedDocument.getClave())
                 .setConsecutivo(detailedDocument.getNumeroConsecutivo())
                 .setFecha(detailedDocument.getFechaEmision().toGregorianCalendar().getTime())
@@ -222,12 +188,12 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
                 .setTotalF04(preserveSign(preserve, exchangeRate, f04.taxed))
                 .setTotalF13(preserveSign(preserve, exchangeRate, f13.taxed))
                 .setTotalF08(preserveSign(preserve, exchangeRate, f08.taxed))
-                .setTotalImpuestoF01(preserveSign(preserve, exchangeRate,  f01.subTotal))
+                .setTotalImpuestoF01(preserveSign(preserve, exchangeRate, f01.subTotal))
                 .setTotalImpuestoF02(preserveSign(preserve, exchangeRate, f02.subTotal))
                 .setTotalImpuestoF04(preserveSign(preserve, exchangeRate, f04.subTotal))
                 .setTotalImpuestoF08(preserveSign(preserve, exchangeRate, f08.subTotal))
                 .setTotalImpuestoF13(preserveSign(preserve, exchangeRate, f13.subTotal))
-                .setCurrency(currency)
+                .setCurrency(codigoTipoMoneda.getCurrency())
                 ;
     }
 
@@ -238,8 +204,8 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
                 .orElse(ZERO);
     }
 
-    public static PaperVoucher of(name.julatec.ekonomi.report.bank.BankTransaction<?> bankTransaction) {
-        return new PaperVoucher()
+    public static Voucher of(name.julatec.ekonomi.report.bank.BankTransaction<?> bankTransaction) {
+        return new Voucher()
                 .setConsecutivo(bankTransaction.getDocumentNumber())
                 .setFecha(bankTransaction.getDate())
                 .setTotalComprobante(bankTransaction.getAmount().negate())
@@ -249,13 +215,13 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
                 ;
     }
 
-    public static Stream<PaperVoucher> fromCsv(InputStream stream, Optional<Currency> currency) {
-        final Character separator = Optional.ofNullable(PaperVoucher.class.getAnnotation(DefaultSeparator.class))
+    public static Stream<Voucher> fromCsv(InputStream stream, Optional<Currency> currency) {
+        final Character separator = Optional.ofNullable(Voucher.class.getAnnotation(DefaultSeparator.class))
                 .map(DefaultSeparator::value)
                 .orElse(',');
         final InputStreamReader reader = new InputStreamReader(stream);
-        final CsvToBean<PaperVoucher> csvToBean = new CsvToBeanBuilder(reader)
-                .withType(PaperVoucher.class)
+        final CsvToBean<Voucher> csvToBean = new CsvToBeanBuilder(reader)
+                .withType(Voucher.class)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(separator)
                 .build();
@@ -264,15 +230,15 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
                 .map(t -> currency.map(t::setCurrency).orElse(t));
     }
 
-    public static Workbook toWorkbook(Iterable<PaperVoucher> transactionList) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+    public static Workbook toWorkbook(Iterable<Voucher> transactionList) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
         return MAPPING_STRATEGY.toWorkbook(transactionList);
     }
 
-    private static <T extends Comparable<T>> T min(Function<PaperVoucher, T> property, PaperVoucher l, PaperVoucher r) {
+    private static <T extends Comparable<T>> T min(Function<Voucher, T> property, Voucher l, Voucher r) {
         return min(property.apply(l), property.apply(r));
     }
 
-    private static <T extends Comparable<T>> T max(Function<PaperVoucher, T> property, PaperVoucher l, PaperVoucher r) {
+    private static <T extends Comparable<T>> T max(Function<Voucher, T> property, Voucher l, Voucher r) {
         return max(property.apply(l), property.apply(r));
     }
 
@@ -300,7 +266,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return bankTransaction;
     }
 
-    public PaperVoucher setBankTransaction(Optional<UUID> bankTransaction) {
+    public Voucher setBankTransaction(Optional<UUID> bankTransaction) {
         this.bankTransaction = bankTransaction;
         return this;
     }
@@ -309,7 +275,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return manualTransaction;
     }
 
-    public PaperVoucher setManualTransaction(Optional<UUID> manualTransaction) {
+    public Voucher setManualTransaction(Optional<UUID> manualTransaction) {
         this.manualTransaction = manualTransaction;
         return this;
     }
@@ -326,7 +292,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return receptorNumero;
     }
 
-    public PaperVoucher setElectronicTransaction(Optional<UUID> electronicTransaction) {
+    public Voucher setElectronicTransaction(Optional<UUID> electronicTransaction) {
         this.electronicTransaction = electronicTransaction;
         return this;
     }
@@ -340,7 +306,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalComprobante;
     }
 
-    public PaperVoucher setClave(String clave) {
+    public Voucher setClave(String clave) {
         this.clave = clave;
         return this;
     }
@@ -349,7 +315,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return fecha;
     }
 
-    public PaperVoucher setEmisorNumero(String emisorNumero) {
+    public Voucher setEmisorNumero(String emisorNumero) {
         this.emisorNumero = emisorNumero;
         return this;
     }
@@ -358,7 +324,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return consecutivo;
     }
 
-    public PaperVoucher setReceptorNumero(String receptorNumero) {
+    public Voucher setReceptorNumero(String receptorNumero) {
         this.receptorNumero = receptorNumero;
         return this;
     }
@@ -372,7 +338,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalExonerado;
     }
 
-    public PaperVoucher setTotalComprobante(BigDecimal totalComprobante) {
+    public Voucher setTotalComprobante(BigDecimal totalComprobante) {
         this.totalComprobante = totalComprobante;
         return this;
     }
@@ -381,7 +347,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoDevuelto;
     }
 
-    public PaperVoucher setFecha(Date fecha) {
+    public Voucher setFecha(Date fecha) {
         this.fecha = fecha;
         return this;
     }
@@ -390,7 +356,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return emisorNombre;
     }
 
-    public PaperVoucher setConsecutivo(String consecutivo) {
+    public Voucher setConsecutivo(String consecutivo) {
         this.consecutivo = consecutivo != null && consecutivo.length() > 0 && consecutivo.charAt(0) == '\'' ?
                 consecutivo.substring(1) :
                 consecutivo;
@@ -401,7 +367,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return receptorNombre;
     }
 
-    public PaperVoucher setTotalExcento(BigDecimal totalGravado) {
+    public Voucher setTotalExcento(BigDecimal totalGravado) {
         this.totalExcento = totalGravado;
         return this;
     }
@@ -410,27 +376,27 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return currency;
     }
 
-    public PaperVoucher setTotalExonerado(BigDecimal totalExento) {
+    public Voucher setTotalExonerado(BigDecimal totalExento) {
         this.totalExonerado = totalExento;
         return this;
     }
 
-    public PaperVoucher setTotalImpuestoDevuelto(BigDecimal totalImpuestoDevuelto) {
+    public Voucher setTotalImpuestoDevuelto(BigDecimal totalImpuestoDevuelto) {
         this.totalImpuestoDevuelto = totalImpuestoDevuelto;
         return this;
     }
 
-    public PaperVoucher setEmisorNombre(String emisorNombre) {
+    public Voucher setEmisorNombre(String emisorNombre) {
         this.emisorNombre = emisorNombre;
         return this;
     }
 
-    public PaperVoucher setReceptorNombre(String receptorNombre) {
+    public Voucher setReceptorNombre(String receptorNombre) {
         this.receptorNombre = receptorNombre;
         return this;
     }
 
-    public PaperVoucher setCurrency(Currency currency) {
+    public Voucher setCurrency(Currency currency) {
         this.currency = currency;
         return this;
     }
@@ -439,7 +405,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoF01;
     }
 
-    public PaperVoucher setTotalImpuestoF01(BigDecimal totalImpuestoF01) {
+    public Voucher setTotalImpuestoF01(BigDecimal totalImpuestoF01) {
         this.totalImpuestoF01 = totalImpuestoF01;
         return this;
     }
@@ -448,7 +414,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoF02;
     }
 
-    public PaperVoucher setTotalImpuestoF02(BigDecimal totalImpuestoF02) {
+    public Voucher setTotalImpuestoF02(BigDecimal totalImpuestoF02) {
         this.totalImpuestoF02 = totalImpuestoF02;
         return this;
     }
@@ -457,7 +423,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoF04;
     }
 
-    public PaperVoucher setTotalImpuestoF04(BigDecimal totalImpuestoF04) {
+    public Voucher setTotalImpuestoF04(BigDecimal totalImpuestoF04) {
         this.totalImpuestoF04 = totalImpuestoF04;
         return this;
     }
@@ -466,7 +432,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoF08;
     }
 
-    public PaperVoucher setTotalImpuestoF08(BigDecimal totalImpuestoF08) {
+    public Voucher setTotalImpuestoF08(BigDecimal totalImpuestoF08) {
         this.totalImpuestoF08 = totalImpuestoF08;
         return this;
     }
@@ -475,7 +441,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalImpuestoF13;
     }
 
-    public PaperVoucher setTotalImpuestoF13(BigDecimal totalImpuestoF12) {
+    public Voucher setTotalImpuestoF13(BigDecimal totalImpuestoF12) {
         this.totalImpuestoF13 = totalImpuestoF12;
         return this;
     }
@@ -484,7 +450,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalF01;
     }
 
-    public PaperVoucher setTotalF01(BigDecimal totalF01) {
+    public Voucher setTotalF01(BigDecimal totalF01) {
         this.totalF01 = totalF01;
         return this;
     }
@@ -493,7 +459,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalF02;
     }
 
-    public PaperVoucher setTotalF02(BigDecimal totalF02) {
+    public Voucher setTotalF02(BigDecimal totalF02) {
         this.totalF02 = totalF02;
         return this;
     }
@@ -502,7 +468,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalF04;
     }
 
-    public PaperVoucher setTotalF04(BigDecimal totalF04) {
+    public Voucher setTotalF04(BigDecimal totalF04) {
         this.totalF04 = totalF04;
         return this;
     }
@@ -511,7 +477,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalF08;
     }
 
-    public PaperVoucher setTotalF08(BigDecimal totalF08) {
+    public Voucher setTotalF08(BigDecimal totalF08) {
         this.totalF08 = totalF08;
         return this;
     }
@@ -520,7 +486,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalF13;
     }
 
-    public PaperVoucher setTotalF13(BigDecimal totalF13) {
+    public Voucher setTotalF13(BigDecimal totalF13) {
         this.totalF13 = totalF13;
         return this;
     }
@@ -529,7 +495,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
         return totalOtrosCargos;
     }
 
-    public PaperVoucher setTotalOtrosCargos(BigDecimal totalOtrosCargos) {
+    public Voucher setTotalOtrosCargos(BigDecimal totalOtrosCargos) {
         this.totalOtrosCargos = totalOtrosCargos;
         return this;
     }
@@ -552,25 +518,25 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
                 .toString();
     }
 
-    public PaperVoucher with(PaperVoucher that) {
+    public Voucher with(Voucher that) {
         return this
                 .setBankTransaction(getBankTransaction().or(that::getBankTransaction))
                 .setElectronicTransaction(getElectronicTransaction().or(that::getElectronicTransaction))
                 .setManualTransaction(getManualTransaction().or(that::getManualTransaction))
-                .setClave(min(PaperVoucher::getClave, this, that))
-                .setConsecutivo(max(PaperVoucher::getConsecutivo, this, that))
-                .setFecha(min(PaperVoucher::getFecha, this, that))
-                .setEmisorNumero(max(PaperVoucher::getEmisorNumero, this, that))
-                .setEmisorNombre(max(PaperVoucher::getEmisorNombre, this, that))
-                .setReceptorNumero(max(PaperVoucher::getReceptorNumero, this, that))
-                .setReceptorNombre(max(PaperVoucher::getReceptorNombre, this, that))
-                .setTotalExcento(max(PaperVoucher::getTotalExcento, this, that))
-                .setTotalExonerado(max(PaperVoucher::getTotalExonerado, this, that))
-                .setTotalImpuestoDevuelto(max(PaperVoucher::getTotalImpuestoDevuelto, this, that))
-                .setTotalComprobante(max(PaperVoucher::getTotalComprobante, this, that));
+                .setClave(min(Voucher::getClave, this, that))
+                .setConsecutivo(max(Voucher::getConsecutivo, this, that))
+                .setFecha(min(Voucher::getFecha, this, that))
+                .setEmisorNumero(max(Voucher::getEmisorNumero, this, that))
+                .setEmisorNombre(max(Voucher::getEmisorNombre, this, that))
+                .setReceptorNumero(max(Voucher::getReceptorNumero, this, that))
+                .setReceptorNombre(max(Voucher::getReceptorNombre, this, that))
+                .setTotalExcento(max(Voucher::getTotalExcento, this, that))
+                .setTotalExonerado(max(Voucher::getTotalExonerado, this, that))
+                .setTotalImpuestoDevuelto(max(Voucher::getTotalImpuestoDevuelto, this, that))
+                .setTotalComprobante(max(Voucher::getTotalComprobante, this, that));
     }
 
-    public PaperVoucher with(Optional<PaperVoucher> r) {
+    public Voucher with(Optional<Voucher> r) {
         return r.isPresent() ? this.with(r.get()) : this;
     }
 
@@ -580,7 +546,7 @@ public class PaperVoucher implements RecordComparable, Comparable<PaperVoucher>{
     }
 
     @Override
-    public int compareTo(PaperVoucher paperVoucher) {
+    public int compareTo(Voucher paperVoucher) {
         return new CompareToBuilder()
                 .append(key, paperVoucher.key)
                 .append(this.clave, paperVoucher.clave).toComparison();
