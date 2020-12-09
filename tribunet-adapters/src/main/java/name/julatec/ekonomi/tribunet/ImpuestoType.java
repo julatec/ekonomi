@@ -13,7 +13,7 @@ import java.util.TreeMap;
 @Adapt({
         cr.go.hacienda.tribunet.v42y2016.factura.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.ImpuestoType.class,
-        cr.go.hacienda.tribunet.v42y2016.nota.credito.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v42y2016.nota.debito.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2017.factura.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.ImpuestoType.class,

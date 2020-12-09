@@ -9,6 +9,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -140,7 +141,9 @@ public class DetailedDocument implements Documento {
                                 ZERO,
                                 impuestoType.getMonto().subtract(impuestoType.getExoneracion().getMontoExoneracion())));
                     } else {
-                        final FactorIVA impuestoFactor = FactorIVA.valueOf(impuestoType.getTarifa());
+                        final FactorIVA impuestoFactor = Optional.ofNullable(
+                                FactorIVA.valueOf(impuestoType.getTarifa()))
+                                .orElse(Exonerado);
                         final ImpuestoType.Codigo codigo = ImpuestoType.Codigo.of(impuestoType.getCodigo());
                         if (codigo.compareTo(ImpuestoType.Codigo.BaseImponible) < 0) {
                             baseImponible = baseImponible.add(impuestoType.getMonto());
