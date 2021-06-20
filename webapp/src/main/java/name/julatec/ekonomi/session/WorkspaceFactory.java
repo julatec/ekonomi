@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.*;
@@ -86,12 +87,33 @@ public class WorkspaceFactory {
         final Workspace workspace = applicationContext.getBean(Workspace.class, user);
         workspaceMap.put(user.getUsername(), workspace);
 
-        workspace.setClients(getSessionClients());
+
 
         if (MultiTenantRepository.getCurrentTenant() == null) {
-            workspace.setTargetPersistanceUnit(user.getDatasources().iterator().next());
-            workspace.setClients(getSessionClients());
+            boolean selected = false;
+            for (Cookie cookie : request.getCookies()) {
+                switch (cookie.getName()) {
+                    case "tenant":
+                        workspace.setTargetPersistanceUnit(cookie.getValue());
+                        MultiTenantRepository.setCurrentDb(cookie.getValue());
+                        selected = true;
+                        break;
+                    default:
+                        break;
+                }
+                if (selected) {
+                    break;
+                }
+            }
+            if (selected == false) {
+                final String firstDb = user.getDatasources().iterator().next();
+                MultiTenantRepository.setCurrentDb(firstDb);
+                workspace.setTargetPersistanceUnit(firstDb);
+                workspace.setClients(getSessionClients());
+            }
         }
+
+        workspace.setClients(getSessionClients());
 
         return workspaceMap.get(user.getUsername())
                 .setRequest(request, this::getSessionClients);
