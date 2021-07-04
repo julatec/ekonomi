@@ -45,6 +45,7 @@ public class EkonomiApplication extends WebSecurityConfigurerAdapter {
     }
 
     public static void main(String[] args) {
+        System.setProperty("org.apache.poi.util.POILogger", "org.apache.poi.util.CommonsLogger" );
         SpringApplication.run(EkonomiApplication.class, args);
     }
 

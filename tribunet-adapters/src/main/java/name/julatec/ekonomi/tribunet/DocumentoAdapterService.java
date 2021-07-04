@@ -1,6 +1,8 @@
 package name.julatec.ekonomi.tribunet;
 
 import name.julatec.ekonomi.tribunet.annotation.AdapterFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import java.util.function.Consumer;
 
 @Service
 public class DocumentoAdapterService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DocumentoAdapterService.class);
 
     private Map<String, DocumentLifecycle> lifecycleMap;
 
@@ -53,13 +57,19 @@ public class DocumentoAdapterService {
 
     public Optional<Object> adapt(Document document) throws JAXBException {
         final String namespace = document.getDocumentElement().getNamespaceURI();
-        if (namespace != null && lifecycleMap.containsKey(namespace)) {
-            final DocumentLifecycle lifecycle = lifecycleMap.get(namespace);
-            final Object entity = lifecycle.unmarshaller.unmarshal(document);
-            final Object adaptedEntity = lifecycle.adapter.adapt(entity);
-            return Optional.ofNullable(adaptedEntity);
+        try {
+            if (namespace != null && lifecycleMap.containsKey(namespace)) {
+                final DocumentLifecycle lifecycle = lifecycleMap.get(namespace);
+                final Object entity = lifecycle.unmarshaller.unmarshal(document);
+                final Object adaptedEntity = lifecycle.adapter.adapt(entity);
+                return Optional.ofNullable(adaptedEntity);
+            }
+            return Optional.empty();
+        } catch (NullPointerException e) {
+            logger.error("Parsing document", e);
+            return Optional.empty();
         }
-        return Optional.empty();
+
     }
 
 

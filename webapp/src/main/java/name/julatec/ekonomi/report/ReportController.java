@@ -108,14 +108,16 @@ public class ReportController {
     private void generateTransactionReport(HttpServletResponse response, String reportName, Iterable<Voucher> transactionList)
             throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
         final Workbook workbook = Voucher.toWorkbook(transactionList);
-        response.addHeader("Content-Disposition", String.format("attachment; filename=%s", reportName));
+        reportName = reportName.replace(',', '-');
+        response.addHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", reportName));
         workbook.write(response.getOutputStream());
     }
 
     private void generateRecordReport(HttpServletResponse response, String reportName, Iterable<RecordSummary> transactionList)
             throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
         final Workbook workbook = RecordSummary.toWorkbook(transactionList);
-        response.addHeader("Content-Disposition", String.format("attachment; filename=%s", reportName));
+        reportName = reportName.replace(',', '-');
+        response.addHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", reportName));
         workbook.write(response.getOutputStream());
     }
 
