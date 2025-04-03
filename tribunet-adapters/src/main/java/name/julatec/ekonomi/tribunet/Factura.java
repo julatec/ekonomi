@@ -9,12 +9,27 @@ import java.util.stream.Stream;
  * Factura adapter interface.
  */
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.factura.FacturaElectronica.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.TiqueteElectronico.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.factura.FacturaElectronica.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.TiqueteElectronico.class,
+
+    /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.factura.FacturaElectronica.class,
         cr.go.hacienda.tribunet.v43.tiquete.TiqueteElectronico.class,
+
+        /*Verison 4.4*/
+
+        cr.go.hacienda.tribunet.v44.factura.FacturaElectronica.class,
+        cr.go.hacienda.tribunet.v44.tiquete.TiqueteElectronico.class
+
 })
 public interface Factura extends Documento {
 

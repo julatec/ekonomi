@@ -12,9 +12,22 @@ import java.util.Optional;
  * Mensaje Hacienda adapter interface
  */
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.mensaje.receptor.MensajeReceptor.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.mensaje.receptor.MensajeReceptor.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.mensaje.receptor.MensajeReceptor.class,
+
+        /* Verison 4.3 */
+
+        cr.go.hacienda.tribunet.v44.mensaje.receptor.MensajeReceptor.class,
 })
 public interface MensajeReceptor {
 

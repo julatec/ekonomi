@@ -9,7 +9,10 @@ import java.util.stream.Stream;
  * Factura Compra adapter interface.
  */
 @Adapt({
-        cr.go.hacienda.tribunet.v43.factura.compra.FacturaElectronicaCompra.class
+        cr.go.hacienda.tribunet.v43.factura.compra.FacturaElectronicaCompra.class,
+
+        cr.go.hacienda.tribunet.v44.factura.compra.FacturaElectronicaCompra.class
+
 })
 public interface FacturaCompra extends Documento {
 

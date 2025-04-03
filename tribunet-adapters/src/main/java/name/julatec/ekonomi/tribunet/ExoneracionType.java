@@ -11,20 +11,39 @@ import java.util.Date;
  * Exoneration type Adapter.
  */
 @Adapt({
+
+        /*<Version 4.2 2016>*/
+
         cr.go.hacienda.tribunet.v42y2016.factura.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.debito.ExoneracionType.class,
+
+        /*<Version 4.2 2017>*/
+
         cr.go.hacienda.tribunet.v42y2017.factura.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.credito.ExoneracionType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.debito.ExoneracionType.class,
+
+        /*<Version 4.3>*/
+
         cr.go.hacienda.tribunet.v43.factura.ExoneracionType.class,
         cr.go.hacienda.tribunet.v43.factura.compra.ExoneracionType.class,
         cr.go.hacienda.tribunet.v43.factura.exportacion.ExoneracionType.class,
         cr.go.hacienda.tribunet.v43.tiquete.ExoneracionType.class,
         cr.go.hacienda.tribunet.v43.nota.credito.ExoneracionType.class,
         cr.go.hacienda.tribunet.v43.nota.debito.ExoneracionType.class,
+
+        /*<Version 4.4>*/
+
+        cr.go.hacienda.tribunet.v44.factura.ExoneracionType.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.ExoneracionType.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.ExoneracionType.class,
+        cr.go.hacienda.tribunet.v44.tiquete.ExoneracionType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.ExoneracionType.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.ExoneracionType.class
+
 })
 public interface ExoneracionType {
 

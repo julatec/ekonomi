@@ -6,20 +6,40 @@ import name.julatec.ekonomi.tribunet.annotation.Adapt;
  * Receptor Adapter Interface.
  */
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.factura.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.debito.ReceptorType.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.factura.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.credito.ReceptorType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.debito.ReceptorType.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.factura.ReceptorType.class,
         cr.go.hacienda.tribunet.v43.factura.compra.ReceptorType.class,
         cr.go.hacienda.tribunet.v43.factura.exportacion.ReceptorType.class,
         cr.go.hacienda.tribunet.v43.tiquete.ReceptorType.class,
         cr.go.hacienda.tribunet.v43.nota.credito.ReceptorType.class,
         cr.go.hacienda.tribunet.v43.nota.debito.ReceptorType.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.factura.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.tiquete.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.ReceptorType.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.ReceptorType.class,
+
 })
 public interface Receptor {
 

@@ -6,9 +6,23 @@ import java.util.Date;
 import java.util.stream.Stream;
 
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.nota.debito.NotaDebitoElectronica.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.nota.debito.NotaDebitoElectronica.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.nota.debito.NotaDebitoElectronica.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.nota.debito.NotaDebitoElectronica.class,
+
 })
 public interface NotaDebito extends Documento {
 

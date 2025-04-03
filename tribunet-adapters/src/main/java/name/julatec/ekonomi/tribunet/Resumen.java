@@ -9,20 +9,39 @@ import java.math.BigDecimal;
  */
 @SuppressWarnings({"SpellCheckingInspection", "unused"})
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.factura.FacturaElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.TiqueteElectronico.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.NotaCreditoElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2016.nota.debito.NotaDebitoElectronica.ResumenFactura.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.factura.FacturaElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.TiqueteElectronico.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2017.nota.credito.NotaCreditoElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v42y2017.nota.debito.NotaDebitoElectronica.ResumenFactura.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.factura.FacturaElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v43.factura.compra.FacturaElectronicaCompra.ResumenFactura.class,
         cr.go.hacienda.tribunet.v43.factura.exportacion.FacturaElectronicaExportacion.ResumenFactura.class,
         cr.go.hacienda.tribunet.v43.tiquete.TiqueteElectronico.ResumenFactura.class,
         cr.go.hacienda.tribunet.v43.nota.credito.NotaCreditoElectronica.ResumenFactura.class,
         cr.go.hacienda.tribunet.v43.nota.debito.NotaDebitoElectronica.ResumenFactura.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.factura.FacturaElectronica.ResumenFactura.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.FacturaElectronicaCompra.ResumenFactura.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.FacturaElectronicaExportacion.ResumenFactura.class,
+        cr.go.hacienda.tribunet.v44.tiquete.TiqueteElectronico.ResumenFactura.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.NotaCreditoElectronica.ResumenFactura.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.NotaDebitoElectronica.ResumenFactura.class,
+
 })
 public interface Resumen extends CodigoTipoMoneda {
 

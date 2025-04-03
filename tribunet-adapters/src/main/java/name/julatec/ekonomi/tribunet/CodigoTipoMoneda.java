@@ -21,6 +21,15 @@ import static java.math.BigDecimal.ZERO;
         cr.go.hacienda.tribunet.v43.tiquete.CodigoMonedaType.class,
         cr.go.hacienda.tribunet.v43.nota.credito.CodigoMonedaType.class,
         cr.go.hacienda.tribunet.v43.nota.debito.CodigoMonedaType.class,
+
+        /*<Version 4.4>*/
+
+        cr.go.hacienda.tribunet.v44.factura.CodigoMonedaType.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.CodigoMonedaType.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.CodigoMonedaType.class,
+        cr.go.hacienda.tribunet.v44.tiquete.CodigoMonedaType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.CodigoMonedaType.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.CodigoMonedaType.class
 })
 public interface CodigoTipoMoneda {
 

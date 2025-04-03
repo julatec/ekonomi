@@ -6,20 +6,39 @@ import name.julatec.ekonomi.tribunet.annotation.Adapt;
  * Identificacion adapter interface.
  */
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.factura.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.debito.IdentificacionType.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.factura.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.credito.IdentificacionType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.debito.IdentificacionType.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.factura.IdentificacionType.class,
         cr.go.hacienda.tribunet.v43.factura.compra.IdentificacionType.class,
         cr.go.hacienda.tribunet.v43.factura.exportacion.IdentificacionType.class,
         cr.go.hacienda.tribunet.v43.tiquete.IdentificacionType.class,
         cr.go.hacienda.tribunet.v43.nota.credito.IdentificacionType.class,
         cr.go.hacienda.tribunet.v43.nota.debito.IdentificacionType.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.factura.IdentificacionType.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.IdentificacionType.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.IdentificacionType.class,
+        cr.go.hacienda.tribunet.v44.tiquete.IdentificacionType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.IdentificacionType.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.IdentificacionType.class,
+
 })
 public interface Identificacion {
 

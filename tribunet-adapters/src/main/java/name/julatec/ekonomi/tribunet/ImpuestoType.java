@@ -11,20 +11,39 @@ import java.util.TreeMap;
  */
 @SuppressWarnings({"SpellCheckingInspection", "unused"})
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.factura.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2016.tiquete.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.debito.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2016.nota.credito.ImpuestoType.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.factura.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2017.tiquete.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.credito.ImpuestoType.class,
         cr.go.hacienda.tribunet.v42y2017.nota.debito.ImpuestoType.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.factura.ImpuestoType.class,
         cr.go.hacienda.tribunet.v43.factura.compra.ImpuestoType.class,
         cr.go.hacienda.tribunet.v43.factura.exportacion.ImpuestoType.class,
         cr.go.hacienda.tribunet.v43.tiquete.ImpuestoType.class,
         cr.go.hacienda.tribunet.v43.nota.credito.ImpuestoType.class,
         cr.go.hacienda.tribunet.v43.nota.debito.ImpuestoType.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.factura.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v44.factura.compra.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v44.factura.exportacion.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v44.tiquete.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v44.nota.debito.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v43.nota.credito.ImpuestoType.class,
+
 })
 public interface ImpuestoType {
 

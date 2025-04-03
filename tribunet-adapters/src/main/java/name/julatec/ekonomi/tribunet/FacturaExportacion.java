@@ -6,7 +6,10 @@ import java.util.Date;
 import java.util.stream.Stream;
 
 @Adapt({
-        cr.go.hacienda.tribunet.v43.factura.exportacion.FacturaElectronicaExportacion.class
+        cr.go.hacienda.tribunet.v43.factura.exportacion.FacturaElectronicaExportacion.class,
+
+        cr.go.hacienda.tribunet.v44.factura.exportacion.FacturaElectronicaExportacion.class,
+
 })
 public interface FacturaExportacion extends Documento {
 

@@ -9,9 +9,22 @@ import java.util.stream.Stream;
  * Nota Credito adapter interface.
  */
 @Adapt({
+
+        /* Verison 4.2 2016 */
+
         cr.go.hacienda.tribunet.v42y2016.nota.credito.NotaCreditoElectronica.class,
+
+        /* Verison 4.2 2017 */
+
         cr.go.hacienda.tribunet.v42y2017.nota.credito.NotaCreditoElectronica.class,
+
+        /* Verison 4.3 */
+
         cr.go.hacienda.tribunet.v43.nota.credito.NotaCreditoElectronica.class,
+
+        /* Verison 4.4 */
+
+        cr.go.hacienda.tribunet.v44.nota.credito.NotaCreditoElectronica.class,
 })
 public interface NotaCredito extends Documento {
 
