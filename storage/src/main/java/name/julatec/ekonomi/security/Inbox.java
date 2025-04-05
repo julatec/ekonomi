@@ -1,6 +1,7 @@
 package name.julatec.ekonomi.security;
 
-import org.apache.tomcat.util.codec.binary.Base64;
+
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.data.annotation.Transient;
 
 import javax.crypto.Cipher;

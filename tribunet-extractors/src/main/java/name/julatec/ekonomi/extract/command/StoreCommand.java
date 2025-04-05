@@ -26,11 +26,12 @@ public class StoreCommand extends BaseCommand<StoreCommand> {
 
     @Override
     public void run() {
-        try (store) {
+        try {
             store.connect();
             final Folder folder = this.store.getFolder("INBOX");
             final FolderCommand command = this.commandFactory.getCommand(this, folder);
             command.run();
+            store.close();
         } catch (MessagingException e) {
             getLogger().error("[{}] Unable to open inbox", e, context.<String>getAttribute("email"));
         }

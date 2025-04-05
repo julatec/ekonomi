@@ -1,15 +1,24 @@
 package name.julatec.ekonomi.tribunet;
 
 import name.julatec.ekonomi.tribunet.annotation.AdapterFactory;
+import org.apache.cxf.helpers.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.*;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.ValidationEvent;
+import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,7 +31,8 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Service
-public class DocumentoAdapterService {
+public class DocumentoAdapterService implements ErrorHandler {
+
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentoAdapterService.class);
 
@@ -38,6 +48,7 @@ public class DocumentoAdapterService {
     public Optional<Documento> adapt(InputStream xml, Consumer<Throwable> throwableConsumer) {
         try {
             final DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setErrorHandler(this);
             final Document document = builder.parse(xml);
             return getDocumento(document);
         } catch (ParserConfigurationException | SAXException | JAXBException | IOException e) {
@@ -91,6 +102,21 @@ public class DocumentoAdapterService {
             }
         }
         this.lifecycleMap = Collections.unmodifiableMap(lifecycleMap);
+    }
+
+    @Override
+    public void warning(SAXParseException exception) throws SAXException {
+        logger.warn(exception.getMessage(), exception);
+    }
+
+    @Override
+    public void error(SAXParseException exception) throws SAXException {
+        logger.warn(exception.getMessage(), exception);
+    }
+
+    @Override
+    public void fatalError(SAXParseException exception) throws SAXException {
+        logger.warn(exception.getMessage(), exception);
     }
 
     private static final class DocumentLifecycle {
