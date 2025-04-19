@@ -1,24 +1,13 @@
 package name.julatec.ekonomi.extract.command;
 
+import jakarta.xml.bind.JAXBException;
 import name.julatec.ekonomi.tribunet.*;
-import name.julatec.ekonomi.tribunet.annotation.AdapterFactory;
-import org.springframework.beans.factory.ListableBeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.bind.*;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.*;
 
 import static name.julatec.ekonomi.extract.command.InboxCommand.EMAIL_ATTRIBUTE;
