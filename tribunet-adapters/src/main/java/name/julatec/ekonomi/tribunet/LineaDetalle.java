@@ -1,8 +1,7 @@
 package name.julatec.ekonomi.tribunet;
 
-import cr.go.hacienda.tribunet.v43.nota.credito.CodigoType;
-import cr.go.hacienda.tribunet.v43.nota.credito.DescuentoType;
 import name.julatec.ekonomi.tribunet.annotation.Adapt;
+import org.apache.ws.commons.schema.resolver.DefaultURIResolver;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -49,15 +48,23 @@ public interface LineaDetalle {
 
     BigInteger getNumeroLinea();
 
-    String getPartidaArancelaria();
+    default String getPartidaArancelaria(){
+        return null;
+    }
 
-    String getCodigo();
+//    default String getCodigo() {
+//        return null;
+//    }
 
-    Stream<CodigoType> getCodigoComercial();
+    default Stream<CodigoType> getCodigoComercial() {
+        return Stream.empty();
+    }
 
     BigDecimal getCantidad();
 
-    String getUnidadMedidad();
+    default String getUnidadMedidad(){
+        return null;
+    }
 
     String getDetalle();
 
@@ -69,7 +76,9 @@ public interface LineaDetalle {
      */
     BigDecimal getMontoTotal();
 
-    Stream <DescuentoType> getDescuento();
+    default Stream <DescuentoType> getDescuento() {
+        return Stream.empty();
+    }
     /**
      * Line subtotal.
      *

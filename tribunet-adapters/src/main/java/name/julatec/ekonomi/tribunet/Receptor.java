@@ -37,7 +37,6 @@ import name.julatec.ekonomi.tribunet.annotation.Adapt;
         cr.go.hacienda.tribunet.v44.factura.exportacion.ReceptorType.class,
         cr.go.hacienda.tribunet.v44.tiquete.ReceptorType.class,
         cr.go.hacienda.tribunet.v44.nota.credito.ReceptorType.class,
-        cr.go.hacienda.tribunet.v44.nota.credito.ReceptorType.class,
         cr.go.hacienda.tribunet.v44.nota.debito.ReceptorType.class,
 
 })

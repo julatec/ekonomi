@@ -42,7 +42,7 @@ import java.util.TreeMap;
         cr.go.hacienda.tribunet.v44.factura.exportacion.ImpuestoType.class,
         cr.go.hacienda.tribunet.v44.tiquete.ImpuestoType.class,
         cr.go.hacienda.tribunet.v44.nota.debito.ImpuestoType.class,
-        cr.go.hacienda.tribunet.v43.nota.credito.ImpuestoType.class,
+        cr.go.hacienda.tribunet.v44.nota.credito.ImpuestoType.class,
 
 })
 public interface ImpuestoType {

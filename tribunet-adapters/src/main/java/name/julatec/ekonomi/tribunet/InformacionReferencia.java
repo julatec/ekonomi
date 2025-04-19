@@ -40,7 +40,9 @@ import java.util.Date;
 public interface InformacionReferencia {
 
 
-    String getTipoDoc();
+    default String getTipoDoc() {
+        return null;
+    }
 
     default TipoDocumento getTipoDocumento() {
         return TipoDocumento.fromCode(getTipoDoc());
@@ -48,7 +50,9 @@ public interface InformacionReferencia {
 
     String getNumero();
 
-    XMLGregorianCalendar getFechaEmision();
+    default XMLGregorianCalendar getFechaEmision() {
+        return null;
+    }
 
     default Date getFechaEmisionAsDate() {
         return getFechaEmision().toGregorianCalendar().getTime();
