@@ -2,7 +2,7 @@ package name.julatec.ekonomi.gnucash;
 
 import org.apache.commons.lang3.builder.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @SuppressWarnings("JpaDataSourceORMInspection")

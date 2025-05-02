@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.search.ReceivedDateTerm;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.search.ReceivedDateTerm;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static javax.mail.search.ComparisonTerm.GE;
+import static jakarta.mail.search.ComparisonTerm.GE;
 import static name.julatec.ekonomi.extract.command.InboxCommand.EMAIL_ATTRIBUTE;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 

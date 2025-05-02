@@ -2,7 +2,7 @@ package name.julatec.ekonomi.storage;
 
 import name.julatec.ekonomi.tribunet.UuidFormatter;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.util.UUID;
 
 public class UuidConverter implements AttributeConverter<UUID, String>, UuidFormatter {

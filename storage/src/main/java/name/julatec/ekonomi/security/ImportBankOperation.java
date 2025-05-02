@@ -3,7 +3,7 @@ package name.julatec.ekonomi.security;
 import name.julatec.ekonomi.report.bank.BankOperation;
 import name.julatec.ekonomi.accounting.EmbeddedTransaction;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity(name = "import_bank_operation")
 public class ImportBankOperation extends ImportTransaction<ImportBankOperation> {

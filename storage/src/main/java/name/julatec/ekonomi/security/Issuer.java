@@ -2,8 +2,8 @@ package name.julatec.ekonomi.security;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity(name = "issuer")
 public class Issuer implements Comparable<Issuer> {

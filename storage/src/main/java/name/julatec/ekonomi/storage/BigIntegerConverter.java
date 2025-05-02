@@ -1,6 +1,6 @@
 package name.julatec.ekonomi.storage;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.math.BigInteger;
 
 public class BigIntegerConverter implements AttributeConverter<BigInteger, String> {

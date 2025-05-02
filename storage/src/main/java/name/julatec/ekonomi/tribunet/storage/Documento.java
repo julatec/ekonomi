@@ -1,10 +1,10 @@
 package name.julatec.ekonomi.tribunet.storage;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Lob;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Lob;
 import java.util.Date;
 
 @Embeddable

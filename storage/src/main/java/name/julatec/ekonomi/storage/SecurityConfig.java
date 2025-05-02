@@ -70,7 +70,7 @@ public class SecurityConfig {
         jpaVendorAdapter.setDatabase(Database.MYSQL);
         jpaVendorAdapter.setGenerateDdl(true);
         jpaVendorAdapter.setShowSql(false);
-        jpaVendorAdapter.setDatabasePlatform("org.hibernate.dialect.MySQL5Dialect");
+        jpaVendorAdapter.setDatabasePlatform(StorageConfig.DATABASE_PLATFORM);
         return jpaVendorAdapter;
     }
 
@@ -78,7 +78,7 @@ public class SecurityConfig {
         return new Properties() {
             {
                 setProperty("hibernate.hbm2ddl.auto", "update");
-                setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
+                setProperty("hibernate.dialect", StorageConfig.DATABASE_PLATFORM);
                 setProperty("hibernate.show_sql", "false");
                 setProperty("hibernate.format_sql", "true");
             }

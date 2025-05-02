@@ -4,7 +4,7 @@ import name.julatec.ekonomi.security.Inbox;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.mail.Session;
+import jakarta.mail.Session;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 

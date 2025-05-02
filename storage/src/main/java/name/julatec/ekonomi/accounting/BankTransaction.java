@@ -4,7 +4,7 @@ package name.julatec.ekonomi.accounting;
 import name.julatec.ekonomi.storage.UuidConverter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;

@@ -7,14 +7,14 @@ import org.springframework.data.annotation.Transient;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.persistence.*;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.persistence.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.Set;
 
-import static javax.mail.Session.getInstance;
+import static jakarta.mail.Session.getInstance;
 
 @Entity(name = "inbox")
 public class Inbox {
@@ -69,7 +69,7 @@ public class Inbox {
         return null;
     }
 
-    public javax.mail.Session getSession() {
+    public jakarta.mail.Session getSession() {
         final Properties properties = new Properties();
         properties.setProperty("mail.host", hostname);
         properties.setProperty("mail.transport.protocol", transportProtocol);
@@ -160,7 +160,7 @@ public class Inbox {
         this.datasources = persistanceUnits;
     }
 
-    private class Authenticator extends javax.mail.Authenticator {
+    private class Authenticator extends jakarta.mail.Authenticator {
         @Override
         protected PasswordAuthentication getPasswordAuthentication() {
             //return new PasswordAuthentication(email, decrypt(password));

@@ -4,7 +4,7 @@ import name.julatec.ekonomi.accounting.Record;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Currency;
 import java.util.Optional;
 

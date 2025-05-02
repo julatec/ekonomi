@@ -2,7 +2,7 @@ package name.julatec.ekonomi.accounting;
 
 import name.julatec.ekonomi.storage.UuidConverter;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;

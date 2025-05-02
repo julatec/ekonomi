@@ -41,6 +41,7 @@ public class StorageConfig {
     public static final String ENTITY_MANAGER_FACTORY = PERSISTENCE_UNIT + "EntityManagerFactory";
     public static final String TRANSACTION_MANAGER = PERSISTENCE_UNIT + "TransactionManager";
     public static final String CONFIGURATION = PERSISTENCE_UNIT + "Configuration";
+    protected static final String DATABASE_PLATFORM = "org.hibernate.dialect.MySQLDialect";
 
     @Value("${name.julatec.ekonomi.storage.tenants.default}")
     private String defaultTenant;
@@ -84,7 +85,7 @@ public class StorageConfig {
         jpaVendorAdapter.setDatabase(Database.MYSQL);
         jpaVendorAdapter.setGenerateDdl(true);
         jpaVendorAdapter.setShowSql(false);
-        jpaVendorAdapter.setDatabasePlatform("org.hibernate.dialect.MySQL5Dialect");
+        jpaVendorAdapter.setDatabasePlatform(DATABASE_PLATFORM);
         return jpaVendorAdapter;
     }
 
@@ -93,7 +94,7 @@ public class StorageConfig {
             {
                 setProperty("hibernate.ddl-auto", "update");
                 setProperty("hibernate.hbm2ddl.auto", "update");
-                setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
+                setProperty("hibernate.dialect", DATABASE_PLATFORM);
                 setProperty("hibernate.show_sql", "false");
                 setProperty("hibernate.format_sql", "true");
                 setProperty("hibernate.enable_lazy_load_no_trans", "true");
