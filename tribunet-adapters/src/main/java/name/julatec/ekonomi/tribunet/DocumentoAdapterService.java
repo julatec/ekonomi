@@ -1,7 +1,6 @@
 package name.julatec.ekonomi.tribunet;
 
 import name.julatec.ekonomi.tribunet.annotation.AdapterFactory;
-import org.apache.cxf.helpers.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
