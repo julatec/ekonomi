@@ -76,6 +76,10 @@ public class StorageConfig {
         lef.setDataSource(dataSource);
         lef.setJpaVendorAdapter(jpaVendorAdapter);
         lef.setJpaProperties(getJpaProperties());
+        lef.setPackagesToScan(
+                "name.julatec.ekonomi.tribunet.storage",
+                "name.julatec.ekonomi.accounting"
+        );
         return lef;
     }
 

@@ -61,6 +61,7 @@ public class SecurityConfig {
         lef.setDataSource(dataSource);
         lef.setJpaVendorAdapter(jpaVendorAdapter);
         lef.setJpaProperties(getJpaProperties());
+        lef.setPackagesToScan("name.julatec.ekonomi.security");
         return lef;
     }
 

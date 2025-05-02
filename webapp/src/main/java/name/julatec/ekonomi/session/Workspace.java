@@ -14,9 +14,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
-//import javax.servlet.http.Cookie;
 import jakarta.servlet.http.Cookie;
-//import javax.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

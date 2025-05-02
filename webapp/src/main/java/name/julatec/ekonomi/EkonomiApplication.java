@@ -14,12 +14,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+//import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @SpringBootApplication(
         exclude = {
@@ -35,7 +38,7 @@ import java.util.Arrays;
 @EnableWebSecurity
 @EnableScheduling
 @EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
-public class EkonomiApplication extends WebSecurityConfigurerAdapter {
+public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
 
 
     AuthenticationService authenticationUserDetailsService;
@@ -61,7 +64,16 @@ public class EkonomiApplication extends WebSecurityConfigurerAdapter {
         return source;
     }
 
-    @Override
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeRequests((authz) -> authz
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(withDefaults());
+        return http.build();
+    }
+
+    //@Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .cors()
@@ -73,7 +85,7 @@ public class EkonomiApplication extends WebSecurityConfigurerAdapter {
                 .authenticated()
                 .and()
                 .x509()
-                .userDetailsService(userDetailsService())
+                //.userDetailsService(userDetailsService())
                 .authenticationUserDetailsService(authenticationUserDetailsService);
     }
 
