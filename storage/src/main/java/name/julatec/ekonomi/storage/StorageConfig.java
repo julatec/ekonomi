@@ -96,8 +96,10 @@ public class StorageConfig {
     private Properties getJpaProperties() {
         return new Properties() {
             {
-                setProperty("hibernate.ddl-auto", "update");
-                setProperty("hibernate.hbm2ddl.auto", "update");
+//                setProperty("hibernate.ddl-auto", "update");
+//                setProperty("hibernate.hbm2ddl.auto", "update");
+                setProperty("hibernate.ddl-auto", "none");
+                setProperty("hibernate.hbm2ddl.auto", "none");
                 setProperty("hibernate.dialect", DATABASE_PLATFORM);
                 setProperty("hibernate.show_sql", "false");
                 setProperty("hibernate.format_sql", "true");

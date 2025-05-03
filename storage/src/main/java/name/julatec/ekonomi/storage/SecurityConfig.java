@@ -78,7 +78,8 @@ public class SecurityConfig {
     private Properties getJpaProperties() {
         return new Properties() {
             {
-                setProperty("hibernate.hbm2ddl.auto", "update");
+//                setProperty("hibernate.hbm2ddl.auto", "update");
+                setProperty("hibernate.hbm2ddl.auto", "none");
                 setProperty("hibernate.dialect", StorageConfig.DATABASE_PLATFORM);
                 setProperty("hibernate.show_sql", "false");
                 setProperty("hibernate.format_sql", "true");
