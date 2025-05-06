@@ -1,8 +1,14 @@
 package name.julatec.ekonomi.security;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +16,7 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.x500.X500Principal;
+import java.io.IOException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
@@ -18,7 +25,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @Service
-public class AuthenticationService implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> {
+public class AuthenticationService implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>, UserDetailsService, AuthenticationEntryPoint {
 
     private final Map<String, Issuer> issuerMap;
     private final Map<UserId, User> userMap;
@@ -67,5 +74,19 @@ public class AuthenticationService implements AuthenticationUserDetailsService<P
             throw new UsernameNotFoundException("Firma digital invalida.", e);
         }
         throw new UsernameNotFoundException("Se requiere autenticarse con firma digital.");
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+        final UserId userId = new UserId().setIssuer("CA SINPE - PERSONA FISICA v2").setValue(userName);
+        if (userMap.containsKey(userId)) {
+            return userMap.get(userId);
+        }
+        throw new UsernameNotFoundException("Firma digital invalida.");
+    }
+
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+        request.getRemoteUser();
     }
 }

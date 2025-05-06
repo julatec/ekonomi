@@ -71,7 +71,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return "{noop}verySecretPassword";
     }
 
     public Set<String> getRoles() {

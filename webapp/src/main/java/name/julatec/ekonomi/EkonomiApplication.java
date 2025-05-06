@@ -1,7 +1,5 @@
 package name.julatec.ekonomi;
 
-//import cr.co.agropag.lang.tex.BookWritingService;
-//import org.jpl7.JPL;
 import name.julatec.ekonomi.security.AuthenticationService;
 import name.julatec.ekonomi.storage.SecurityConfig;
 import name.julatec.ekonomi.storage.StorageConfig;
@@ -11,10 +9,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -35,9 +33,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
         StorageConfig.class,
         AppConfig.class
 })
-@EnableWebSecurity
+@EnableWebSecurity(debug = false)
 @EnableScheduling
-@EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+//@EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+// @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
 
 
@@ -48,7 +47,7 @@ public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
     }
 
     public static void main(String[] args) {
-        System.setProperty("org.apache.poi.util.POILogger", "org.apache.poi.util.CommonsLogger" );
+        System.setProperty("org.apache.poi.util.POILogger", "org.apache.poi.util.CommonsLogger");
         SpringApplication.run(EkonomiApplication.class, args);
     }
 
@@ -64,30 +63,25 @@ public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
         return source;
     }
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests((authz) -> authz
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(withDefaults());
-        return http.build();
+        return http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .x509(x509 -> x509.authenticationUserDetailsService(this.authenticationUserDetailsService))
+                .httpBasic(Customizer.withDefaults())
+                .build();
     }
 
-    //@Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .cors()
-                .and()
-                .csrf()
-                .disable()
-                .authorizeRequests()
-                .anyRequest()
-                .authenticated()
-                .and()
-                .x509()
-                //.userDetailsService(userDetailsService())
-                .authenticationUserDetailsService(authenticationUserDetailsService);
-    }
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        return new InMemoryUserDetailsManager(
+//                User.withUsername("julatec@agropag.co.cr")
+//                        .password("") // no se usa
+//                        .roles("USER")
+//                        .build()
+//        );
+//    }
 
     @Autowired
     EkonomiApplication setAuthenticationUserDetailsService(

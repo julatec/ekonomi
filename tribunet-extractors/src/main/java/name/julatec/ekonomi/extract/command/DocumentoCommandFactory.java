@@ -45,6 +45,10 @@ public class DocumentoCommandFactory {
     public <P extends BaseCommand<P>> DocumentCommand<?>
     getCommand(BaseCommand<P> parentCommand, Document document) throws JAXBException {
         final String namespace = document.getDocumentElement().getNamespaceURI();
+        parentCommand.context.logger.warn("[{}][{}] Adapting namespace: {}",
+                parentCommand.context.getAttribute(EMAIL_ATTRIBUTE),
+                parentCommand.context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
+                namespace);
         if (namespace != null && adapterService.supportedNamespaces().contains(namespace)) {
             try {
                 final Optional<Object> documento = adapterService.adapt(document);
@@ -55,6 +59,11 @@ public class DocumentoCommandFactory {
                             namespace);
                     return null;
                 }
+                parentCommand.context.logger.warn("[{}][{}] Adapted namespace: {}",
+                        parentCommand.context.getAttribute(EMAIL_ATTRIBUTE),
+                        parentCommand.context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
+                        namespace);
+
                 for (Map.Entry<Class<?>, Class<? extends DocumentCommand>> entry : commands.entrySet()) {
                     if (entry.getKey().isInstance(documento.get())) {
                         DocumentCommand command = context.getBean(
