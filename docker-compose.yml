@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # MySQL Database - Multi-tenant setup
+  mysql:
+    image: mysql:8.0
+    container_name: ekonomi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ekonomi_primary}
+      MYSQL_USER: ${MYSQL_USER:-ekonomi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ekonomi_password}
+      TZ: America/Costa_Rica
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+    networks:
+      - ekonomi-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password
+
+  # MailHog - Email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ekonomi-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"  # SMTP server
+      - "${MAILHOG_WEB_PORT:-8025}:8025"   # Web UI
+    networks:
+      - ekonomi-network
+    logging:
+      driver: "none"
+
+  # Adminer - Database management UI
+  adminer:
+    image: adminer:latest
+    container_name: ekonomi-adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    networks:
+      - ekonomi-network
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+      ADMINER_DESIGN: nette
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Ekonomi Web Application (optional - uncomment to run the app in Docker)
+  # webapp:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: ekonomi-webapp
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${WEBAPP_PORT:-8081}:8080"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ekonomi_primary?useSSL=false&serverTimezone=America/Costa_Rica
+  #     SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-ekonomi}
+  #     SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-ekonomi_password}
+  #     SPRING_MAIL_HOST: mailhog
+  #     SPRING_MAIL_PORT: 1025
+  #   networks:
+  #     - ekonomi-network
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     mailhog:
+  #       condition: service_started
+  #   volumes:
+  #     - ./target:/app/target
+
+networks:
+  ekonomi-network:
+    driver: bridge
+    name: ekonomi-network
+
+volumes:
+  mysql_data:
+    name: ekonomi-mysql-data

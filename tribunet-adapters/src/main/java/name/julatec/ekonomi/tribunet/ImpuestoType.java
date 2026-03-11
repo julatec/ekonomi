@@ -196,5 +196,31 @@ public interface ImpuestoType {
         public static Codigo of(String codigo) {
             return reverseMap.get(Optional.ofNullable(codigo).orElse(""));
         }
+
+        /**
+         * Tax classification categories per Nota 8 of Hacienda Anexos v4.4.
+         */
+        public enum Clasificacion {
+            /** Specific consumption taxes that add to the taxable base. */
+            BASE_IMPONIBLE,
+            /** IVA taxes (Valor Agregado, Especial, Bienes Usados). */
+            IVA,
+            /** Guard/sentinel values used for internal ordering. */
+            GUARD
+        }
+
+        /**
+         * Returns the classification of this tax code per Nota 8.
+         *
+         * @return the classification category.
+         */
+        public Clasificacion getClasificacion() {
+            return switch (this) {
+                case SelectivoDeConsumo, Combustivos, BebidasAlcoholicas,
+                     BebidasEnvasadas, Cemento, Otros, ProductosDeTabaco -> Clasificacion.BASE_IMPONIBLE;
+                case ValorAgregado, ValorAgregadoEspecial, ValorAgregadoUsados -> Clasificacion.IVA;
+                default -> Clasificacion.GUARD;
+            };
+        }
     }
 }

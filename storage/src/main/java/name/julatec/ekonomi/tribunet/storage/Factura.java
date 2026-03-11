@@ -21,7 +21,7 @@ import java.util.Optional;
 })
 public class Factura implements ElectronicReceipt {
 
-    private static final Currency CURRENCY = Currency.getInstance(Locale.getDefault());
+    private static final Currency CURRENCY = Currency.getInstance("CRC");
     public static final String EXPORT_NAME = "factura";
 
     @Id

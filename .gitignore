@@ -3,3 +3,9 @@
 webapp/package-lock.json
 */target
 webapp/node_modules/
+
+# Docker
+.env
+docker-compose.override.yml
+backups/
+*.sql

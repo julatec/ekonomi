@@ -141,19 +141,21 @@ public class DetailedDocument implements Documento {
                                 ZERO,
                                 impuestoType.getMonto().subtract(impuestoType.getExoneracion().getMontoExoneracion())));
                     } else {
-                        final FactorIVA impuestoFactor = Optional.ofNullable(
-                                FactorIVA.valueOf(impuestoType.getTarifa()))
+                        // Use codigo-based lookup (preferred) with fallback to tarifa-based lookup
+                        final FactorIVA impuestoFactor = Optional.ofNullable(impuestoType.getCodigoTarifa())
+                                .map(FactorIVA::fromCodigo)
+                                .or(() -> Optional.ofNullable(FactorIVA.valueOf(impuestoType.getTarifa())))
                                 .orElse(Exonerado);
                         final ImpuestoType.Codigo codigo = ImpuestoType.Codigo.of(impuestoType.getCodigo());
-                        if (codigo.compareTo(ImpuestoType.Codigo.BaseImponible) < 0) {
-                            baseImponible = baseImponible.add(impuestoType.getMonto());
-                        } else if (codigo.compareTo(ImpuestoType.Codigo.OtrosCargos) < 0) {
-                            buffer.add(Otros, new TaxAccumulated(
-                                    impuestoType.getMonto(),
-                                    ZERO,
-                                    ZERO));
-                        } else {
-                            impuesto = impuesto.add(impuestoType.getMonto());
+                        switch (codigo.getClasificacion()) {
+                            case BASE_IMPONIBLE:
+                                baseImponible = baseImponible.add(impuestoType.getMonto());
+                                break;
+                            case IVA:
+                                impuesto = impuesto.add(impuestoType.getMonto());
+                                break;
+                            default:
+                                break;
                         }
                         if (factorIVA.compareTo(impuestoFactor) < 0) {
                             factorIVA = impuestoFactor;

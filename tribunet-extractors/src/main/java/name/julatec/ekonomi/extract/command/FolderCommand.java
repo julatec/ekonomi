@@ -76,7 +76,7 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
                         context.getAttribute(EMAIL_ATTRIBUTE),
                         receivedDate,
                         message.getMessageNumber(), message.getSubject());
-                if (message.getSubject().contains("00200001010000015211")) {
+                if (message.getSubject().contains("495640")) {
                     getLogger().info("[{}] stop", context.getAttribute(EMAIL_ATTRIBUTE));
                 }
                 final MessageCommand command = commandFactory.getCommand(this, message);
@@ -91,10 +91,12 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
 
     protected Stream<Message> getMessages() throws MessagingException {
         final Set<String> profiles = Set.of(environment.getActiveProfiles());
-        return profiles.contains("production") ? getMessagesSince(-1, TimeUnit.DAYS) :
-                profiles.contains("month-import") ? getMessagesSince(-45, TimeUnit.DAYS) :
-                        profiles.contains("full-import") ? getAllMessages() :
-                                Stream.empty();
+        //return getAllMessages();
+        return getMessagesSince(-20, TimeUnit.DAYS);
+//        return profiles.contains("production") ? getMessagesSince(-30*4, TimeUnit.DAYS) :
+//                profiles.contains("month-import") ? getMessagesSince(-60, TimeUnit.DAYS) :
+//                        profiles.contains("full-import") ? getAllMessages() :
+//                                Stream.empty();
     }
 
 
