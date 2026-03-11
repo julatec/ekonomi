@@ -11,6 +11,31 @@
     <name>storage</name>
     <groupId>name.julatec.ekonomi</groupId>
     <artifactId>storage</artifactId>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- GnuCash JPA entities - require database -->
+                        <exclude>name/julatec/ekonomi/gnucash/**</exclude>
+                        <!-- Tribunet storage JPA entities/repositories - require database -->
+                        <exclude>name/julatec/ekonomi/tribunet/storage/**</exclude>
+                        <!-- Spring Security infrastructure -->
+                        <exclude>name/julatec/ekonomi/security/**</exclude>
+                        <!-- Spring Boot storage configuration -->
+                        <exclude>name/julatec/ekonomi/storage/**</exclude>
+                        <!-- Report infrastructure -->
+                        <exclude>name/julatec/ekonomi/report/**</exclude>
+                        <!-- JPA repositories in accounting - require database -->
+                        <exclude>name/julatec/ekonomi/accounting/*Repository.class</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

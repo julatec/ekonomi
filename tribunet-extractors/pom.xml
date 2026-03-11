@@ -11,6 +11,45 @@
     <groupId>name.julatec.ekonomi</groupId>
     <artifactId>tribunet-extractors</artifactId>
     <name>tribunet-extractors</name>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>cr/go/hacienda/**</exclude>
+                        <exclude>name/julatec/ekonomi/tribunet/annotation/**</exclude>
+                        <exclude>name/julatec/ekonomi/tribunet/*Factory.class</exclude>
+                        <exclude>name/julatec/ekonomi/tribunet/*Factory$*.class</exclude>
+                        <!-- IMAP infrastructure commands - require real mail server -->
+                        <exclude>name/julatec/ekonomi/extract/command/SessionCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/StoreCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/FolderCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/InboxCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/MessageCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/XmlAttachmentCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/ZipAttachmentCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/DocumentoCommandFactory.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/CommandFactory.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/BaseCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/DocumentCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/FacturaCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/FacturaCompraCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/FacturaExportacionCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/NotaCreditoCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/NotaDebitoCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/MensajeHaciendaCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/MensajeReceptorCommand.class</exclude>
+                        <exclude>name/julatec/ekonomi/extract/command/StoreCommand.class</exclude>
+                        <!-- Service - requires Spring context with repositories -->
+                        <exclude>name/julatec/ekonomi/extract/ExtractService.class</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
