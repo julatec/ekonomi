@@ -20,10 +20,16 @@ public class ExtractService extends BaseCommand<ExtractService> {
 
     final InboxRepository inboxRepository;
 
-    public ExtractService(CommandFactory commandFactory, InboxRepository inboxRepository) {
+    final ExtractExecutor extractExecutor;
+
+    public ExtractService(
+            CommandFactory commandFactory,
+            InboxRepository inboxRepository,
+            ExtractExecutor extractExecutor) {
         super(new Context<ExtractService>(null, logger));
         this.commandFactory = commandFactory;
         this.inboxRepository = inboxRepository;
+        this.extractExecutor = extractExecutor;
     }
 
     private void startListen(Inbox inbox) {
@@ -36,14 +42,34 @@ public class ExtractService extends BaseCommand<ExtractService> {
 
     }
 
+    /**
+     * Recorre los buzones <b>de uno en uno</b>, a propósito.
+     *
+     * <p>Antes esto era un {@code parallel stream}, con los dos defectos que trae: corría en
+     * {@link java.util.concurrent.ForkJoinPool#commonPool()}, cuyos hilos sobreviven al undeploy
+     * del webapp, y anidaba paralelismo con el de {@code FolderCommand}.
+     *
+     * <p>El paralelismo ahora vive un nivel más adentro: {@code FolderCommand} reparte los
+     * mensajes de cada buzón en {@link ExtractExecutor}. Anidar ahí también sería un abrazo
+     * mortal — las tareas de buzón ocuparían todos los hilos del pool esperando tareas de
+     * mensaje que ya no tendrían dónde correr. Y como es un lote cada 6 h, serializar los
+     * buzones no cuesta nada.
+     */
     @Scheduled(fixedDelay = 6 * 60 * 60 * 1000)
     @Override
     public void run() {
-        inboxRepository
-                .findAll()
-                .stream()
-                .parallel()
-                .filter(Inbox::isActive)
-                .forEach(this::startListen);
+        if (extractExecutor.isShuttingDown()) {
+            logger.info("Contexto en cierre: se omite esta corrida de extracción.");
+            return;
+        }
+        for (Inbox inbox : inboxRepository.findAll()) {
+            if (extractExecutor.isShuttingDown()) {
+                logger.info("Contexto en cierre: se corta la corrida de extracción.");
+                return;
+            }
+            if (inbox.isActive()) {
+                startListen(inbox);
+            }
+        }
     }
 }

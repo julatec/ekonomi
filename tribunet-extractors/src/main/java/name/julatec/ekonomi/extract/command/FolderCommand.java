@@ -1,5 +1,6 @@
 package name.julatec.ekonomi.extract.command;
 
+import name.julatec.ekonomi.extract.ExtractExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
     protected final Folder folder;
 
     private Environment environment;
+
+    private ExtractExecutor extractExecutor;
 
     public FolderCommand(Context<?> context, Folder folder) {
         super(context);
@@ -65,11 +68,28 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
                 });
     }
 
-    private void process(Message message) {
-        try {
+    /**
+     * Reabre el folder si hiciera falta.
+     *
+     * <p>Sincronizado porque varias tareas del pool comparten este folder: sin esto dos hilos
+     * pueden pasar el {@code isOpen()} a la vez y el segundo {@code open()} revienta.
+     */
+    private void ensureOpen() throws MessagingException {
+        synchronized (folder) {
             if (!folder.isOpen()) {
                 folder.open(Folder.READ_ONLY);
             }
+        }
+    }
+
+    private void process(Message message) {
+        // En un redespliegue el contexto se cierra con el lote a medias. Rendirse en silencio:
+        // insistir acá es lo que llenó catalina.out con trazas de un classloader ya cerrado.
+        if (extractExecutor.isShuttingDown()) {
+            return;
+        }
+        try {
+            ensureOpen();
             final Date receivedDate = message.getReceivedDate();
             if (message.getContentType().contains("multipart")) {
                 getLogger().info("[{}][{}/{}]: {}",
@@ -102,9 +122,11 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
     public void run() {
         try {
             folder.open(Folder.READ_ONLY);
-            getMessages()
-                    .parallel()
-                    .forEach(this::process);
+            // Pool propio del webapp, NO ForkJoinPool.commonPool(): sus hilos sobreviven al
+            // undeploy y se quedan girando contra un classloader muerto. Ver ExtractExecutor.
+            // forEach() espera a que todo el lote termine, porque StoreCommand cierra el Store
+            // apenas regresamos de acá.
+            extractExecutor.forEach(getMessages(), this::process);
         } catch (MessagingException e) {
             getLogger().error("[{}] Error reading messages", context.getAttribute(EMAIL_ATTRIBUTE), e);
         } catch (Exception e) {
@@ -117,6 +139,12 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
     @Autowired
     FolderCommand setEnvironment(Environment environment) {
         this.environment = environment;
+        return this;
+    }
+
+    @Autowired
+    FolderCommand setExtractExecutor(ExtractExecutor extractExecutor) {
+        this.extractExecutor = extractExecutor;
         return this;
     }
 }
