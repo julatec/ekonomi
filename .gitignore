@@ -9,3 +9,9 @@ webapp/node_modules/
 docker-compose.override.yml
 backups/
 *.sql
+
+# Python — entornos virtuales
+.venv/
+**/.venv/
+__pycache__/
+*.pyc

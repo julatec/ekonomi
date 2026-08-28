@@ -1,0 +1,47 @@
+# Docker Compose Override Example
+# Copy this file to docker-compose.override.yml to customize your local setup
+# This file is ignored by git and won't affect other developers
+
+version: '3.8'
+
+services:
+  # Customize MySQL configuration
+  mysql:
+    # Use a different port
+    # ports:
+    #   - "3307:3306"
+
+    # Add custom environment variables
+    # environment:
+    #   MYSQL_ROOT_PASSWORD: my_custom_password
+
+    # Mount additional volumes
+    # volumes:
+    #   - ./my-custom-init:/docker-entrypoint-initdb.d/99-custom
+
+    # Increase memory limit
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1G
+
+  # Customize MailHog ports
+  mailhog:
+    # ports:
+    #   - "1026:1025"  # SMTP
+    #   - "8026:8025"  # Web UI
+
+  # Enable webapp service for full Docker deployment
+  # webapp:
+  #   # Custom environment variables
+  #   environment:
+  #     JAVA_OPTS: -Xmx512m -Xms256m
+  #     SPRING_PROFILES_ACTIVE: docker,dev
+
+  # Add additional services for testing
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - ekonomi-network
