@@ -1,6 +1,5 @@
 package name.julatec.ekonomi.extract.command;
 
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -51,7 +50,11 @@ public class ZipAttachmentCommand extends BaseCommand<ZipAttachmentCommand> {
 
     private InputStream convertZipInputStreamToInputStream(final ZipInputStream in) throws IOException {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        IOUtils.copy(in, out);
+        // Antes: IOUtils.copy(in, out), de org.apache.tomcat.util.http.fileupload.
+        // Esa única llamada obligaba a depender de tomcat-embed-core —3,6 MB de
+        // contenedor de servlets— sólo para copiar bytes. InputStream.transferTo hace
+        // lo mismo desde Java 9 y no arrastra nada.
+        in.transferTo(out);
         final InputStream is = new ByteArrayInputStream(out.toByteArray());
         return is;
     }

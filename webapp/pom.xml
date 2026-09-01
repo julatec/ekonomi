@@ -13,6 +13,25 @@
   <name>ekonomi</name>
   <description>Ekonomi - Finance Statistics Services</description>
   <dependencies>
+    <!--
+      El contenedor de servlets lo pone Tomcat, no el WAR.
+
+      `spring-boot-starter-tomcat` llega transitivamente por el starter web, en alcance
+      `compile`, y arrastraba tomcat-embed-core, tomcat-embed-el y tomcat-annotations-api
+      dentro del WEB-INF/lib: 3,8 MB de Tomcat 10.1.39 empaquetados en una aplicación que
+      se despliega sobre un Tomcat 11.0.6 propio. Nunca se ejecutaban —el contenedor gana
+      siempre— pero convivían dos versiones de las mismas clases, que es la clase de cosa
+      que produce fallos incomprensibles después de una actualización.
+
+      Declararlo acá en `provided` gana por cercanía sobre la transitiva y lo saca del
+      empaquetado. Ya existía la exclusión de tomcat-embed-websocket más abajo, así que el
+      problema se conocía a medias.
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>name.julatec.ekonomi</groupId>
       <artifactId>storage</artifactId>
