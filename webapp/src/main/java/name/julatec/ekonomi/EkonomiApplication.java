@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,8 +18,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @SpringBootApplication(
         exclude = {
@@ -64,12 +61,21 @@ public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
     }
 
 
+    /**
+     * Autenticación únicamente por certificado de firma digital.
+     * <p>
+     * Aquí estuvo {@code .httpBasic(...)}, que junto con la contraseña fija de
+     * {@code User.getPassword()} permitía entrar conociendo solo una cédula
+     * —dato público— desde internet. La aplicación nunca tuvo contraseñas
+     * reales, así que retirar el mecanismo no le quita acceso a nadie.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .x509(x509 -> x509.authenticationUserDetailsService(this.authenticationUserDetailsService))
-                .httpBasic(Customizer.withDefaults())
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(this.authenticationUserDetailsService))
                 .build();
     }
 

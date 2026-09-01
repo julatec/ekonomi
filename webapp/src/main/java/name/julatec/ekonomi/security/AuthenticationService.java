@@ -76,17 +76,20 @@ public class AuthenticationService implements AuthenticationUserDetailsService<P
         throw new UsernameNotFoundException("Se requiere autenticarse con firma digital.");
     }
 
+    /**
+     * Resolver un usuario por nombre —es decir, por cédula— sin presentar el
+     * certificado permitiría entrar conociendo únicamente un dato público. La
+     * única vía de autenticación admitida es {@link #loadUserDetails}, que exige
+     * el certificado. Este método se conserva porque lo impone
+     * {@link UserDetailsService}, pero no autentica a nadie.
+     */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-        final UserId userId = new UserId().setIssuer("CA SINPE - PERSONA FISICA v2").setValue(userName);
-        if (userMap.containsKey(userId)) {
-            return userMap.get(userId);
-        }
-        throw new UsernameNotFoundException("Firma digital invalida.");
+        throw new UsernameNotFoundException("Se requiere autenticarse con firma digital.");
     }
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        request.getRemoteUser();
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Se requiere autenticarse con firma digital.");
     }
 }

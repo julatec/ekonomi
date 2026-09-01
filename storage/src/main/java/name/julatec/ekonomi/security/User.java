@@ -69,9 +69,15 @@ public class User implements UserDetails {
         return grantedAuthorities;
     }
 
+    /**
+     * La autenticación de Ekonomi es exclusivamente por certificado de firma
+     * digital (X.509). No existe una contraseña que validar: devolver {@code null}
+     * impide que cualquier {@code AuthenticationProvider} basado en contraseña
+     * —como {@code DaoAuthenticationProvider}— pueda autenticar a este usuario.
+     */
     @Override
     public String getPassword() {
-        return "{noop}verySecretPassword";
+        return null;
     }
 
     public Set<String> getRoles() {

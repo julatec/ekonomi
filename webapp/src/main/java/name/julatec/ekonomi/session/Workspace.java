@@ -93,17 +93,24 @@ public class Workspace {
                 });
     }
 
+    /**
+     * Determina el tenant activo a partir de la cookie del cliente.
+     * <p>
+     * La cookie la controla quien hace la petición, así que su valor solo se
+     * acepta si está entre los datasources asignados al usuario. Sin ese filtro,
+     * cambiar la cookie bastaba para leer la contabilidad de cualquier otro
+     * tenant. Un valor ajeno o vencido cae al predeterminado en vez de fallar,
+     * para que una cookie vieja no rompa la sesión.
+     */
     private static String getTenantFromCookie(
             final HttpServletRequest request,
             final String cookieName,
+            final Set<String> allowedTenants,
             final String defaultValue) {
         return Optional.ofNullable(WebUtils.getCookie(request, cookieName))
                 .map(Cookie::getValue)
-                .or(() -> Optional.ofNullable(defaultValue))
-                .map(tenant -> {
-                    MultiTenantRepository.setCurrentDb(tenant);
-                    return tenant;
-                }).get();
+                .filter(allowedTenants::contains)
+                .orElse(defaultValue);
     }
 
     public SortedSet<Session.Client> getClients() {
@@ -150,7 +157,11 @@ public class Workspace {
         final String tenant = getTenantFromCookie(
                 request,
                 TENANT_COOKIE,
+                user.getDatasources(),
                 user.getDatasources().iterator().next());
+        // El tenant vive en un ThreadLocal y Tomcat reutiliza los hilos, así que
+        // hay que fijarlo en cada petición, no solo cuando cambia.
+        MultiTenantRepository.setCurrentDb(tenant);
         this.dateInterval = Interval.of(lower, upper);
         this.locale = request.getLocale();
         if (this.targetPersistanceUnit == null || !this.targetPersistanceUnit.equals(tenant)) {

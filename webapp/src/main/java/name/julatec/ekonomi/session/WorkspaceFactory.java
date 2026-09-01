@@ -91,12 +91,18 @@ public class WorkspaceFactory {
 
         if (MultiTenantRepository.getCurrentTenant() == null) {
             boolean selected = false;
-            for (Cookie cookie : request.getCookies()) {
+            // getCookies() devuelve null cuando la petición no trae ninguna.
+            final Cookie[] cookies = request.getCookies();
+            for (Cookie cookie : cookies == null ? new Cookie[0] : cookies) {
                 switch (cookie.getName()) {
-                    case "tenant":
-                        workspace.setTargetPersistanceUnit(cookie.getValue());
-                        MultiTenantRepository.setCurrentDb(cookie.getValue());
-                        selected = true;
+                    case Workspace.TENANT_COOKIE:
+                        // La cookie es del cliente: solo se acepta si el tenant
+                        // pertenece al usuario. Ver Workspace#getTenantFromCookie.
+                        if (user.getDatasources().contains(cookie.getValue())) {
+                            workspace.setTargetPersistanceUnit(cookie.getValue());
+                            MultiTenantRepository.setCurrentDb(cookie.getValue());
+                            selected = true;
+                        }
                         break;
                     default:
                         break;
