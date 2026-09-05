@@ -1,6 +1,7 @@
 package name.julatec.ekonomi.storage;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.stream.Stream;
 
 @NoRepositoryBean
 public interface MultiTenantRepository<T, ID, Self extends MultiTenantRepository<T, ID, Self>>
-        extends JpaRepository<T, ID> {
+        extends JpaRepository<T, ID>, JpaSpecificationExecutor<T> {
 
     ThreadLocal<String> currentTenant = new ThreadLocal<>();
 

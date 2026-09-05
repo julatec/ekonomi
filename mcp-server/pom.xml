@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>ekonomi</artifactId>
+        <groupId>name.julatec.ekonomi</groupId>
+        <version>1.0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <name>mcp-server</name>
+    <artifactId>mcp-server</artifactId>
+
+    <!--
+      Las herramientas MCP viven acá; el transporte no.
+
+      Este módulo solo declara las herramientas y la lógica de consulta sobre el
+      dominio. Quien las publica por HTTP es `webapp`, que ya tiene la cadena de
+      Spring Security con X.509. Mantenerlo así evita que el módulo arrastre un
+      contenedor de servlets y deja la superficie expuesta en un solo lugar.
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>name.julatec.ekonomi</groupId>
+            <artifactId>storage</artifactId>
+            <version>${name.julatec.ekonomi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-mcp-annotations</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -34,6 +34,23 @@
     </dependency>
     <dependency>
       <groupId>name.julatec.ekonomi</groupId>
+      <artifactId>mcp-server</artifactId>
+      <version>${name.julatec.ekonomi.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <!--
+      El transporte MCP. Va acá y no en `mcp-server` a propósito: este starter
+      arrastra spring-boot-starter-web —y con él un Tomcat embebido— y el WAR se
+      despliega sobre un Tomcat propio. La declaración `provided` de arriba gana
+      por ser directa y lo mantiene fuera de WEB-INF/lib.
+    -->
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+      <version>${spring-ai.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>name.julatec.ekonomi</groupId>
       <artifactId>storage</artifactId>
       <version>${name.julatec.ekonomi.version}</version>
       <scope>compile</scope>

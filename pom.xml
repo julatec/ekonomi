@@ -20,6 +20,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <name.julatec.ekonomi.version>1.0.2-SNAPSHOT</name.julatec.ekonomi.version>
+        <spring-ai.version>2.0.1</spring-ai.version>
     </properties>
 
     <dependencies>
@@ -65,6 +66,7 @@
         <module>tribunet-adapters</module>
         <module>tribunet-extractors</module>
         <module>storage</module>
+        <module>mcp-server</module>
         <module>webapp</module>
     </modules>
 
