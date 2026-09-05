@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
     <groupId>name.julatec.ekonomi</groupId>
@@ -15,10 +15,10 @@
     <name>ekonomi</name>
     <url>https://github.com/julatec/ekonomi</url>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <name.julatec.ekonomi.version>1.0.2-SNAPSHOT</name.julatec.ekonomi.version>
     </properties>
 
@@ -73,7 +73,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.8.1</version>
+            <version>3.16.0</version>
             <configuration>
                 <annotationProcessors>
                     <annotationProcessor>

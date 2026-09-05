@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 @SpringBootApplication(
         exclude = {
-                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+                org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration.class,
         }
 
 )

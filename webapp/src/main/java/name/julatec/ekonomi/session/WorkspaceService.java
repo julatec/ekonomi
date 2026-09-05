@@ -1,7 +1,7 @@
 package name.julatec.ekonomi.session;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import name.julatec.ekonomi.AppConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,7 +28,7 @@ public class WorkspaceService {
 
     private ResourceBundleMessageSource messages;
 
-    public void printSession(Workspace workspace, PrintWriter writer, Locale locale) throws JsonProcessingException {
+    public void printSession(Workspace workspace, PrintWriter writer, Locale locale) throws JacksonException {
         writer.print("const session = ");
         writer.print(objectMapper.writeValueAsString(workspace.getSession()));
         writer.println(";");
