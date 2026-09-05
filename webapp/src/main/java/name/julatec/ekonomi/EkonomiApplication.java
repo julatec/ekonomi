@@ -4,11 +4,13 @@ import name.julatec.ekonomi.security.AuthenticationService;
 import name.julatec.ekonomi.storage.SecurityConfig;
 import name.julatec.ekonomi.storage.StorageConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @SpringBootApplication(
         exclude = {
@@ -32,12 +35,21 @@ import java.util.Arrays;
 })
 @EnableWebSecurity(debug = false)
 @EnableScheduling
-//@EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
-// @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
-public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
+@EnableMethodSecurity(securedEnabled = true)
+public class EkonomiApplication {
 
 
     AuthenticationService authenticationUserDetailsService;
+
+    /**
+     * Orígenes permitidos para CORS.
+     * <p>
+     * Antes era {@code "*"} junto con {@code allowCredentials(true)}, combinación que los
+     * navegadores rechazan de todas formas. Todo se sirve desde el mismo origen en producción;
+     * esta lista existe para el dev server de Vite, que corre en otro puerto.
+     */
+    @Value("${name.julatec.ekonomi.cors.allowed-origins:}")
+    List<String> allowedOrigins;
 
     static {
         //JPL.loadNativeLibrary();
@@ -51,7 +63,7 @@ public class EkonomiApplication /*extends WebSecurityConfigurerAdapter*/ {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(allowedOrigins == null ? List.of() : allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

@@ -87,7 +87,7 @@ public class User implements UserDetails {
     public User setRoles(Set<String> roles) {
         this.roles = roles;
         this.grantedAuthorities = new HashSet<>();
-        for (String role : roles) {
+        for (String role : roles == null ? Collections.<String>emptySet() : roles) {
             final SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(role);
             this.grantedAuthorities.add(simpleGrantedAuthority);
         }

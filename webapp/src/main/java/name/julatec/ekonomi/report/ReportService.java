@@ -48,7 +48,7 @@ public class ReportService {
     }
 
     public <T extends BankTransaction<T>> long upload(Workspace workspace, ImportBankTransaction account, Stream<T> stream) {
-        try {
+        try (var scope = bankTransactionRepository.openScope(account.getPersistenceUnit())) {
             return stream
                     .map(name.julatec.ekonomi.accounting.BankTransaction::of)
                     .map(bankTransactionRepository::saveAndFlush)
@@ -65,7 +65,7 @@ public class ReportService {
     }
 
     public <T extends BankOperation<T>> long upload(Workspace workspace, ImportBankOperation account, Stream<T> stream) {
-        try {
+        try (var scope = bankOperationRepository.openScope(account.getPersistenceUnit())) {
             return stream
                     .map(account::of)
                     .map(bankOperationRepository::saveAndFlush)
@@ -82,7 +82,7 @@ public class ReportService {
     }
 
     public long upload(Workspace workspace, ImportManualTransaction account, Stream<Voucher> stream) {
-        try {
+        try (var scope = voucherRepository.openScope(account.getPersistenceUnit())) {
             return stream
                     .filter(transaction -> transaction.getClave() != null)
                     .map(voucherRepository::saveAndFlush)
