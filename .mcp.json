@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "ekonomi": {
-      "command": "/Users/julatec/Workspace/Personales/ekonomi/mcp/.venv/bin/python",
-      "args": ["/Users/julatec/Workspace/Personales/ekonomi/mcp/ekonomi_mcp.py"]
-    }
-  }
-}
