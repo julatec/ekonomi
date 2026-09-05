@@ -94,7 +94,7 @@ dev-seed: ## Seed the local database with the dev user matching docker/certs/
 # El perfil es `local`, no `docker`: nunca existio un application-docker.properties, y por eso
 # este target no podia funcionar. Ver webapp/src/main/resources/application-local.properties.
 run-local: up ## Run application locally against the Docker MySQL (mTLS on :8443)
-	@echo "$(COLOR_GREEN)Starting on https://localhost:8443/ (needs make dev-certs first)$(COLOR_RESET)"
+	@echo "$(COLOR_GREEN)Starting on https://ekonomi.promyse.home.julatec.name:8443/ (needs make dev-certs + the /etc/hosts line)$(COLOR_RESET)"
 	cd webapp && mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 run-docker: ## Run application in Docker container

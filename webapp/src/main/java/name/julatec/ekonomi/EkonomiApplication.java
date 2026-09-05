@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,6 +48,9 @@ public class EkonomiApplication {
      * Antes era {@code "*"} junto con {@code allowCredentials(true)}, combinación que los
      * navegadores rechazan de todas formas. Todo se sirve desde el mismo origen en producción;
      * esta lista existe para el dev server de Vite, que corre en otro puerto.
+     * <p>
+     * En producción queda vacía y eso es lo correcto: ningún origen ajeno pasa. Con la lista
+     * vacía el filtro sigue instalado, pero rechaza todo lo que venga de otro origen.
      */
     @Value("${name.julatec.ekonomi.cors.allowed-origins:}")
     List<String> allowedOrigins;
@@ -84,6 +88,12 @@ public class EkonomiApplication {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
+                // Sin esta linea el bean `corsConfigurationSource` existe y nadie lo llama.
+                // Estaba asi: la propiedad se documentaba como «para el dev server de Vite» y
+                // no emitia un solo encabezado Access-Control-*. Hoy no se nota porque el
+                // proxy de Vite hace que todo viaje al mismo origen, pero el dia que alguien
+                // llame al API desde otro puerto va a buscar el error en el lugar equivocado.
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .x509(x509 -> x509.authenticationUserDetailsService(this.authenticationUserDetailsService))
                 .exceptionHandling(exceptions -> exceptions
