@@ -1,6 +1,7 @@
 package name.julatec.ekonomi.accounting;
 
-import name.julatec.ekonomi.storage.UuidConverter;
+import name.julatec.ekonomi.storage.UuidHexUserType;
+import org.hibernate.annotations.Type;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -35,7 +36,7 @@ public class BankOperation implements
      */
     @Id
     @Column(name = "guid", nullable = false, length = 32)
-    @Convert(converter = UuidConverter.class)
+    @Type(UuidHexUserType.class)
     private UUID guid;
 
     /**

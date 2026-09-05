@@ -1,7 +1,8 @@
 package name.julatec.ekonomi.accounting;
 
 
-import name.julatec.ekonomi.storage.UuidConverter;
+import name.julatec.ekonomi.storage.UuidHexUserType;
+import org.hibernate.annotations.Type;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import jakarta.persistence.*;
@@ -25,7 +26,7 @@ public class BankTransaction implements
 
     @Id
     @Column(name = "guid", nullable = false, length = 32)
-    @Convert(converter = UuidConverter.class)
+    @Type(UuidHexUserType.class)
     private UUID guid;
 
     private Date date;
