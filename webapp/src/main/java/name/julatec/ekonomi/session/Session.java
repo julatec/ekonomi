@@ -14,7 +14,6 @@ public class Session {
 
     String username;
     String tenant;
-    SortedSet<Client> clients;
     SortedSet<String> inboxes;
     SortedSet<String> tenants;
     SortedSet<ImportAccount> importAccounts;
@@ -29,15 +28,6 @@ public class Session {
 
     public Session setUsername(String username) {
         this.username = username;
-        return this;
-    }
-
-    public SortedSet<Client> getClients() {
-        return clients;
-    }
-
-    public Session setClients(SortedSet<Client> clients) {
-        this.clients = clients;
         return this;
     }
 
@@ -146,44 +136,6 @@ public class Session {
         @Override
         public int compareTo(ImportAccount that) {
             return new CompareToBuilder().append(this.name, that.name).toComparison();
-        }
-    }
-
-    public static final class Client implements Comparable<Client> {
-        private String id;
-        private String name;
-        private BigDecimal records;
-
-        public String getId() {
-            return id;
-        }
-
-        public Client setId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Client setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public BigDecimal getRecords() {
-            return records;
-        }
-
-        public Client setRecords(BigDecimal records) {
-            this.records = records;
-            return this;
-        }
-
-        @Override
-        public int compareTo(Client client) {
-            return new CompareToBuilder().append(id, client.id).toComparison();
         }
     }
 }

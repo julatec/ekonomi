@@ -93,44 +93,61 @@
   </dependencies>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>com.github.eirslett</groupId>
-          <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.9.1</version>
-          <configuration>
-            <installDirectory>target</installDirectory>
-          </configuration>
-          <executions>
-            <execution>
-              <id>install node and npm</id>
-              <goals>
-                <goal>install-node-and-npm</goal>
-              </goals>
-              <configuration>
-                <nodeVersion>v10.11.0</nodeVersion>
-                <npmVersion>6.4.1</npmVersion>
-              </configuration>
-            </execution>
-            <execution>
-              <id>npm install</id>
-              <goals>
-                <goal>npm</goal>
-              </goals>
-              <configuration>
-                <arguments>install</arguments>
-              </configuration>
-            </execution>
-            <execution>
-              <id>webpack build</id>
-              <goals>
-                <goal>webpack</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+    <plugins>
+      <!--
+        El bundle del frontend se construye acá y no a mano.
+
+        Antes esto vivía en <pluginManagement>, que declara la configuración pero no ejecuta
+        nada: `mvn package` no reconstruía la interfaz y el bundle estaba commiteado. Cualquier
+        cambio en el código de la interfaz que alguien olvidara compilar a mano se perdía en
+        silencio, y el artefacto no correspondía al fuente.
+
+        Node se instala dentro de `target/` y no se toma del PATH: el build tiene que dar el
+        mismo resultado en la máquina de quien programa y en la que arma el release.
+      -->
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.15.1</version>
+        <configuration>
+          <installDirectory>${project.build.directory}</installDirectory>
+          <workingDirectory>frontend</workingDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>instalar node y npm</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <configuration>
+              <nodeVersion>v22.11.0</nodeVersion>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm ci</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <!-- `ci` y no `install`: instala exactamente el package-lock.json y falla si
+                   no coincide, en vez de resolver versiones nuevas en cada build. -->
+              <arguments>ci</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>vite build</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>run build</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

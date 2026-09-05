@@ -1,8 +1,14 @@
 *.iml
 .idea
-webapp/package-lock.json
 */target
-webapp/node_modules/
+
+# Frontend: nada de lo que produce el build se versiona.
+#
+# El package-lock.json SÍ va —es lo que hace reproducible el `npm ci` del build de Maven—;
+# lo que no va es el bundle. Antes `static/built/bundle.js` estaba commiteado a mano y el
+# artefacto podía no corresponder al fuente.
+webapp/frontend/node_modules/
+webapp/src/main/resources/static/dist/
 
 # Docker
 .env

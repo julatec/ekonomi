@@ -1,0 +1,209 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { api } from '../api/client.js'
+import { useSesion } from '../estado/SesionContexto.jsx'
+import { useDebounce } from '../hooks/useDebounce.js'
+import { CAMPOS, comoParametros, interpretarConsulta } from '../dominio/interpretarConsulta.js'
+import { ORDEN_TIPOS, tipo as definicionTipo } from '../dominio/tiposDeComprobante.js'
+import { conSigno, formatearEntero, formatearMonto } from '../dominio/formato.js'
+import EtiquetaTipo from '../componentes/EtiquetaTipo.jsx'
+import BandaTotales from '../componentes/BandaTotales.jsx'
+
+const LIMITES = [50, 200, 500]
+
+export default function PaginaComprobantes() {
+  const { tenant, rango, cambiarRango } = useSesion()
+  const navegar = useNavigate()
+  const [parametrosUrl, setParametrosUrl] = useSearchParams()
+
+  const [texto, setTexto] = useState(parametrosUrl.get('q') || '')
+  // `campo` llega en el enlace cuando quien navega ya sabe qué es lo que trae —la lista de
+  // contrapartes manda una cédula—, y así no depende de que la adivinanza acierte.
+  const [campoForzado, setCampoForzado] = useState(parametrosUrl.get('campo') || null)
+  const [tiposActivos, setTiposActivos] = useState(
+    () => new Set((parametrosUrl.get('tipos') || '').split(',').filter(Boolean)),
+  )
+  const [limite, setLimite] = useState(Number(parametrosUrl.get('limite')) || LIMITES[0])
+
+  // Un enlace compartido puede traer su propio rango. Se adopta una sola vez, al abrir: de
+  // ahí en adelante manda la barra superior, que es el rango de toda la aplicación.
+  const rangoAdoptado = useRef(false)
+  useEffect(() => {
+    if (rangoAdoptado.current) return
+    rangoAdoptado.current = true
+    const desdeUrl = parametrosUrl.get('desde')
+    const hastaUrl = parametrosUrl.get('hasta')
+    if (desdeUrl || hastaUrl) cambiarRango(desdeUrl, hastaUrl)
+  }, [parametrosUrl, cambiarRango])
+
+  const { desde, hasta } = rango
+
+  const textoDiferido = useDebounce(texto, 400)
+  const interpretacion = useMemo(() => interpretarConsulta(textoDiferido), [textoDiferido])
+  const campo = campoForzado || interpretacion.campo
+
+  // El rango de fechas siempre va —es el de la barra superior, el mismo de los reportes— y
+  // por sí solo satisface el "hace falta al menos un filtro" del backend, así que la pantalla
+  // nunca arranca en un error.
+  const parametros = {
+    desde,
+    hasta,
+    limite,
+    ...comoParametros(campo, interpretacion.valor),
+    ...(tiposActivos.size ? { tiposDeComprobante: [...tiposActivos].join(',') } : {}),
+  }
+
+  const consulta = useQuery({
+    queryKey: ['comprobantes', tenant, parametros],
+    queryFn: () => api.comprobantes(parametros),
+    placeholderData: keepPreviousData,
+  })
+
+  const datos = consulta.data
+
+  function alternarTipo(clave) {
+    setTiposActivos((previos) => {
+      const siguiente = new Set(previos)
+      if (siguiente.has(clave)) siguiente.delete(clave)
+      else siguiente.add(clave)
+      const url = new URLSearchParams(parametrosUrl)
+      if (siguiente.size) url.set('tipos', [...siguiente].join(','))
+      else url.delete('tipos')
+      setParametrosUrl(url, { replace: true })
+      return siguiente
+    })
+  }
+
+  return (
+    <>
+      <div className="buscador">
+        <input
+          type="search"
+          placeholder="Clave, consecutivo, cédula o nombre…"
+          value={texto}
+          onChange={(evento) => {
+            setTexto(evento.target.value)
+            setCampoForzado(null)
+            const url = new URLSearchParams(parametrosUrl)
+            if (evento.target.value) url.set('q', evento.target.value)
+            else url.delete('q')
+            setParametrosUrl(url, { replace: true })
+          }}
+        />
+        <select value={limite} onChange={(e) => setLimite(Number(e.target.value))}>
+          {LIMITES.map((valor) => (
+            <option key={valor} value={valor}>{valor} filas</option>
+          ))}
+        </select>
+        {consulta.isFetching && <span className="tenue pequeno">buscando…</span>}
+      </div>
+
+      {/* La interpretación siempre se muestra y siempre se puede corregir: adivinar mal sin
+          dejar cambiarlo sería peor que no adivinar. */}
+      {campo && interpretacion.valor && (
+        <div className="buscador pequeno">
+          <span className="tenue">Buscando por</span>
+          {Object.keys(CAMPOS).map((nombre) => (
+            <button
+              key={nombre}
+              className={`chip ${campo === nombre ? 'encendido' : ''}`}
+              onClick={() => setCampoForzado(nombre)}
+            >
+              {CAMPOS[nombre]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="buscador">
+        {ORDEN_TIPOS.map((clave) => {
+          const cuantos = datos?.porTipo?.[clave]
+          return (
+            <button
+              key={clave}
+              className={`chip ${tiposActivos.has(clave) ? 'encendido' : ''} ${cuantos === 0 ? 'vacio' : ''}`}
+              onClick={() => alternarTipo(clave)}
+            >
+              {definicionTipo(clave).etiqueta}
+              {cuantos !== undefined && ` (${cuantos})`}
+            </button>
+          )
+        })}
+      </div>
+
+      {consulta.error && <div className="aviso error">{consulta.error.message}</div>}
+
+      {datos?.truncado && (
+        <div className="aviso">
+          <span>
+            Mostrando {formatearEntero(datos.devueltos)} de {formatearEntero(datos.total)} que
+            cumplen el filtro.
+          </span>
+          {limite < LIMITES[LIMITES.length - 1] && (
+            <button onClick={() => setLimite(LIMITES[LIMITES.indexOf(limite) + 1] || 500)}>
+              Mostrar más
+            </button>
+          )}
+        </div>
+      )}
+
+      <BandaTotales lineas={datos?.lineas} />
+
+      <div className="panel">
+        <h2>
+          Comprobantes
+          {datos ? <span className="tenue pequeno"> · {formatearEntero(datos.total)}</span> : null}
+        </h2>
+        <div className="desplazable">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Consecutivo</th>
+                <th>Emisor</th>
+                <th>Receptor</th>
+                <th style={{ textAlign: 'right' }}>Impuesto</th>
+                <th style={{ textAlign: 'right' }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {datos?.comprobantes?.map((fila) => {
+                const negativo = definicionTipo(fila.tipo).signo < 0
+                return (
+                  <tr
+                    key={fila.clave}
+                    className="clicable"
+                    onClick={() => navegar(`/comprobantes/${fila.clave}`)}
+                  >
+                    <td className="mono">{fila.fechaEmision || '—'}</td>
+                    <td><EtiquetaTipo valor={fila.tipo} /></td>
+                    <td className="mono">{fila.consecutivo}</td>
+                    <td>
+                      {fila.emisorNombre || '—'}
+                      <div className="tenue mono">{fila.emisorNumero}</div>
+                    </td>
+                    <td>
+                      {fila.receptorNombre || '—'}
+                      <div className="tenue mono">{fila.receptorNumero}</div>
+                    </td>
+                    <td className={`monto ${negativo ? 'negativo' : ''}`}>
+                      {formatearMonto(conSigno(fila.totalImpuesto, fila.tipo), fila.moneda)}
+                    </td>
+                    <td className={`monto ${negativo ? 'negativo' : ''}`}>
+                      {formatearMonto(conSigno(fila.totalComprobante, fila.tipo), fila.moneda)}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {datos && datos.comprobantes.length === 0 && (
+          <div className="vacio">No hay comprobantes que cumplan ese filtro.</div>
+        )}
+      </div>
+    </>
+  )
+}

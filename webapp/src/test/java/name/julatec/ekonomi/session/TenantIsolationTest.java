@@ -14,7 +14,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -60,7 +59,7 @@ class TenantIsolationTest {
     void cookieConTenantAjenoNoAbreEsaContabilidad() {
         final Workspace workspace = new Workspace(usuarioCon(PROPIO));
 
-        workspace.setRequest(peticionConTenant(AJENO), TreeSet::new);
+        workspace.setRequest(peticionConTenant(AJENO));
 
         assertEquals(PROPIO, workspace.getTargetPersistanceUnit(),
                 "el workspace no debe apuntar a un tenant que no es del usuario");
@@ -73,7 +72,7 @@ class TenantIsolationTest {
     void cookieConTenantPropioSeRespeta() {
         final Workspace workspace = new Workspace(usuarioCon(PROPIO, "julatec"));
 
-        workspace.setRequest(peticionConTenant("julatec"), TreeSet::new);
+        workspace.setRequest(peticionConTenant("julatec"));
 
         assertEquals("julatec", workspace.getTargetPersistanceUnit());
         assertEquals("julatec", MultiTenantRepository.getCurrentTenant());
@@ -87,7 +86,7 @@ class TenantIsolationTest {
         when(request.getCookies()).thenReturn(null);
         when(request.getLocale()).thenReturn(Locale.getDefault());
 
-        workspace.setRequest(request, TreeSet::new);
+        workspace.setRequest(request);
 
         assertEquals(PROPIO, workspace.getTargetPersistanceUnit());
     }

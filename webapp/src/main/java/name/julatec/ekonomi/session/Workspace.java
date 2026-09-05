@@ -19,7 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toCollection;
@@ -37,7 +36,6 @@ public class Workspace {
 
     final User user;
     private Locale locale;
-    private SortedSet<Session.Client> clients = new TreeSet<>();
     private Interval<Date> dateInterval = getDefaultDateInterval();
     private Map<UUID, ImportTransaction<?>> importTransactionMap;
     private Map<String, Set<String>> importTransactionMapByOwnerId = new HashMap<>();
@@ -113,17 +111,8 @@ public class Workspace {
                 .orElse(defaultValue);
     }
 
-    public SortedSet<Session.Client> getClients() {
-        return clients;
-    }
-
     public ImportTransaction<?> getImportBankAccount(UUID uuid) {
         return this.importTransactionMap.get(uuid);
-    }
-
-    public Workspace setClients(SortedSet<Session.Client> clients) {
-        this.clients = clients;
-        return this;
     }
 
     public Interval<Date> getDateInterval() {
@@ -133,7 +122,6 @@ public class Workspace {
     public Session getSession() {
         return new Session()
                 .setUsername(user.getDisplayName())
-                .setClients(clients)
                 .setLowerDate(dateInterval.lower)
                 .setUpperDate(dateInterval.upper)
                 .setTenants(new TreeSet<>(user.getDatasources()))
@@ -150,7 +138,7 @@ public class Workspace {
                                 .collect(toCollection(TreeSet::new)));
     }
 
-    public Workspace setRequest(HttpServletRequest request, Supplier<? extends SortedSet<Session.Client>> clients) {
+    public Workspace setRequest(HttpServletRequest request) {
         final Interval<Date> dateInterval = this.dateInterval;
         final Date lower = getDateFromIsoCookie(request, Interval_LOWER_COOKIE).orElse(dateInterval.lower);
         final Date upper = getDateFromIsoCookie(request, Interval_UPPER_COOKIE).orElse(dateInterval.upper);
@@ -166,7 +154,6 @@ public class Workspace {
         this.locale = request.getLocale();
         if (this.targetPersistanceUnit == null || !this.targetPersistanceUnit.equals(tenant)) {
             setTargetPersistanceUnit(tenant);
-            this.clients = clients.get();
         }
         return this;
     }

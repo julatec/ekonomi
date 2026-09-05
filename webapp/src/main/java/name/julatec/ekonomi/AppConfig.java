@@ -3,7 +3,6 @@ package name.julatec.ekonomi;
 import name.julatec.ekonomi.report.ReportController;
 import name.julatec.ekonomi.security.AuthenticationService;
 import name.julatec.ekonomi.session.Workspace;
-import name.julatec.ekonomi.session.WorkspaceController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -12,10 +11,14 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
+// Las clases son marcadores de paquete, no beans: cada una nombra el paquete que hay que
+// escanear. `Workspace` reemplazó acá a `WorkspaceController` cuando ese controlador se
+// eliminó —servía `/js/session.js`, que devolvía JavaScript literal y lo sustituyó
+// `GET /api/session`—; el paquete que marcaba sigue siendo el mismo.
 @ComponentScan(basePackageClasses = {
         ReportController.class,
         AuthenticationService.class,
-        WorkspaceController.class
+        Workspace.class
 })
 public class AppConfig {
 
