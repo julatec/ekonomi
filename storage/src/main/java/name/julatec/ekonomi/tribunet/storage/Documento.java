@@ -39,6 +39,29 @@ public class Documento {
      * {@code none} desde mayo de 2025 —16 meses antes de que entrara Hibernate 7—, pero eso
      * es una propiedad, no una barrera.
      */
+    /*
+     * 🔴 EL JUEGO DE CARACTERES NO SE DECLARA ACA, Y ESO ES DELIBERADO.
+     *
+     * Las columnas de produccion eran `latin1`, y eso hacia que un comprobante con un
+     * caracter fuera de ese juego NO SE GUARDARA. Medido el 5 sep 2026: 840 fallos en un dia
+     * sobre `julatec_tribuconta.factura`, todos con
+     *
+     *     Incorrect string value: '\xE2\x82\xA1…'   (U+20A1, el simbolo del colon)
+     *
+     * El emisor que escribe `¢` (0xA2, existe en latin1) pasaba; el que escribe `₡` reventaba
+     * y el documento se perdia en silencio — llegaba por correo y no quedaba en ningun lado.
+     *
+     * La correccion NO va en una `columnDefinition` de esta anotacion: eso solo lo usa la
+     * generacion de DDL, es especifico de MySQL y romperia cualquier otro motor. Va en el
+     * JUEGO POR OMISION DE LA TABLA, que es lo que Hibernate hereda cuando emite un
+     * `modify column ... longtext` sin charset. Con la tabla en utf8mb4, un eventual
+     * `hbm2ddl.auto=update` conserva el juego en vez de revertirlo a latin1.
+     *
+     * Estado al 5 sep 2026: los dos esquemas y las diez tablas ya tienen utf8mb4 por
+     * omision. Las columnas `document` estan convertidas en cuatro tablas de
+     * `julatec_invoices`; faltan `julatec_invoices.factura` y las cinco de
+     * `julatec_tribuconta` — son reconstrucciones de tabla, la mayor de 753 MB.
+     */
     @Lob
     @Column(length = Integer.MAX_VALUE)
     private String document;
