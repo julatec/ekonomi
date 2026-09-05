@@ -6,6 +6,16 @@ import { useSesion } from '../estado/SesionContexto.jsx'
 import { useDebounce } from '../hooks/useDebounce.js'
 import { formatearEntero } from '../dominio/formato.js'
 
+/**
+ * La factura electrónica arrancó en Costa Rica en 2018, así que nada puede ser anterior. Es un
+ * piso, no una fecha real: sirve para que «ver comprobantes» abarque todo el histórico.
+ */
+const DESDE_SIEMPRE = '2015-01-01'
+
+function hoy() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export default function PaginaClientes() {
   const { tenant } = useSesion()
   const navegar = useNavigate()
@@ -62,20 +72,41 @@ export default function PaginaClientes() {
                   <td>{cliente.nombre}</td>
                   <td className="monto">{formatearEntero(cliente.comprobantes)}</td>
                   <td className="pequeno">
-                    {/* Absolutas y no relativas: la aplicación se despliega como ROOT.war y
-                        estas rutas cuelgan de la raíz, no de la pantalla que las dibuja. El
-                        rango que lleva el reporte es el de la barra superior. */}
-                    <a href={`/report/purchases?id=${encodeURIComponent(cliente.numero)}`}>compras</a>
-                    {' · '}
-                    <a href={`/report/sales?id=${encodeURIComponent(cliente.numero)}`}>ventas</a>
-                    {' · '}
+                    {/* Botones y no enlaces de texto: bajan un `.xlsx` —el servidor manda
+                        `Content-Disposition: attachment`— y una descarga no se parece a
+                        navegar. Siguen siendo <a> por debajo para que el navegador haga la
+                        descarga solo, sin pasar por fetch ni blobs.
+
+                        Rutas absolutas: la aplicación se despliega como ROOT.war y estas
+                        cuelgan de la raíz, no de la pantalla que las dibuja. El rango que
+                        lleva el reporte es el de la barra superior. */}
+                    <a
+                      className="boton"
+                      href={`/report/purchases?id=${encodeURIComponent(cliente.numero)}`}
+                      title="Descargar el .xlsx de compras del rango seleccionado"
+                    >
+                      ↓ compras
+                    </a>
+                    <a
+                      className="boton"
+                      href={`/report/sales?id=${encodeURIComponent(cliente.numero)}`}
+                      title="Descargar el .xlsx de ventas del rango seleccionado"
+                    >
+                      ↓ ventas
+                    </a>
+                    {/* El conteo de la columna es de TODO el histórico —la consulta de
+                        contrapartes no filtra por fecha—, así que el enlace tiene que llevar
+                        un rango que lo cubra. Sin esto prometía «6.310» y al hacer clic
+                        mostraba cero, porque se aplicaba el rango de la barra superior. */}
                     <button
                       className="chip"
                       onClick={() =>
                         navegar(
-                          `/comprobantes?q=${encodeURIComponent(cliente.numero)}&campo=cedula`,
+                          `/comprobantes?q=${encodeURIComponent(cliente.numero)}&campo=cedula`
+                            + `&desde=${DESDE_SIEMPRE}&hasta=${hoy()}`,
                         )
                       }
+                      title="Todos los comprobantes de esta contraparte, en cualquier fecha"
                     >
                       ver comprobantes
                     </button>

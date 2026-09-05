@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @SpringBootApplication(
@@ -62,14 +61,34 @@ public class EkonomiApplication {
         SpringApplication.run(EkonomiApplication.class, args);
     }
 
+    /**
+     * Con la lista vacía NO se registra ninguna regla, y esa condición es el arreglo de un
+     * error medido el 5 sep 2026 contra la contabilidad real.
+     * <p>
+     * Vite emite los tags del bundle con el atributo {@code crossorigin}, y eso obliga al
+     * navegador a mandar el encabezado {@code Origin} <b>aunque la petición sea del mismo
+     * origen</b>. Spring trata como petición CORS a cualquiera que traiga ese encabezado, así
+     * que con la lista vacía —el valor de producción— el filtro respondía <b>403 a los propios
+     * assets de la aplicación</b> y la página quedaba en blanco:
+     * <pre>
+     *   GET /dist/assets/index-….js                 200
+     *   GET /dist/assets/index-….js  con Origin     403
+     * </pre>
+     * Registrando la regla solo cuando hay orígenes configurados, producción se comporta como
+     * antes de que existiera este bean —el filtro deja pasar— y el dev server de Vite sigue
+     * teniendo su permiso donde la propiedad lo define.
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins == null ? List.of() : allowedOrigins);
-        configuration.setAllowedMethods(Arrays.asList("*"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            return source;
+        }
+        final CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

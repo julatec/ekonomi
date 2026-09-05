@@ -95,6 +95,8 @@ public class ComprobanteController {
             @RequestParam(required = false) String consecutivo,
             @RequestParam(required = false) String cedula,
             @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String emisor,
+            @RequestParam(required = false) String receptor,
             @RequestParam(required = false) String desde,
             @RequestParam(required = false) String hasta,
             @RequestParam(required = false) String montoMinimo,
@@ -106,6 +108,7 @@ public class ComprobanteController {
         final FiltroComprobantes filtro;
         try {
             filtro = FiltroComprobantes.de(clave, consecutivo, cedula, nombre,
+                    emisor, receptor,
                     desde, hasta, montoMinimo, montoMaximo, moneda);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);

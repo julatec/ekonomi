@@ -19,6 +19,13 @@ package name.julatec.ekonomi.tribunet.storage;
  * {@code group_concat} ordenado por conteo: gana la grafía que aparece en más comprobantes,
  * igual que hacía el código Java, pero sumando todas las variantes en vez de quedarse con una.
  * <p>
+ * <b>La rama del receptor excluye los documentos donde el receptor <i>es</i> el emisor.</b>
+ * Sin esa condición se cuentan <b>apariciones</b> y no comprobantes: un documento con la misma
+ * parte de los dos lados entra por las dos ramas. Medido contra la contabilidad real el 5 sep
+ * 2026 — la columna decía 1.437 para una cédula que tiene 1.370 comprobantes, porque 67 la
+ * llevan en los dos nodos. El número prometía uno y el clic mostraba otro, que es justo lo que
+ * hace desconfiar de una pantalla.
+ * <p>
  * <b>Las cinco tablas, no solo {@code factura}.</b> La consulta vieja solo miraba facturas,
  * así que el selector ofrecía menos cédulas de las que aceptan los reportes, que sí consultan
  * facturas de compra y notas.
@@ -52,6 +59,7 @@ final class ClientesSql {
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura where receptor_numero is not null and receptor_nombre is not null
+                   and (emisor_numero is null or emisor_numero <> receptor_numero)
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
@@ -60,6 +68,7 @@ final class ClientesSql {
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_compra where receptor_numero is not null and receptor_nombre is not null
+                   and (emisor_numero is null or emisor_numero <> receptor_numero)
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
@@ -68,6 +77,7 @@ final class ClientesSql {
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_exportacion where receptor_numero is not null and receptor_nombre is not null
+                   and (emisor_numero is null or emisor_numero <> receptor_numero)
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
@@ -76,6 +86,7 @@ final class ClientesSql {
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_credito where receptor_numero is not null and receptor_nombre is not null
+                   and (emisor_numero is null or emisor_numero <> receptor_numero)
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
@@ -84,6 +95,7 @@ final class ClientesSql {
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_debito where receptor_numero is not null and receptor_nombre is not null
+                   and (emisor_numero is null or emisor_numero <> receptor_numero)
                  group by receptor_numero, receptor_nombre
             ) v
             group by v.numero

@@ -85,6 +85,30 @@ public final class ComprobanteSpecs {
     }
 
     /**
+     * Una de las dos partes, por identificación exacta <b>o</b> por nombre.
+     * <p>
+     * Un solo campo por lado y no dos, porque quien busca ya tiene en la mano una cosa o la
+     * otra y no debería tener que decir cuál es: una cédula no coincide con ningún nombre y un
+     * nombre no coincide con ninguna cédula, así que el {@code or} no confunde resultados.
+     * <p>
+     * La identificación va por igualdad —hay índice sobre {@code emisor_numero} y
+     * {@code receptor_numero}— y el nombre por {@code like} con comodín inicial, que es un
+     * barrido. Buscar por cédula es barato; por nombre, no.
+     */
+    public static <T> Specification<T> emisorEs(String valor) {
+        return (root, query, cb) -> cb.or(
+                cb.equal(root.get("documento").get("emisor").get("numero"), valor),
+                contiene(cb, root.get("documento").get("emisor").get("nombre"), valor));
+    }
+
+    /** El espejo de {@link #emisorEs}, del otro lado del documento. */
+    public static <T> Specification<T> receptorEs(String valor) {
+        return (root, query, cb) -> cb.or(
+                cb.equal(root.get("documento").get("receptor").get("numero"), valor),
+                contiene(cb, root.get("documento").get("receptor").get("nombre"), valor));
+    }
+
+    /**
      * El nombre de cualquiera de las dos partes.
      * <p>
      * No hay índice sobre {@code emisor_nombre} ni {@code receptor_nombre}, y el

@@ -21,6 +21,16 @@ public record FiltroComprobantes(
         String consecutivo,
         String cedula,
         String nombre,
+        /**
+         * Una parte concreta del documento, por identificación exacta o por nombre.
+         * <p>
+         * {@code cedula} y {@code nombre} buscan en los dos lados a la vez, que es lo correcto
+         * cuando se busca «todo lo de esta contraparte». Estos dos sirven para la pregunta
+         * distinta —«lo que ME facturó fulano» contra «lo que YO le facturé»— que antes obligaba
+         * a mirar la columna a ojo.
+         */
+        String emisor,
+        String receptor,
         Date desde,
         Date hasta,
         BigDecimal montoMinimo,
@@ -29,6 +39,7 @@ public record FiltroComprobantes(
 
     public boolean vacio() {
         return clave == null && consecutivo == null && cedula == null && nombre == null
+                && emisor == null && receptor == null
                 && desde == null && hasta == null
                 && montoMinimo == null && montoMaximo == null && moneda == null;
     }
@@ -81,6 +92,7 @@ public record FiltroComprobantes(
 
     public static FiltroComprobantes de(
             String clave, String consecutivo, String cedula, String nombre,
+            String emisor, String receptor,
             String desde, String hasta, String montoMinimo, String montoMaximo, String moneda) {
         final BigDecimal minimo = monto("monto_minimo", montoMinimo);
         final BigDecimal maximo = monto("monto_maximo", montoMaximo);
@@ -95,16 +107,25 @@ public record FiltroComprobantes(
         }
         return new FiltroComprobantes(
                 limpio(clave), limpio(consecutivo), limpio(cedula), limpio(nombre),
+                limpio(emisor), limpio(receptor),
                 inicio, fin, minimo, maximo, limpio(moneda));
     }
 
     /** Traduce los criterios a un filtro aplicable a cualquiera de los cinco tipos. */
     public <T> Specification<T> aSpecification() {
         return ComprobanteSpecs.todos(
-                clave == null ? null : ComprobanteSpecs.<T>claveContiene(clave),
+                // Una clave completa son 50 dígitos y es la llave primaria: por igualdad usa el
+                // índice, mientras que `like %…%` obliga a barrer las cinco tablas. El fragmento
+                // sigue existiendo para quien pegue un pedazo.
+                clave == null ? null
+                        : clave.length() == 50 && clave.chars().allMatch(Character::isDigit)
+                        ? ComprobanteSpecs.<T>clave(clave)
+                        : ComprobanteSpecs.<T>claveContiene(clave),
                 consecutivo == null ? null : ComprobanteSpecs.<T>consecutivo(consecutivo),
                 cedula == null ? null : ComprobanteSpecs.<T>parteNumero(cedula),
                 nombre == null ? null : ComprobanteSpecs.<T>nombreContiene(nombre),
+                emisor == null ? null : ComprobanteSpecs.<T>emisorEs(emisor),
+                receptor == null ? null : ComprobanteSpecs.<T>receptorEs(receptor),
                 desde == null ? null : ComprobanteSpecs.<T>desde(desde),
                 hasta == null ? null : ComprobanteSpecs.<T>hasta(hasta),
                 montoMinimo == null ? null : ComprobanteSpecs.<T>montoDesde(montoMinimo),

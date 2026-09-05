@@ -21,6 +21,14 @@ export default function PaginaComprobantes() {
   // `campo` llega en el enlace cuando quien navega ya sabe qué es lo que trae —la lista de
   // contrapartes manda una cédula—, y así no depende de que la adivinanza acierte.
   const [campoForzado, setCampoForzado] = useState(parametrosUrl.get('campo') || null)
+  // Filtros por lado del documento. `q` busca en los dos a la vez —que es lo correcto para
+  // «todo lo de esta contraparte»— y estos dos responden la pregunta distinta: «lo que ME
+  // facturó fulano» contra «lo que YO le facturé». Cada uno acepta cédula o nombre: una cédula
+  // no coincide con ningún nombre y un nombre no coincide con ninguna cédula, así que no hace
+  // falta decir cuál de las dos se está escribiendo.
+  const [emisor, setEmisor] = useState(parametrosUrl.get('emisor') || '')
+  const [receptor, setReceptor] = useState(parametrosUrl.get('receptor') || '')
+
   const [tiposActivos, setTiposActivos] = useState(
     () => new Set((parametrosUrl.get('tipos') || '').split(',').filter(Boolean)),
   )
@@ -40,6 +48,8 @@ export default function PaginaComprobantes() {
   const { desde, hasta } = rango
 
   const textoDiferido = useDebounce(texto, 400)
+  const emisorDiferido = useDebounce(emisor, 400)
+  const receptorDiferido = useDebounce(receptor, 400)
   const interpretacion = useMemo(() => interpretarConsulta(textoDiferido), [textoDiferido])
   const campo = campoForzado || interpretacion.campo
 
@@ -51,6 +61,8 @@ export default function PaginaComprobantes() {
     hasta,
     limite,
     ...comoParametros(campo, interpretacion.valor),
+    ...(emisorDiferido.trim() ? { emisor: emisorDiferido.trim() } : {}),
+    ...(receptorDiferido.trim() ? { receptor: receptorDiferido.trim() } : {}),
     ...(tiposActivos.size ? { tiposDeComprobante: [...tiposActivos].join(',') } : {}),
   }
 
@@ -61,6 +73,13 @@ export default function PaginaComprobantes() {
   })
 
   const datos = consulta.data
+
+  function ponerEnUrl(nombre, valor) {
+    const url = new URLSearchParams(parametrosUrl)
+    if (valor) url.set(nombre, valor)
+    else url.delete(nombre)
+    setParametrosUrl(url, { replace: true })
+  }
 
   function alternarTipo(clave) {
     setTiposActivos((previos) => {
@@ -97,6 +116,31 @@ export default function PaginaComprobantes() {
           ))}
         </select>
         {consulta.isFetching && <span className="tenue pequeno">buscando…</span>}
+      </div>
+
+      <div className="buscador">
+        <input
+          type="search"
+          placeholder="Emisor: cédula o nombre…"
+          value={emisor}
+          onChange={(evento) => { setEmisor(evento.target.value); ponerEnUrl('emisor', evento.target.value) }}
+        />
+        <input
+          type="search"
+          placeholder="Receptor: cédula o nombre…"
+          value={receptor}
+          onChange={(evento) => { setReceptor(evento.target.value); ponerEnUrl('receptor', evento.target.value) }}
+        />
+        {(emisor || receptor) && (
+          <button className="chip" onClick={() => {
+            setEmisor(''); setReceptor('')
+            const url = new URLSearchParams(parametrosUrl)
+            url.delete('emisor'); url.delete('receptor')
+            setParametrosUrl(url, { replace: true })
+          }}>
+            limpiar
+          </button>
+        )}
       </div>
 
       {/* La interpretación siempre se muestra y siempre se puede corregir: adivinar mal sin

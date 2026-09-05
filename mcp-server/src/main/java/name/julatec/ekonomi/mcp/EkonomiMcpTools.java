@@ -161,8 +161,7 @@ public class EkonomiMcpTools {
     }
 
     private Map<String, Long> conteosPorTipo() {
-        final FiltroComprobantes ninguno = FiltroComprobantes.de(
-                null, null, null, null, null, null, null, null, null);
+        final FiltroComprobantes ninguno = FiltroComprobantes.de(null, null, null, null, null, null, null, null, null, null, null);
         return busqueda.buscar(ninguno, Set.of(), 1).porTipo();
     }
 
@@ -222,8 +221,7 @@ public class EkonomiMcpTools {
             @McpToolParam(description = "Máximo de filas; por omisión 50, tope 500.",
                     required = false) Integer limite) {
 
-        final FiltroComprobantes filtro = FiltroComprobantes.de(
-                clave, consecutivo, cedula, nombre, desde, hasta, montoMinimo, montoMaximo, moneda);
+        final FiltroComprobantes filtro = FiltroComprobantes.de(clave, consecutivo, cedula, nombre, null, null, desde, hasta, montoMinimo, montoMaximo, moneda);
         if (filtro.vacio()) {
             throw new IllegalArgumentException(
                     "Hace falta al menos un filtro. Sin ninguno esto devolvería un recorte arbitrario "
@@ -286,8 +284,7 @@ public class EkonomiMcpTools {
             @McpToolParam(description = "Tipos separados por coma; por omisión los cinco.",
                     required = false) String tiposDeComprobante) {
 
-        final FiltroComprobantes filtro = FiltroComprobantes.de(
-                null, null, cedula, nombre, desde, hasta, null, null, null);
+        final FiltroComprobantes filtro = FiltroComprobantes.de(null, null, cedula, nombre, null, null, desde, hasta, null, null, null);
         final Set<String> tipos = tipos(tiposDeComprobante);
         return acceso.en(tenant, () -> {
             final List<ResumenComprobantes.Linea> lineas = resumen.resumen(filtro, tipos);
