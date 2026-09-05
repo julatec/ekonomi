@@ -47,6 +47,20 @@ public class WorkspaceService {
         return factory.getWorkspace(authentication, request);
     }
 
+    /**
+     * Los mismos mensajes que {@link #printSession} inyectaba como {@code const app = {...}},
+     * pero como mapa: la API los devuelve dentro del JSON en vez de servir JavaScript.
+     */
+    public Map<String, Object> getMessages(Locale locale) {
+        final Object[] empty = new Object[0];
+        final Map<String, Object> mensajes = new TreeMap<>();
+        for (Message messageName : Message.values()) {
+            mensajes.put(messageName.name(),
+                    this.messages.getMessage(format("%s.%s", APP_PREFIX, messageName.name()), empty, locale));
+        }
+        return mensajes;
+    }
+
     @Autowired
     WorkspaceService setFactory(WorkspaceFactory factory) {
         this.factory = factory;

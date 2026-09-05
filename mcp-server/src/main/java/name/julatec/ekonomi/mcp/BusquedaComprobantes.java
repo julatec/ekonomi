@@ -91,6 +91,22 @@ public class BusquedaComprobantes {
     }
 
     /**
+     * Conteo de los <b>cinco</b> tipos para el mismo filtro, sin traer filas.
+     * <p>
+     * {@link #buscar} solo cuenta los tipos consultados, que es lo correcto para una
+     * herramienta. Para una UI con filtros por tipo no alcanza: al dejar solo "factura"
+     * marcado, los otros cuatro se quedarían sin número y no habría con qué volver a
+     * encenderlos. Son cinco {@code count()}, sin materializar entidades.
+     */
+    public Map<String, Long> conteosPorTipo(FiltroComprobantes filtro) {
+        final Map<String, Long> porTipo = new LinkedHashMap<>();
+        for (String tipo : TIPOS) {
+            porTipo.put(tipo, contarEn(repositorios.get(tipo), filtro));
+        }
+        return porTipo;
+    }
+
+    /**
      * @param tipos si viene vacío, se consultan los cinco
      * @param limite tope de filas devueltas en total, ya mezcladas
      */

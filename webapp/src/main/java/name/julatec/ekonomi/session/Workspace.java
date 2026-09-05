@@ -130,7 +130,7 @@ public class Workspace {
         return dateInterval;
     }
 
-    Session getSession() {
+    public Session getSession() {
         return new Session()
                 .setUsername(user.getDisplayName())
                 .setClients(clients)
