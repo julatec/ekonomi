@@ -60,6 +60,17 @@ export default defineConfig(({ command }) => ({
   },
   server: {
     port: 5173,
+    // IPv4 explicito, y no el `localhost` por omision. En macOS `localhost` resuelve primero
+    // a `::1`, asi que Vite quedaba escuchando SOLO en [::1] — y un nombre puesto en
+    // /etc/hosts apunta a 127.0.0.1, donde no habia nadie: la conexion no daba error de
+    // nombre ni 403, simplemente no conectaba. Atado a 127.0.0.1 sirve a los dos, porque
+    // navegadores y curl caen a IPv4 cuando ::1 rechaza.
+    host: '127.0.0.1',
+    // Vite 6 rechaza con 403 toda peticion cuyo encabezado Host no reconozca —es su
+    // proteccion contra DNS rebinding— y solo trae `localhost` y las IPs de fabrica. Sin
+    // esta linea, abrir el dev server por el nombre del /etc/hosts da un "Blocked request"
+    // que no se parece en nada a un problema de nombres.
+    allowedHosts: ['ekonomi.promyse.home.julatec.name'],
     // En desarrollo el backend corre aparte. El proxy hace que todo viaje al mismo origen
     // desde el navegador, así CORS no entra en juego; `secure: false` es porque el
     // certificado del servidor local es autofirmado.

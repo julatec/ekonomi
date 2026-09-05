@@ -14,16 +14,36 @@ USE ekonomi_primary;
 
 -- El emisor se busca por el CN del emisor del certificado; `field` dice que RDN del sujeto
 -- lleva el nombre de usuario. Ver AuthenticationService.loadUserDetails.
+--
+-- Dos emisores, y no es redundancia:
+--   · `Ekonomi Dev CA`      — el `CN=dev` que generan los scripts. Lo usan curl y el proxy
+--                             de Vite, que no pueden depender de un certificado que vence
+--                             en 14 dias.
+--   · `Julatec CA Clientes` — el certificado de persona que ya esta en el llavero del Mac,
+--                             emitido por la CA interna y renovado solo por thot. Es el que
+--                             ofrece el navegador.
+--
+-- 🔴 Esto vale para el ambiente LOCAL y solo para el. En produccion la CA interna NO puede
+-- compartir truststore con la firma digital: AuthenticationService resuelve el emisor
+-- comparando el CN como string, sin mirar huella ni serial, asi que quien tenga la llave de
+-- una CA de ese truststore puede firmar un intermedio con CN=CA SINPE - PERSONA FISICA y
+-- entrar como cualquier cedula. Aca no hay ninguna CA nacional en el truststore y la base es
+-- desechable, por eso conviven.
 INSERT INTO issuer (name, field) VALUES ('Ekonomi Dev CA', 'CN')
+  ON DUPLICATE KEY UPDATE field = VALUES(field);
+INSERT INTO issuer (name, field) VALUES ('Julatec CA Clientes', 'CN')
   ON DUPLICATE KEY UPDATE field = VALUES(field);
 
 INSERT INTO user (username, displayName, email)
   VALUES ('dev', 'Desarrollo local', 'dev@localhost')
   ON DUPLICATE KEY UPDATE displayName = VALUES(displayName);
 
--- CN=dev del certificado de cliente, emitido por la CA de desarrollo.
+-- Las dos identidades del mismo usuario local. El `value` es el CN del SUJETO, que es lo
+-- que dice `field='CN'` del emisor correspondiente.
 DELETE FROM user_ids WHERE user_username = 'dev';
-INSERT INTO user_ids (user_username, issuer, value) VALUES ('dev', 'Ekonomi Dev CA', 'dev');
+INSERT INTO user_ids (user_username, issuer, value) VALUES
+  ('dev', 'Ekonomi Dev CA',      'dev'),
+  ('dev', 'Julatec CA Clientes', '5-0359-0732');
 
 -- Con method security activo, un usuario sin roles queda con 403 en /.
 DELETE FROM user_roles WHERE user_username = 'dev';
@@ -34,6 +54,7 @@ DELETE FROM user_datasources WHERE user_username = 'dev';
 INSERT INTO user_datasources (user_username, datasources) VALUES ('dev', 'julatec'), ('dev', 'tribuconta');
 
 SELECT 'usuario dev listo' AS estado,
+       (SELECT COUNT(*) FROM user_ids WHERE user_username = 'dev') AS certificados,
        (SELECT COUNT(*) FROM user_roles WHERE user_username = 'dev') AS roles,
        (SELECT COUNT(*) FROM user_datasources WHERE user_username = 'dev') AS tenants;
 

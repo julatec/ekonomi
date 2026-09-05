@@ -6,10 +6,17 @@
 # (`anyRequest().authenticated()` + `.x509(...)`), así que sin un certificado de cliente no
 # se llega ni al 401 — no hay forma de abrir la UI en el navegador para iterar.
 #
-# Por qué NO se usa la CA interna del proyecto `certificados-internos`: su raíz todavía no
-# existe. Crearla exige elegir una frase de paso y decidir dónde vive la llave, que es una
-# decisión de la persona, no de un script. Cuando esa CA esté operativa, este material se
-# puede tirar y usar aquélla.
+# La CA interna del proyecto `certificados-internos` YA existe y su raíz ya está confiada en
+# el llavero de esta Mac. Este material sigue existiendo por dos razones:
+#
+#   1. Para que el ambiente local arranque sin depender de thot. Quien clone el repositorio
+#      y no tenga acceso a la CA interna igual puede levantar la aplicación.
+#   2. El certificado de cliente `CN=dev` lo usan los scripts y el proxy de Vite, que no
+#      pueden quedar atados a un certificado que vence en 14 días.
+#
+# Para el navegador conviene el otro camino: `./traer-certs-thot.sh` reemplaza el certificado
+# del servidor por uno emitido por la CA interna, y entonces no hay ninguna CA nueva que
+# instalar en el llavero.
 #
 # 🔴 Esta CA NO debe entrar nunca al truststore de la firma digital. Ekonomi resuelve el
 # emisor comparando el CN como string, sin mirar huella ni serial: si comparten truststore,
@@ -23,7 +30,13 @@ CLIENT_CN="dev"
 PASS="changeit"          # protege material autofirmado y desechable, en una carpeta gitignored
 DIAS=825                 # tope que aceptan los navegadores para certificados de servidor
 
-rm -f ./*.pem ./*.p12 ./*.srl ./*.csr ./*.cnf
+# Solo lo que genera ESTE script. Un `rm ./*.pem ./*.p12` se llevaba por delante el
+# certificado emitido por la CA interna y su cadena, que vienen de thot y no se regeneran
+# acá: volver a correr `make dev-certs` dejaba el ambiente sin poder arrancar.
+rm -f dev-ca.key.pem dev-ca.crt.pem dev-ca.crt.srl \
+      server.key.pem server.crt.pem servidor-local.p12 \
+      client.key.pem client.crt.pem dev-client.p12 dev-client-compat.p12 \
+      dev-truststore.p12 ./*.csr ./*.cnf
 
 echo "1/4  CA de desarrollo"
 openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
@@ -32,7 +45,7 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
   -addext "basicConstraints=critical,CA:TRUE,pathlen:0" \
   -addext "keyUsage=critical,keyCertSign,cRLSign" 2>/dev/null
 
-echo "2/4  certificado del servidor (localhost)"
+echo "2/4  certificado del servidor (localhost + el nombre del /etc/hosts)"
 cat > server.cnf <<'EOF'
 [req]
 distinguished_name = dn
@@ -41,18 +54,33 @@ distinguished_name = dn
 basicConstraints = CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = DNS:localhost,IP:127.0.0.1
+# Los tres nombres por los que se llega a la misma aplicación. `localhost` no se puede
+# sacar: lo usan el proxy de Vite, los scripts y curl. El nombre largo existe porque
+# Chrome trata distinto a `localhost` y porque una cookie de `localhost` la comparte
+# cualquier otra cosa que corra en esta máquina.
+subjectAltName = DNS:ekonomi.promyse.home.julatec.name,DNS:localhost,IP:127.0.0.1
 EOF
 openssl req -newkey rsa:2048 -nodes -keyout server.key.pem -out server.csr \
   -subj "/CN=localhost" 2>/dev/null
 openssl x509 -req -in server.csr -CA dev-ca.crt.pem -CAkey dev-ca.key.pem -CAcreateserial \
   -out server.crt.pem -days "${DIAS}" -sha256 -extfile server.cnf -extensions ext 2>/dev/null
-openssl pkcs12 -export -out localhost-server.p12 -inkey server.key.pem -in server.crt.pem \
-  -name localhost -passout "pass:${PASS}"
+openssl pkcs12 -export -out servidor-local.p12 -inkey server.key.pem -in server.crt.pem \
+  -name "servidor-local" -passout "pass:${PASS}"
 
-echo "3/4  truststore con la CA (para exigir certificado de cliente)"
-keytool -importcert -noprompt -alias dev-ca -file dev-ca.crt.pem \
+# El truststore decide QUÉ CAs de cliente anuncia el conector en el handshake, y de eso
+# depende que el navegador ofrezca o no un certificado. Si acá falta la CA que emitió el
+# certificado que tenés en el llavero, el navegador no muestra ningún diálogo y entra sin
+# certificado: es un silencio, no un rechazo, y por eso confunde tanto.
+echo "3/4  truststore con las CAs de cliente"
+keytool -importcert -noprompt -alias ekonomi-dev-ca -file dev-ca.crt.pem \
   -keystore dev-truststore.p12 -storetype PKCS12 -storepass "${PASS}" 2>/dev/null
+for ca in julatec-raiz julatec-intermedia; do
+  if [ -f "${ca}.crt.pem" ]; then
+    keytool -importcert -noprompt -alias "${ca}" -file "${ca}.crt.pem" \
+      -keystore dev-truststore.p12 -storetype PKCS12 -storepass "${PASS}" 2>/dev/null
+    echo "     + ${ca}.crt.pem"
+  fi
+done
 
 echo "4/4  certificado de cliente (CN=${CLIENT_CN})"
 cat > client.cnf <<'EOF'

@@ -83,6 +83,10 @@ dev-certs: ## Generate the local dev CA, server cert and client .p12 into docker
 	@echo "$(COLOR_GREEN)Generating local development certificates...$(COLOR_RESET)"
 	./docker/certs/generar-certs-dev.sh
 
+certs-thot: ## Fetch the server cert and CA chain from the internal CA on thot
+	@echo "$(COLOR_GREEN)Fetching server certificate from the internal CA...$(COLOR_RESET)"
+	./docker/certs/traer-certs-thot.sh
+
 dev-seed: ## Seed the local database with the dev user matching docker/certs/
 	@echo "$(COLOR_GREEN)Seeding local dev user...$(COLOR_RESET)"
 	docker exec -i ekonomi-mysql mysql -uekonomi -pekonomi_password < docker/mysql/seed-local.sql
