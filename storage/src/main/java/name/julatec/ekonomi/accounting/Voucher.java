@@ -37,16 +37,28 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
         "Nombre Receptor",
         "Total Excento",
         "Total Exonerado",
+        "Tarifa 0% Art.32",
+        "Base Imponible 0% Art.32",
+        "Impuesto 0.5%",
+        "Base Imponible 0.5%",
         "Impuesto 1%",
         "Base Imponible 1%",
         "Impuesto 2%",
         "Base Imponible 2%",
         "Impuesto 4%",
         "Base Imponible 4%",
+        "Transitorio 0%",
+        "Base Imponible Trans. 0%",
+        "Transitorio 4%",
+        "Base Imponible Trans. 4%",
         "Impuesto 8%",
         "Base Imponible 8%",
         "Impuesto 13%",
         "Base Imponible 13%",
+        "Tarifa Exenta",
+        "Base Imponible Exenta",
+        "Tarifa 0% sin crédito",
+        "Base Imponible 0% sin crédito",
         "Base Imponible Devuelto",
         "Total Otros Cargos",
         "Total Comprobante",
@@ -92,35 +104,71 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
     @CsvBindByName(column = "Total Exonerado", locale = LOCALE_CODE)
     private BigDecimal totalExonerado;
 
+    @CsvBindByName(column = "Tarifa 0% Art.32", locale = LOCALE_CODE)
+    private BigDecimal totalT01;
+
+    @CsvBindByName(column = "Base Imponible 0% Art.32", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT01;
+
+    @CsvBindByName(column = "Impuesto 0.5%", locale = LOCALE_CODE)
+    private BigDecimal totalT09;
+
+    @CsvBindByName(column = "Base Imponible 0.5%", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT09;
+
     @CsvBindByName(column = "Impuesto 1%", locale = LOCALE_CODE)
-    private BigDecimal totalF01;
+    private BigDecimal totalT02;
 
     @CsvBindByName(column = "Base Imponible 1%", locale = LOCALE_CODE)
-    private BigDecimal totalImpuestoF01;
+    private BigDecimal totalImpuestoT02;
 
     @CsvBindByName(column = "Impuesto 2%", locale = LOCALE_CODE)
-    private BigDecimal totalF02;
+    private BigDecimal totalT03;
 
     @CsvBindByName(column = "Base Imponible 2%", locale = LOCALE_CODE)
-    private BigDecimal totalImpuestoF02;
+    private BigDecimal totalImpuestoT03;
 
     @CsvBindByName(column = "Impuesto 4%", locale = LOCALE_CODE)
-    private BigDecimal totalF04;
+    private BigDecimal totalT04;
 
     @CsvBindByName(column = "Base Imponible 4%", locale = LOCALE_CODE)
-    private BigDecimal totalImpuestoF04;
+    private BigDecimal totalImpuestoT04;
+
+    @CsvBindByName(column = "Transitorio 0%", locale = LOCALE_CODE)
+    private BigDecimal totalT05;
+
+    @CsvBindByName(column = "Base Imponible Trans. 0%", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT05;
+
+    @CsvBindByName(column = "Transitorio 4%", locale = LOCALE_CODE)
+    private BigDecimal totalT06;
+
+    @CsvBindByName(column = "Base Imponible Trans. 4%", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT06;
 
     @CsvBindByName(column = "Impuesto 8%", locale = LOCALE_CODE)
-    private BigDecimal totalF08;
+    private BigDecimal totalT07;
 
     @CsvBindByName(column = "Base Imponible 8%", locale = LOCALE_CODE)
-    private BigDecimal totalImpuestoF08;
+    private BigDecimal totalImpuestoT07;
 
     @CsvBindByName(column = "Impuesto 13%", locale = LOCALE_CODE)
-    private BigDecimal totalF13;
+    private BigDecimal totalT08;
 
     @CsvBindByName(column = "Base Imponible 13%", locale = LOCALE_CODE)
-    private BigDecimal totalImpuestoF13;
+    private BigDecimal totalImpuestoT08;
+
+    @CsvBindByName(column = "Tarifa Exenta", locale = LOCALE_CODE)
+    private BigDecimal totalT10;
+
+    @CsvBindByName(column = "Base Imponible Exenta", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT10;
+
+    @CsvBindByName(column = "Tarifa 0% sin crédito", locale = LOCALE_CODE)
+    private BigDecimal totalT11;
+
+    @CsvBindByName(column = "Base Imponible 0% sin crédito", locale = LOCALE_CODE)
+    private BigDecimal totalImpuestoT11;
 
     @CsvBindByName(column = "Total Otros Cargos", locale = LOCALE_CODE)
     private BigDecimal totalOtrosCargos;
@@ -158,12 +206,20 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
         final DetailedDocument.TaxAccumulated otros = detailedDocument.getTaxes().getOrElse(Otros, empty);
         final DetailedDocument.TaxAccumulated excento = detailedDocument.getTaxes().getOrElse(Excento, empty);
         final DetailedDocument.TaxAccumulated exonerado = detailedDocument.getTaxes().getOrElse(Exonerado, empty);
-        final DetailedDocument.TaxAccumulated f01 = detailedDocument.getTaxes().getOrElse(F01, empty);
-        final DetailedDocument.TaxAccumulated f02 = detailedDocument.getTaxes().getOrElse(F02, empty);
-        final DetailedDocument.TaxAccumulated f04 = detailedDocument.getTaxes().getOrElse(F04, empty);
-        final DetailedDocument.TaxAccumulated f08 = detailedDocument.getTaxes().getOrElse(F08, empty);
-        final DetailedDocument.TaxAccumulated f13 = detailedDocument.getTaxes().getOrElse(F13, empty);
-        final DetailedDocument.TaxAccumulated all = excento.add(exonerado).add(f01).add(f02).add(f04).add(f08).add(f13).add(otros);
+        final DetailedDocument.TaxAccumulated t01 = detailedDocument.getTaxes().getOrElse(T01, empty);
+        final DetailedDocument.TaxAccumulated t02 = detailedDocument.getTaxes().getOrElse(T02, empty);
+        final DetailedDocument.TaxAccumulated t03 = detailedDocument.getTaxes().getOrElse(T03, empty);
+        final DetailedDocument.TaxAccumulated t04 = detailedDocument.getTaxes().getOrElse(T04, empty);
+        final DetailedDocument.TaxAccumulated t05 = detailedDocument.getTaxes().getOrElse(T05, empty);
+        final DetailedDocument.TaxAccumulated t06 = detailedDocument.getTaxes().getOrElse(T06, empty);
+        final DetailedDocument.TaxAccumulated t07 = detailedDocument.getTaxes().getOrElse(T07, empty);
+        final DetailedDocument.TaxAccumulated t08 = detailedDocument.getTaxes().getOrElse(T08, empty);
+        final DetailedDocument.TaxAccumulated t09 = detailedDocument.getTaxes().getOrElse(T09, empty);
+        final DetailedDocument.TaxAccumulated t10 = detailedDocument.getTaxes().getOrElse(T10, empty);
+        final DetailedDocument.TaxAccumulated t11 = detailedDocument.getTaxes().getOrElse(T11, empty);
+        final DetailedDocument.TaxAccumulated all = excento.add(exonerado)
+                .add(t01).add(t02).add(t03).add(t04).add(t05).add(t06).add(t07).add(t08).add(t09).add(t10).add(t11)
+                .add(otros);
         final BigDecimal totalComprobante = detailedDocument.getResumenFactura().getTotalComprobante();
         final BigDecimal totalLineas = all.subTotal.add(all.taxed);
         final BigDecimal otrosCargos = Optional.ofNullable(detailedDocument.getResumenFactura().getTotalOtrosCargos())
@@ -183,16 +239,28 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
                 .setTotalComprobante(preserveSign(preserve, exchangeRate, detailedDocument.getResumenFactura().getTotalComprobante()))
                 .setTotalExcento(preserveSign(preserve, exchangeRate, excento.subTotal))
                 .setTotalExonerado(preserveSign(preserve, exchangeRate, exonerado.subTotal))
-                .setTotalF01(preserveSign(preserve, exchangeRate, f01.taxed))
-                .setTotalF02(preserveSign(preserve, exchangeRate, f02.taxed))
-                .setTotalF04(preserveSign(preserve, exchangeRate, f04.taxed))
-                .setTotalF13(preserveSign(preserve, exchangeRate, f13.taxed))
-                .setTotalF08(preserveSign(preserve, exchangeRate, f08.taxed))
-                .setTotalImpuestoF01(preserveSign(preserve, exchangeRate, f01.subTotal))
-                .setTotalImpuestoF02(preserveSign(preserve, exchangeRate, f02.subTotal))
-                .setTotalImpuestoF04(preserveSign(preserve, exchangeRate, f04.subTotal))
-                .setTotalImpuestoF08(preserveSign(preserve, exchangeRate, f08.subTotal))
-                .setTotalImpuestoF13(preserveSign(preserve, exchangeRate, f13.subTotal))
+                .setTotalT01(preserveSign(preserve, exchangeRate, t01.taxed))
+                .setTotalT02(preserveSign(preserve, exchangeRate, t02.taxed))
+                .setTotalT03(preserveSign(preserve, exchangeRate, t03.taxed))
+                .setTotalT04(preserveSign(preserve, exchangeRate, t04.taxed))
+                .setTotalT05(preserveSign(preserve, exchangeRate, t05.taxed))
+                .setTotalT06(preserveSign(preserve, exchangeRate, t06.taxed))
+                .setTotalT07(preserveSign(preserve, exchangeRate, t07.taxed))
+                .setTotalT08(preserveSign(preserve, exchangeRate, t08.taxed))
+                .setTotalT09(preserveSign(preserve, exchangeRate, t09.taxed))
+                .setTotalT10(preserveSign(preserve, exchangeRate, t10.taxed))
+                .setTotalT11(preserveSign(preserve, exchangeRate, t11.taxed))
+                .setTotalImpuestoT01(preserveSign(preserve, exchangeRate, t01.subTotal))
+                .setTotalImpuestoT02(preserveSign(preserve, exchangeRate, t02.subTotal))
+                .setTotalImpuestoT03(preserveSign(preserve, exchangeRate, t03.subTotal))
+                .setTotalImpuestoT04(preserveSign(preserve, exchangeRate, t04.subTotal))
+                .setTotalImpuestoT05(preserveSign(preserve, exchangeRate, t05.subTotal))
+                .setTotalImpuestoT06(preserveSign(preserve, exchangeRate, t06.subTotal))
+                .setTotalImpuestoT07(preserveSign(preserve, exchangeRate, t07.subTotal))
+                .setTotalImpuestoT08(preserveSign(preserve, exchangeRate, t08.subTotal))
+                .setTotalImpuestoT09(preserveSign(preserve, exchangeRate, t09.subTotal))
+                .setTotalImpuestoT10(preserveSign(preserve, exchangeRate, t10.subTotal))
+                .setTotalImpuestoT11(preserveSign(preserve, exchangeRate, t11.subTotal))
                 .setCurrency(codigoTipoMoneda.getCurrency())
                 ;
     }
@@ -401,93 +469,201 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
         return this;
     }
 
-    public BigDecimal getTotalImpuestoF01() {
-        return totalImpuestoF01;
+    public BigDecimal getTotalImpuestoT01() {
+        return totalImpuestoT01;
     }
 
-    public Voucher setTotalImpuestoF01(BigDecimal totalImpuestoF01) {
-        this.totalImpuestoF01 = totalImpuestoF01;
+    public Voucher setTotalImpuestoT01(BigDecimal totalImpuestoT01) {
+        this.totalImpuestoT01 = totalImpuestoT01;
         return this;
     }
 
-    public BigDecimal getTotalImpuestoF02() {
-        return totalImpuestoF02;
+    public BigDecimal getTotalImpuestoT02() {
+        return totalImpuestoT02;
     }
 
-    public Voucher setTotalImpuestoF02(BigDecimal totalImpuestoF02) {
-        this.totalImpuestoF02 = totalImpuestoF02;
+    public Voucher setTotalImpuestoT02(BigDecimal totalImpuestoT02) {
+        this.totalImpuestoT02 = totalImpuestoT02;
         return this;
     }
 
-    public BigDecimal getTotalImpuestoF04() {
-        return totalImpuestoF04;
+    public BigDecimal getTotalImpuestoT03() {
+        return totalImpuestoT03;
     }
 
-    public Voucher setTotalImpuestoF04(BigDecimal totalImpuestoF04) {
-        this.totalImpuestoF04 = totalImpuestoF04;
+    public Voucher setTotalImpuestoT03(BigDecimal totalImpuestoT03) {
+        this.totalImpuestoT03 = totalImpuestoT03;
         return this;
     }
 
-    public BigDecimal getTotalImpuestoF08() {
-        return totalImpuestoF08;
+    public BigDecimal getTotalImpuestoT04() {
+        return totalImpuestoT04;
     }
 
-    public Voucher setTotalImpuestoF08(BigDecimal totalImpuestoF08) {
-        this.totalImpuestoF08 = totalImpuestoF08;
+    public Voucher setTotalImpuestoT04(BigDecimal totalImpuestoT04) {
+        this.totalImpuestoT04 = totalImpuestoT04;
         return this;
     }
 
-    public BigDecimal getTotalImpuestoF13() {
-        return totalImpuestoF13;
+    public BigDecimal getTotalImpuestoT05() {
+        return totalImpuestoT05;
     }
 
-    public Voucher setTotalImpuestoF13(BigDecimal totalImpuestoF12) {
-        this.totalImpuestoF13 = totalImpuestoF12;
+    public Voucher setTotalImpuestoT05(BigDecimal totalImpuestoT05) {
+        this.totalImpuestoT05 = totalImpuestoT05;
         return this;
     }
 
-    public BigDecimal getTotalF01() {
-        return totalF01;
+    public BigDecimal getTotalImpuestoT06() {
+        return totalImpuestoT06;
     }
 
-    public Voucher setTotalF01(BigDecimal totalF01) {
-        this.totalF01 = totalF01;
+    public Voucher setTotalImpuestoT06(BigDecimal totalImpuestoT06) {
+        this.totalImpuestoT06 = totalImpuestoT06;
         return this;
     }
 
-    public BigDecimal getTotalF02() {
-        return totalF02;
+    public BigDecimal getTotalImpuestoT07() {
+        return totalImpuestoT07;
     }
 
-    public Voucher setTotalF02(BigDecimal totalF02) {
-        this.totalF02 = totalF02;
+    public Voucher setTotalImpuestoT07(BigDecimal totalImpuestoT07) {
+        this.totalImpuestoT07 = totalImpuestoT07;
         return this;
     }
 
-    public BigDecimal getTotalF04() {
-        return totalF04;
+    public BigDecimal getTotalImpuestoT08() {
+        return totalImpuestoT08;
     }
 
-    public Voucher setTotalF04(BigDecimal totalF04) {
-        this.totalF04 = totalF04;
+    public Voucher setTotalImpuestoT08(BigDecimal totalImpuestoT08) {
+        this.totalImpuestoT08 = totalImpuestoT08;
         return this;
     }
 
-    public BigDecimal getTotalF08() {
-        return totalF08;
+    public BigDecimal getTotalImpuestoT09() {
+        return totalImpuestoT09;
     }
 
-    public Voucher setTotalF08(BigDecimal totalF08) {
-        this.totalF08 = totalF08;
+    public Voucher setTotalImpuestoT09(BigDecimal totalImpuestoT09) {
+        this.totalImpuestoT09 = totalImpuestoT09;
         return this;
     }
 
-    public BigDecimal getTotalF13() {
-        return totalF13;
+    public BigDecimal getTotalImpuestoT10() {
+        return totalImpuestoT10;
     }
 
-    public Voucher setTotalF13(BigDecimal totalF13) {
-        this.totalF13 = totalF13;
+    public Voucher setTotalImpuestoT10(BigDecimal totalImpuestoT10) {
+        this.totalImpuestoT10 = totalImpuestoT10;
+        return this;
+    }
+
+    public BigDecimal getTotalImpuestoT11() {
+        return totalImpuestoT11;
+    }
+
+    public Voucher setTotalImpuestoT11(BigDecimal totalImpuestoT11) {
+        this.totalImpuestoT11 = totalImpuestoT11;
+        return this;
+    }
+
+    public BigDecimal getTotalT01() {
+        return totalT01;
+    }
+
+    public Voucher setTotalT01(BigDecimal totalT01) {
+        this.totalT01 = totalT01;
+        return this;
+    }
+
+    public BigDecimal getTotalT02() {
+        return totalT02;
+    }
+
+    public Voucher setTotalT02(BigDecimal totalT02) {
+        this.totalT02 = totalT02;
+        return this;
+    }
+
+    public BigDecimal getTotalT03() {
+        return totalT03;
+    }
+
+    public Voucher setTotalT03(BigDecimal totalT03) {
+        this.totalT03 = totalT03;
+        return this;
+    }
+
+    public BigDecimal getTotalT04() {
+        return totalT04;
+    }
+
+    public Voucher setTotalT04(BigDecimal totalT04) {
+        this.totalT04 = totalT04;
+        return this;
+    }
+
+    public BigDecimal getTotalT05() {
+        return totalT05;
+    }
+
+    public Voucher setTotalT05(BigDecimal totalT05) {
+        this.totalT05 = totalT05;
+        return this;
+    }
+
+    public BigDecimal getTotalT06() {
+        return totalT06;
+    }
+
+    public Voucher setTotalT06(BigDecimal totalT06) {
+        this.totalT06 = totalT06;
+        return this;
+    }
+
+    public BigDecimal getTotalT07() {
+        return totalT07;
+    }
+
+    public Voucher setTotalT07(BigDecimal totalT07) {
+        this.totalT07 = totalT07;
+        return this;
+    }
+
+    public BigDecimal getTotalT08() {
+        return totalT08;
+    }
+
+    public Voucher setTotalT08(BigDecimal totalT08) {
+        this.totalT08 = totalT08;
+        return this;
+    }
+
+    public BigDecimal getTotalT09() {
+        return totalT09;
+    }
+
+    public Voucher setTotalT09(BigDecimal totalT09) {
+        this.totalT09 = totalT09;
+        return this;
+    }
+
+    public BigDecimal getTotalT10() {
+        return totalT10;
+    }
+
+    public Voucher setTotalT10(BigDecimal totalT10) {
+        this.totalT10 = totalT10;
+        return this;
+    }
+
+    public BigDecimal getTotalT11() {
+        return totalT11;
+    }
+
+    public Voucher setTotalT11(BigDecimal totalT11) {
+        this.totalT11 = totalT11;
         return this;
     }
 
