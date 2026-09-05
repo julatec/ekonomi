@@ -78,12 +78,18 @@ public record DetalleComprobante(
      * Solo las notas de crédito y débito la traen con sentido: es el documento que ajustan o
      * anulan, y sin ella el comprobante no se entiende. En los otros tres tipos el nodo existe
      * en el esquema pero suele venir vacío.
+     * <p>
+     * Los dos códigos viajan con su descripción resuelta al lado, y no traducidos en el
+     * lugar: las Notas 9 y 10 mandan mostrar la descripción, pero el código es lo que trae el
+     * documento firmado y lo que hay que poder citar si algo no cuadra.
      */
     public record Referencia(
             String tipoDoc,
+            String descripcionTipoDoc,
             String numero,
             String fechaEmision,
             String codigo,
+            String descripcionCodigo,
             String razon) {
     }
 }

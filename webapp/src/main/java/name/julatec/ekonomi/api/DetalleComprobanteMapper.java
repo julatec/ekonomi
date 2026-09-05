@@ -4,7 +4,9 @@ import name.julatec.ekonomi.tribunet.Documento;
 import name.julatec.ekonomi.tribunet.ExoneracionType;
 import name.julatec.ekonomi.tribunet.FactorIVA;
 import name.julatec.ekonomi.tribunet.ImpuestoType;
+import name.julatec.ekonomi.tribunet.CodigoReferencia;
 import name.julatec.ekonomi.tribunet.InformacionReferencia;
+import name.julatec.ekonomi.tribunet.TipoDocumentoReferencia;
 import name.julatec.ekonomi.tribunet.LineaDetalle;
 import org.springframework.stereotype.Service;
 
@@ -102,9 +104,11 @@ public class DetalleComprobanteMapper {
     private DetalleComprobante.Referencia referencia(InformacionReferencia referencia) {
         return new DetalleComprobante.Referencia(
                 referencia.getTipoDoc(),
+                TipoDocumentoReferencia.descripcionDe(referencia.getTipoDoc()),
                 referencia.getNumero(),
                 fecha(referencia.getFechaEmision()),
                 referencia.getCodigo(),
+                CodigoReferencia.descripcionDe(referencia.getCodigo()),
                 referencia.getRazon());
     }
 

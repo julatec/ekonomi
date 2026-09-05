@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -45,6 +46,9 @@ public class ResumenComprobantes {
         put("nota_debito", NotaDebito.class);
     }};
 
+    /** La moneda que asume Hacienda cuando el comprobante no declara `CodigoTipoMoneda`. */
+    private static final String MONEDA_LOCAL = "CRC";
+
     @PersistenceContext(unitName = StorageConfig.PERSISTENCE_UNIT)
     private EntityManager entityManager;
 
@@ -61,9 +65,17 @@ public class ResumenComprobantes {
         final CriteriaQuery<Tuple> consulta = cb.createTupleQuery();
         final Root<T> root = consulta.from(entidad);
 
-        final Path<String> moneda = root.get("documento").get("resumen").get("codigoMoneda");
+        final Path<String> codigoMoneda = root.get("documento").get("resumen").get("codigoMoneda");
         final Path<BigDecimal> total = root.get("documento").get("resumen").get("totalComprobante");
         final Path<BigDecimal> impuesto = root.get("documento").get("resumen").get("totalImpuesto");
+
+        // `CodigoTipoMoneda` es opcional en el esquema de Hacienda y los comprobantes viejos
+        // suelen no traerlo: la ausencia significa colones. Sin el coalesce el group by deja
+        // un grupo aparte con la moneda en null, y la misma contabilidad aparece dos veces
+        // bajo el mismo tipo —una fila "factura/CRC" y otra "factura/(nada)"— que quien lea
+        // el resumen no tiene cómo saber que hay que sumar. Es la misma regla que ya aplica
+        // `Factura.key` al elegir la moneda del registro.
+        final Expression<String> moneda = cb.coalesce(codigoMoneda, cb.literal(MONEDA_LOCAL));
 
         consulta.multiselect(moneda, cb.count(root), cb.sum(total), cb.sum(impuesto)).groupBy(moneda);
 
