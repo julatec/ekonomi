@@ -38,8 +38,19 @@ export function interpretarConsulta(texto) {
   return { campo: 'nombre', valor: limpio }
 }
 
-/** Los parámetros que espera GET /api/comprobantes para el campo elegido. */
-export function comoParametros(campo, valor) {
+/**
+ * Los parámetros que espera GET /api/comprobantes para el campo elegido.
+ *
+ * `lado` solo tiene sentido sobre una cédula, y traduce «venta» y «compra» a los filtros por
+ * parte. La convención es la de los reportes que ya existen —`sales(numero)` busca por emisor,
+ * `purchases(numero)` por receptor—, o sea: desde el punto de vista del número buscado. Si esa
+ * contraparte emitió, para ella fue una venta; si recibió, una compra.
+ */
+export function comoParametros(campo, valor, lado) {
   if (!campo || !valor) return {}
+  if (campo === 'cedula') {
+    if (lado === 'venta') return { emisor: valor }
+    if (lado === 'compra') return { receptor: valor }
+  }
   return { [campo]: valor }
 }

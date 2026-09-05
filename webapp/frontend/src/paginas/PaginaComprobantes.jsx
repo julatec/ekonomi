@@ -26,6 +26,13 @@ export default function PaginaComprobantes() {
   // facturó fulano» contra «lo que YO le facturé». Cada uno acepta cédula o nombre: una cédula
   // no coincide con ningún nombre y un nombre no coincide con ninguna cédula, así que no hace
   // falta decir cuál de las dos se está escribiendo.
+  // Venta o compra, RELATIVO A LA CÉDULA BUSCADA y no al dueño de la contabilidad —que la
+  // aplicación no conoce—. Es la misma convención que ya usan los reportes:
+  // `sales(numero)` busca por emisor y `purchases(numero)` por receptor, o sea desde el punto
+  // de vista del número que se pasa. Así el botón «ventas» de una contraparte y este filtro
+  // muestran lo mismo, que es lo único que evita dos verdades sobre la misma pantalla.
+  const [lado, setLado] = useState(parametrosUrl.get('lado') || 'ambos')
+
   const [emisor, setEmisor] = useState(parametrosUrl.get('emisor') || '')
   const [receptor, setReceptor] = useState(parametrosUrl.get('receptor') || '')
 
@@ -60,7 +67,7 @@ export default function PaginaComprobantes() {
     desde,
     hasta,
     limite,
-    ...comoParametros(campo, interpretacion.valor),
+    ...comoParametros(campo, interpretacion.valor, lado),
     ...(emisorDiferido.trim() ? { emisor: emisorDiferido.trim() } : {}),
     ...(receptorDiferido.trim() ? { receptor: receptorDiferido.trim() } : {}),
     ...(tiposActivos.size ? { tiposDeComprobante: [...tiposActivos].join(',') } : {}),
@@ -142,6 +149,27 @@ export default function PaginaComprobantes() {
           </button>
         )}
       </div>
+
+      {/* Solo aparece con una cédula: sin ella no hay respecto de quién ser venta o compra, y
+          un control que no se sabe qué filtra es peor que no tenerlo. */}
+      {campo === 'cedula' && interpretacion.valor && (
+        <div className="buscador pequeno">
+          <span className="tenue">Esa cédula</span>
+          {[
+            ['ambos', 'en ambos lados'],
+            ['venta', 'como emisor · venta'],
+            ['compra', 'como receptor · compra'],
+          ].map(([valor, etiqueta]) => (
+            <button
+              key={valor}
+              className={`chip ${lado === valor ? 'encendido' : ''}`}
+              onClick={() => { setLado(valor); ponerEnUrl('lado', valor === 'ambos' ? '' : valor) }}
+            >
+              {etiqueta}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* La interpretación siempre se muestra y siempre se puede corregir: adivinar mal sin
           dejar cambiarlo sería peor que no adivinar. */}
