@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jndi.JndiTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -49,7 +50,19 @@ public class StorageConfig {
     @Value("#{${name.julatec.ekonomi.storage.tenants}}")
     private Map<String, String> dataSources;
 
+    /**
+     * Por omisión {@code none}: contra la base real el esquema no se toca nunca desde acá.
+     * El ambiente local lo sube a {@code update} porque arranca contra esquemas vacíos.
+     */
+    @Value("${name.julatec.ekonomi.storage.ddl-auto:none}")
+    private String ddlAuto;
+
+    /**
+     * Ver {@link SecurityConfig#dataSource()}: fuera del perfil {@code local}, donde no hay
+     * JNDI y lo reemplaza {@code LocalDataSourceConfig}.
+     */
     @Bean(DATASOURCE)
+    @Profile("!local")
     public DataSource multiRoutingDataSource() throws NamingException {
         final Map<Object, Object> targetDataSources = new HashMap<>();
         for (Map.Entry<String, String> datasourceEntry : dataSources.entrySet()) {
@@ -94,18 +107,14 @@ public class StorageConfig {
     }
 
     private Properties getJpaProperties() {
-        return new Properties() {
-            {
-//                setProperty("hibernate.ddl-auto", "update");
-//                setProperty("hibernate.hbm2ddl.auto", "update");
-                setProperty("hibernate.ddl-auto", "none");
-                setProperty("hibernate.hbm2ddl.auto", "none");
-                setProperty("hibernate.dialect", DATABASE_PLATFORM);
-                setProperty("hibernate.show_sql", "false");
-                setProperty("hibernate.format_sql", "true");
-                setProperty("hibernate.enable_lazy_load_no_trans", "true");
-            }
-        };
+        final Properties properties = new Properties();
+        properties.setProperty("hibernate.ddl-auto", ddlAuto);
+        properties.setProperty("hibernate.hbm2ddl.auto", ddlAuto);
+        properties.setProperty("hibernate.dialect", DATABASE_PLATFORM);
+        properties.setProperty("hibernate.show_sql", "false");
+        properties.setProperty("hibernate.format_sql", "true");
+        properties.setProperty("hibernate.enable_lazy_load_no_trans", "true");
+        return properties;
     }
 
     @Primary

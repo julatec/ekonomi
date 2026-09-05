@@ -79,9 +79,19 @@ test-storage: ## Run storage tests
 	mvn clean test -pl storage
 
 # Application Commands
-run-local: up ## Run application locally with Docker services
-	@echo "$(COLOR_GREEN)Starting application with Docker profile...$(COLOR_RESET)"
-	cd webapp && mvn spring-boot:run -Dspring-boot.run.profiles=docker
+dev-certs: ## Generate the local dev CA, server cert and client .p12 into docker/certs/
+	@echo "$(COLOR_GREEN)Generating local development certificates...$(COLOR_RESET)"
+	./docker/certs/generar-certs-dev.sh
+
+dev-seed: ## Seed the local database with the dev user matching docker/certs/
+	@echo "$(COLOR_GREEN)Seeding local dev user...$(COLOR_RESET)"
+	docker exec -i ekonomi-mysql mysql -uekonomi -pekonomi_password < docker/mysql/seed-local.sql
+
+# El perfil es `local`, no `docker`: nunca existio un application-docker.properties, y por eso
+# este target no podia funcionar. Ver webapp/src/main/resources/application-local.properties.
+run-local: up ## Run application locally against the Docker MySQL (mTLS on :8443)
+	@echo "$(COLOR_GREEN)Starting on https://localhost:8443/ (needs make dev-certs first)$(COLOR_RESET)"
+	cd webapp && mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 run-docker: ## Run application in Docker container
 	@echo "$(COLOR_GREEN)Starting application in Docker...$(COLOR_RESET)"

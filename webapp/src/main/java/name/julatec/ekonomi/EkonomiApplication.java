@@ -9,7 +9,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,10 +30,11 @@ import java.util.List;
 @Import({
         SecurityConfig.class,
         StorageConfig.class,
-        AppConfig.class
+        AppConfig.class,
+        LocalDataSourceConfig.class,
+        SchedulingConfig.class
 })
 @EnableWebSecurity(debug = false)
-@EnableScheduling
 @EnableMethodSecurity(securedEnabled = true)
 public class EkonomiApplication {
 

@@ -9,6 +9,15 @@ webapp/node_modules/
 docker-compose.override.yml
 backups/
 *.sql
+# Los del contenedor sí van: crean los esquemas y siembran el usuario del ambiente local.
+!docker/mysql/init/*.sql
+!docker/mysql/seed-local.sql
+
+# Material criptográfico del ambiente local: se regenera con `make dev-certs`.
+# No se versiona ninguna llave, ni siquiera de un autofirmado desechable.
+docker/certs/*.pem
+docker/certs/*.p12
+docker/certs/*.srl
 
 # Python — entornos virtuales
 .venv/

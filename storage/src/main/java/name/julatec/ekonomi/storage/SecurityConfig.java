@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jndi.JndiTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -42,7 +43,20 @@ public class SecurityConfig {
     @Value("${name.julatec.ekonomi.storage.security.datasource}")
     private String dataSourceName;
 
+    /**
+     * Ver {@link StorageConfig#ddlAuto}: {@code none} contra la base real, {@code update} solo
+     * en el ambiente local, que arranca contra un esquema vacío.
+     */
+    @Value("${name.julatec.ekonomi.storage.ddl-auto:none}")
+    private String ddlAuto;
+
+    /**
+     * Fuera del perfil {@code local}, donde no hay JNDI: ahí lo reemplaza
+     * {@code LocalDataSourceConfig}, que arma el datasource desde propiedades. No se deja al
+     * orden de registro de beans que uno gane sobre el otro.
+     */
     @Bean(DATASOURCE)
+    @Profile("!local")
     public DataSource dataSource() throws NamingException {
         return (DataSource) new JndiTemplate().lookup(dataSourceName);
     }
@@ -76,15 +90,12 @@ public class SecurityConfig {
     }
 
     private Properties getJpaProperties() {
-        return new Properties() {
-            {
-//                setProperty("hibernate.hbm2ddl.auto", "update");
-                setProperty("hibernate.hbm2ddl.auto", "none");
-                setProperty("hibernate.dialect", StorageConfig.DATABASE_PLATFORM);
-                setProperty("hibernate.show_sql", "false");
-                setProperty("hibernate.format_sql", "true");
-            }
-        };
+        final Properties properties = new Properties();
+        properties.setProperty("hibernate.hbm2ddl.auto", ddlAuto);
+        properties.setProperty("hibernate.dialect", StorageConfig.DATABASE_PLATFORM);
+        properties.setProperty("hibernate.show_sql", "false");
+        properties.setProperty("hibernate.format_sql", "true");
+        return properties;
     }
 
     @Primary
