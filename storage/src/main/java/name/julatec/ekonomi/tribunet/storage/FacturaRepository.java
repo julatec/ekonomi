@@ -1,6 +1,8 @@
 package name.julatec.ekonomi.tribunet.storage;
 
 import name.julatec.ekonomi.storage.MultiTenantRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,6 +35,28 @@ public interface FacturaRepository extends MultiTenantRepository<Factura, String
             "group by numero, nombre" +
             ";", nativeQuery = true)
     List<Object[]> getClients();
+
+    /**
+     * Las contrapartes del tenant activo, paginadas y filtrables por nombre o cédula.
+     * <p>
+     * Reemplaza a {@link #getClients()}, que traía la tabla entera para de-duplicar en
+     * memoria y por eso se recalculaba completa en cada login y cada cambio de tenant. Ver
+     * {@link ClientesSql} para las tres diferencias de fondo: {@code union all}, agrupación
+     * solo por cédula, y las cinco tablas en vez de solo {@code factura}.
+     *
+     * @param patron patrón de {@code like} ya armado; {@code %} para no filtrar.
+     */
+    @Query(value = ClientesSql.BUSCAR, countQuery = ClientesSql.CONTAR, nativeQuery = true)
+    Page<ClienteProyeccion> buscarClientes(@Param("patron") String patron, Pageable pageable);
+
+    /** Proyección de {@link #buscarClientes}: los alias del select, no columnas de una tabla. */
+    interface ClienteProyeccion {
+        String getNumero();
+
+        Long getComprobantes();
+
+        String getNombre();
+    }
 
     @Query("select f.documento.emisor.numero from factura f where f.clave= :clave")
     String getEmisorByClave(@Param("clave") String clave);

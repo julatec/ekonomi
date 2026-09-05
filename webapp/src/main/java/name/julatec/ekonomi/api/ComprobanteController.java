@@ -8,11 +8,17 @@ import name.julatec.ekonomi.mcp.FiltroComprobantes;
 import name.julatec.ekonomi.mcp.ResumenComprobantes;
 import name.julatec.ekonomi.session.Workspace;
 import name.julatec.ekonomi.session.WorkspaceService;
+import name.julatec.ekonomi.tribunet.Documento;
+import name.julatec.ekonomi.tribunet.DocumentoAdapterService;
+import name.julatec.ekonomi.tribunet.storage.ElectronicReceipt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +27,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -44,10 +51,14 @@ public class ComprobanteController {
     private static final int FILAS_POR_DEFECTO = 50;
     private static final int TOPE_FILAS = 500;
 
+    private static final Logger logger = LoggerFactory.getLogger(ComprobanteController.class);
+
     private BusquedaComprobantes busqueda;
     private ResumenComprobantes resumen;
     private AccesoTenant accesoTenant;
     private WorkspaceService workspaceService;
+    private DocumentoAdapterService adapterService;
+    private DetalleComprobanteMapper mapper;
 
     public record BusquedaDto(
             String tenant,
@@ -125,6 +136,63 @@ public class ComprobanteController {
                     resultado.comprobantes(),
                     resumen.resumen(filtro, tipos));
         });
+    }
+
+    /**
+     * El comprobante completo, para el visualizador.
+     * <p>
+     * Las líneas de detalle y las referencias no están persistidas en forma estructurada: de
+     * cada comprobante {@code storage} guarda las partes, el resumen y el XML entero. Así que
+     * el detalle sale de re-parsear ese XML con el mismo adaptador que usa la ingesta, que ya
+     * resuelve las cuatro generaciones de esquema de Hacienda.
+     *
+     * @param xml si viene {@code true}, se devuelve además el documento original. Va aparte
+     *            porque son decenas de kilobytes que la vista normal no necesita.
+     */
+    @GetMapping("/api/comprobantes/{clave}")
+    public DetalleComprobante detalle(
+            Authentication authentication,
+            HttpServletRequest request,
+            @PathVariable String clave,
+            @RequestParam(required = false, defaultValue = "false") boolean xml) {
+
+        final Workspace workspace = workspaceService.getWorkspace(authentication, request);
+        final String tenant = workspace.getSession().getTenant();
+
+        return accesoTenant.en(tenant, () -> {
+            final Map.Entry<String, ElectronicReceipt> encontrado = busqueda.porClave(clave)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "No hay ningún comprobante con esa clave en esta contabilidad."));
+
+            final String documentoXml = Optional.ofNullable(encontrado.getValue().getDocumento())
+                    .map(d -> d.getDocument())
+                    .orElse(null);
+            if (documentoXml == null || documentoXml.isBlank()) {
+                // La fila existe pero sin el XML no hay líneas que mostrar: es un dato
+                // incompleto, no un comprobante inexistente.
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "El comprobante está registrado pero no tiene el documento original guardado.");
+            }
+
+            final Documento documento = adapterService
+                    .adapt(documentoXml, e -> logger.error("No se pudo interpretar el XML de {}", clave, e))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
+                            "El documento guardado no corresponde a ningún esquema de Hacienda soportado."));
+
+            return mapper.de(tenant, encontrado.getKey(), documento, xml ? documentoXml : null);
+        });
+    }
+
+    @Autowired
+    ComprobanteController setAdapterService(DocumentoAdapterService adapterService) {
+        this.adapterService = adapterService;
+        return this;
+    }
+
+    @Autowired
+    ComprobanteController setMapper(DetalleComprobanteMapper mapper) {
+        this.mapper = mapper;
+        return this;
     }
 
     @Autowired

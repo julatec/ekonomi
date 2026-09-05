@@ -36,12 +36,14 @@ public class Mensaje {
     @Column(name = "receptor_fecha")
     protected Date receptorFecha;
 
+    /** Ver {@code Documento.document}: sin {@code length} explícito, Hibernate 7 crea tinytext. */
     @Lob
-    @Column(name = "mensaje_hacienda")
+    @Column(name = "mensaje_hacienda", length = Integer.MAX_VALUE)
     protected String mensajeHacienda;
 
+    /** Ver {@code Documento.document}: sin {@code length} explícito, Hibernate 7 crea tinytext. */
     @Lob
-    @Column(name = "mensaje_receptor")
+    @Column(name = "mensaje_receptor", length = Integer.MAX_VALUE)
     protected String mensajeReceptor;
 
     public String getClave() {

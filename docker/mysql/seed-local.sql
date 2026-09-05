@@ -36,3 +36,15 @@ INSERT INTO user_datasources (user_username, datasources) VALUES ('dev', 'julate
 SELECT 'usuario dev listo' AS estado,
        (SELECT COUNT(*) FROM user_roles WHERE user_username = 'dev') AS roles,
        (SELECT COUNT(*) FROM user_datasources WHERE user_username = 'dev') AS tenants;
+
+-- La columna del XML: Hibernate la crea como tinytext (255 bytes) y un comprobante real son
+-- ~29 KB, asi que el INSERT falla con el error 1406 en vez de truncar. La anotacion ya lleva
+-- `length = Integer.MAX_VALUE`, pero `hbm2ddl.auto=update` NO altera el tipo de una columna
+-- que ya existe: solo crea las que faltan. Sobre un esquema ya creado hay que ensancharla a
+-- mano, y por eso vive aca y no en la anotacion sola.
+USE ekonomi_julatec;
+ALTER TABLE factura              MODIFY COLUMN document longtext;
+ALTER TABLE factura_compra       MODIFY COLUMN document longtext;
+ALTER TABLE factura_exportacion  MODIFY COLUMN document longtext;
+ALTER TABLE nota_credito         MODIFY COLUMN document longtext;
+ALTER TABLE nota_debito          MODIFY COLUMN document longtext;

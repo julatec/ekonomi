@@ -22,8 +22,25 @@ public class Documento {
     @Embedded
     private Resumen resumen;
 
+    /**
+     * El comprobante completo, tal como llegó. Son decenas de kilobytes: uno real medido
+     * pesa 29 KB.
+     * <p>
+     * El {@code length} explícito no es adorno. Sin él, JPA deja el default en 255 y el
+     * {@code MySQLDialect} de Hibernate 7 elige el tipo por escalera de tamaño: la columna
+     * sale {@code tinytext}, y con {@code STRICT_TRANS_TABLES} el INSERT de un XML real
+     * falla con el error 1406 en vez de truncar. Contra un esquema vacío —el ambiente
+     * local— eso es exactamente lo que pasaba.
+     * <p>
+     * Y al revés: Hibernate 7 sí sabe angostar columnas, cosa que Hibernate 5 no hacía. Con
+     * la anotación sin {@code length}, apuntar la aplicación a la base real con
+     * {@code hbm2ddl.auto=update} emitiría un {@code alter ... modify column document
+     * tinytext} sobre la contabilidad. Hoy no ocurre porque el valor por omisión es
+     * {@code none} desde mayo de 2025 —16 meses antes de que entrara Hibernate 7—, pero eso
+     * es una propiedad, no una barrera.
+     */
     @Lob
-    @Column
+    @Column(length = Integer.MAX_VALUE)
     private String document;
 
     public Date getFechaEmision() {
