@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<FacturaElectronica xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/facturaElectronica">
+    <Clave>50610012000310231549000100004010000054357101884012</Clave>
+    <CodigoActividad>523402</CodigoActividad>
+    <NumeroConsecutivo>00100004010000040012</NumeroConsecutivo>
+    <FechaEmision>2025-06-10T00:00:00-06:00</FechaEmision>
+    <Emisor>
+        <Nombre>INVERSIONES ABC</Nombre>
+        <Identificacion>
+            <Tipo>02</Tipo>
+            <Numero>55102565590</Numero>
+        </Identificacion>
+        <NombreComercial>Example ABC</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>05</Distrito>
+            <Barrio>04</Barrio>
+            <OtrasSenas>Some where.</OtrasSenas>
+        </Ubicacion>
+        <Telefono>
+            <CodigoPais>506</CodigoPais>
+            <NumTelefono>12345678</NumTelefono>
+        </Telefono>
+        <CorreoElectronico>emmiter@test.com</CorreoElectronico>
+    </Emisor>
+    <Receptor>
+        <Nombre>Test Testing</Nombre>
+        <Identificacion>
+            <Tipo>01</Tipo>
+            <Numero>501230456</Numero>
+        </Identificacion>
+        <NombreComercial>ABC DEF GHI JIH</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>06</Distrito>
+            <Barrio>01</Barrio>
+            <OtrasSenas>No especificada</OtrasSenas>
+        </Ubicacion>
+        <CorreoElectronico>receptor@test.com</CorreoElectronico>
+    </Receptor>
+    <CondicionVenta>01</CondicionVenta>
+    <PlazoCredito>0</PlazoCredito>
+    <MedioPago>01</MedioPago>
+    <DetalleServicio>
+        <LineaDetalle>
+            <NumeroLinea>1</NumeroLinea>
+            <Cantidad>1</Cantidad>
+            <UnidadMedida>Unid</UnidadMedida>
+            <Detalle>Producto tarifa 09 - 0.5% (esquema v4.4, CodigoTarifaIVA)</Detalle>
+            <PrecioUnitario>10000</PrecioUnitario>
+            <MontoTotal>10000</MontoTotal>
+            <SubTotal>10000</SubTotal>
+            <Impuesto>
+                <Codigo>01</Codigo>
+                <CodigoTarifaIVA>09</CodigoTarifaIVA>
+                <Tarifa>0.5</Tarifa>
+                <Monto>50</Monto>
+            </Impuesto>
+            <ImpuestoNeto>50</ImpuestoNeto>
+            <MontoTotalLinea>10050</MontoTotalLinea>
+        </LineaDetalle>
+    </DetalleServicio>
+    <ResumenFactura>
+        <TotalMercanciasGravadas>10000</TotalMercanciasGravadas>
+        <TotalGravado>10000</TotalGravado>
+        <TotalExento>0</TotalExento>
+        <TotalVenta>10000</TotalVenta>
+        <TotalVentaNeta>10000</TotalVentaNeta>
+        <TotalImpuesto>50</TotalImpuesto>
+        <TotalComprobante>10050</TotalComprobante>
+    </ResumenFactura>
+</FacturaElectronica>

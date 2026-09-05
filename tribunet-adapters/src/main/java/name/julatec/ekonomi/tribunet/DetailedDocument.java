@@ -141,19 +141,31 @@ public class DetailedDocument implements Documento {
                                 ZERO,
                                 impuestoType.getMonto().subtract(impuestoType.getExoneracion().getMontoExoneracion())));
                     } else {
-                        final FactorIVA impuestoFactor = Optional.ofNullable(
-                                FactorIVA.valueOf(impuestoType.getTarifa()))
-                                .orElse(Exonerado);
+                        // Preferido: código real de Hacienda (v4.3 CodigoTarifa / v4.4
+                        // CodigoTarifaIVA, sin ambigüedad). Fallback: valor numérico de Tarifa,
+                        // solo para documentos v4.2 que no tienen campo de código. Un código
+                        // presente pero no reconocido (dato futuro o corrupto) cae en Otros,
+                        // no en Exonerado — no es una exoneración legal.
+                        final FactorIVA impuestoFactor = Optional.ofNullable(impuestoType.getCodigoTarifaResuelto())
+                                .map(FactorIVA::fromCodigo)
+                                .or(() -> Optional.ofNullable(FactorIVA.valueOf(impuestoType.getTarifa())))
+                                .orElse(Otros);
                         final ImpuestoType.Codigo codigo = ImpuestoType.Codigo.of(impuestoType.getCodigo());
-                        if (codigo.compareTo(ImpuestoType.Codigo.BaseImponible) < 0) {
-                            baseImponible = baseImponible.add(impuestoType.getMonto());
-                        } else if (codigo.compareTo(ImpuestoType.Codigo.OtrosCargos) < 0) {
-                            buffer.add(Otros, new TaxAccumulated(
-                                    impuestoType.getMonto(),
-                                    ZERO,
-                                    ZERO));
-                        } else {
-                            impuesto = impuesto.add(impuestoType.getMonto());
+                        switch (codigo.getClasificacion()) {
+                            case BaseImponible:
+                                baseImponible = baseImponible.add(impuestoType.getMonto());
+                                break;
+                            case OtrosCargos:
+                                buffer.add(Otros, new TaxAccumulated(
+                                        impuestoType.getMonto(),
+                                        ZERO,
+                                        ZERO));
+                                break;
+                            case Iva:
+                                impuesto = impuesto.add(impuestoType.getMonto());
+                                break;
+                            case Guard:
+                                break;
                         }
                         if (factorIVA.compareTo(impuestoFactor) < 0) {
                             factorIVA = impuestoFactor;

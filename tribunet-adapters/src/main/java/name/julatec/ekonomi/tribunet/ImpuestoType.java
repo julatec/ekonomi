@@ -57,12 +57,32 @@ public interface ImpuestoType {
     }
 
     /**
-     * Rate code.
+     * Rate code. Called {@code CodigoTarifa} in the v4.3 schema; absent in v4.2 and v4.4.
      *
      * @return rate code.
      */
     default String getCodigoTarifa() {
         return null;
+    }
+
+    /**
+     * Rate code. Called {@code CodigoTarifaIVA} in the v4.4 schema (renamed from
+     * {@code CodigoTarifa}); absent in v4.2 and v4.3.
+     *
+     * @return rate code.
+     */
+    default String getCodigoTarifaIVA() {
+        return null;
+    }
+
+    /**
+     * Rate code resolved across schema versions: prefers the v4.4 field name, falls back to
+     * the v4.3 one, and is {@code null} for v4.2 (which has no rate code field at all).
+     *
+     * @return the resolved rate code, or {@code null} when the document has none.
+     */
+    default String getCodigoTarifaResuelto() {
+        return Optional.ofNullable(getCodigoTarifaIVA()).orElseGet(this::getCodigoTarifa);
     }
 
     /**
@@ -214,6 +234,49 @@ public interface ImpuestoType {
          */
         public static Codigo of(String codigo) {
             return reverseMap.get(Optional.ofNullable(codigo).orElse(""));
+        }
+
+        /**
+         * How a tax code's amount folds into the report: added to the taxable base, reported
+         * as a separate charge, counted as the IVA itself, or neither (guard values).
+         * <p>
+         * Replaces an earlier ordinal-based {@code compareTo} classification that broke
+         * silently if the enum constants were ever reordered.
+         */
+        public enum Clasificacion {
+            /** Specific consumption taxes that add to the IVA taxable base. */
+            BaseImponible,
+            /** Reported as its own charge, neither part of the base nor the IVA collected. */
+            OtrosCargos,
+            /** The IVA itself (Valor Agregado, Especial, Bienes Usados). */
+            Iva,
+            /** Guard/sentinel values with no fiscal meaning of their own. */
+            Guard
+        }
+
+        /**
+         * Classification used to decide how this tax code's amount folds into the report.
+         *
+         * @return the classification category.
+         */
+        public Clasificacion getClasificacion() {
+            switch (this) {
+                case SelectivoDeConsumo:
+                case Combustivos:
+                case BebidasAlcoholicas:
+                case BebidasEnvasadas:
+                case Cemento:
+                case Otros:
+                    return Clasificacion.BaseImponible;
+                case ProductosDeTabaco:
+                    return Clasificacion.OtrosCargos;
+                case ValorAgregado:
+                case ValorAgregadoEspecial:
+                case ValorAgregadoUsados:
+                    return Clasificacion.Iva;
+                default:
+                    return Clasificacion.Guard;
+            }
         }
     }
 }
