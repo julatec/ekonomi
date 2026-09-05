@@ -60,7 +60,7 @@ fi
 en_thot cat "$SALIDA_REMOTA/$NOMBRE.p12" > servidor-local.p12
 chmod 600 servidor-local.p12
 
-echo "3/3  truststore con las tres CAs de cliente"
+echo "3/3  truststores de cliente"
 # Las tres, a proposito: la interna para entrar vos desde el navegador con el certificado
 # que ya tenes, y la de desarrollo porque el proxy de Vite y los scripts usan `CN=dev` y
 # no pueden depender de un certificado que vence en 14 dias.
@@ -75,6 +75,22 @@ for par in "ekonomi-dev-ca:dev-ca.crt.pem" \
   echo "     + $alias"
 done
 
+# El truststore del 9443 del Tomcat de /opt/tomcat, con UNA sola CA.
+#
+# 🔴 Es un archivo APARTE del de la firma digital, y esa separacion es el punto entero.
+# AuthenticationService resuelve el emisor comparando el STRING del CN, sin mirar huella
+# ni serial: si esta CA entrara al truststore de la firma digital, quien tenga su llave
+# podria firmar un intermedio con CN=CA SINPE - PERSONA FISICA y entrar como cualquier
+# cedula registrada. Por eso la separacion es por PUERTO y por TRUSTSTORE, no por SNI
+# —loadUserDetails nunca ve por cual SSLHostConfig entro la conexion—.
+#
+#   8443 -> firma-digital-local.p12  (las CAs del PKI nacional)
+#   9443 -> ca-julatec-clientes.p12  (esta, con la raiz propia y nada mas)
+rm -f ca-julatec-clientes.p12
+keytool -importcert -noprompt -alias julatec-ca-raiz -file julatec-raiz.crt.pem \
+  -keystore ca-julatec-clientes.p12 -storetype PKCS12 -storepass "$PASS" 2>/dev/null
+chmod 600 ca-julatec-clientes.p12
+
 cat <<FIN
 
   Listo. El servidor local presenta:
@@ -83,4 +99,9 @@ $(openssl pkcs12 -in servidor-local.p12 -nokeys -passin "pass:$PASS" 2>/dev/null
 
   Reiniciá la aplicación y abrí:
     https://$NOMBRE:8443/
+
+  Para el Tomcat de /opt/tomcat (el que se pega a la contabilidad real), copiar
+  tambien los dos archivos del conector 9443:
+
+    cp servidor-local.p12 ca-julatec-clientes.p12 /opt/tomcat/conf/
 FIN
