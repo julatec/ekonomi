@@ -6,16 +6,6 @@ import { useSesion } from '../estado/SesionContexto.jsx'
 import { useDebounce } from '../hooks/useDebounce.js'
 import { formatearEntero } from '../dominio/formato.js'
 
-/**
- * La factura electrónica arrancó en Costa Rica en 2018, así que nada puede ser anterior. Es un
- * piso, no una fecha real: sirve para que «ver comprobantes» abarque todo el histórico.
- */
-const DESDE_SIEMPRE = '2015-01-01'
-
-function hoy() {
-  return new Date().toISOString().slice(0, 10)
-}
-
 export default function PaginaClientes() {
   const { tenant } = useSesion()
   const navegar = useNavigate()
@@ -105,18 +95,17 @@ export default function PaginaClientes() {
                       ↓ sus compras
                     </a>
                     {/* El conteo de la columna es de TODO el histórico —la consulta de
-                        contrapartes no filtra por fecha—, así que el enlace tiene que llevar
-                        un rango que lo cubra. Sin esto prometía «6.310» y al hacer clic
-                        mostraba cero, porque se aplicaba el rango de la barra superior. */}
+                        contrapartes no filtra por fecha—, pero el enlace SÍ respeta el rango
+                        de la barra superior: no hay forma de "ver todo desde siempre" sin
+                        arriesgarse a traer miles de filas de golpe. Que el número de acá no
+                        siempre coincida con lo que aparece al hacer clic es el costo aceptado
+                        de no barrer el histórico completo por un clic. */}
                     <button
                       className="chip"
                       onClick={() =>
-                        navegar(
-                          `/comprobantes?q=${encodeURIComponent(cliente.numero)}&campo=cedula`
-                            + `&desde=${DESDE_SIEMPRE}&hasta=${hoy()}`,
-                        )
+                        navegar(`/comprobantes?q=${encodeURIComponent(cliente.numero)}&campo=cedula`)
                       }
-                      title="Todos los comprobantes de esta contraparte, en cualquier fecha"
+                      title="Comprobantes de esta contraparte, en el rango de la barra superior"
                     >
                       ver comprobantes
                     </button>

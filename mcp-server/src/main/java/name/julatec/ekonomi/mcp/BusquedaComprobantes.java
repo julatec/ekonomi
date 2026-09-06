@@ -167,8 +167,15 @@ public class BusquedaComprobantes {
             }
         }
 
+        // Por el INSTANTE real (fecha Y hora), no por ComprobanteResumen.fechaEmision(): esa es
+        // una cadena "aaaa-mm-dd" pensada para mostrarse en la UI, sin la hora. Ordenando por
+        // esa cadena, dos comprobantes del mismo día quedaban desempatados por clave -orden
+        // alfabético de un identificador, no de cuándo se emitió cada uno-, así que un
+        // comprobante de las 8 a.m. podía aparecer después de otro de las 5 p.m. del mismo día.
         encontrados.sort(Comparator
-                .comparing((Encontrado e) -> e.resumen().fechaEmision(),
+                .comparing((Encontrado e) -> Optional.ofNullable(e.receipt().getDocumento())
+                                .map(Documento::getFechaEmision)
+                                .orElse(null),
                         Comparator.nullsLast(Comparator.reverseOrder()))
                 .thenComparing(e -> e.resumen().clave(),
                         Comparator.nullsLast(Comparator.naturalOrder())));

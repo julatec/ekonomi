@@ -55,18 +55,12 @@ export default function PaginaComprobantes() {
   )
   const [limite, setLimite] = useState(Number(parametrosUrl.get('limite')) || LIMITES[0])
 
-  // Un enlace como el «ver comprobantes» de una contraparte trae su propio rango para mostrar
-  // TODO su histórico, sin importar qué haya puesto la barra superior. Antes esto se adoptaba
-  // con cambiarRango(), que escribe la cookie del rango de TODA la aplicación: un solo clic ahí
-  // dejaba la barra superior —y cualquier otra pantalla— pegada a «desde 2015» hasta que
-  // alguien la cambiara a mano otra vez. Ahora es un override local a esta pantalla nada más:
-  // se lee una sola vez al abrir (por eso useState y no useSearchParams directo, que cambiaría
-  // en cada edición de los demás filtros) y no toca la cookie ni el estado global.
-  const [desdeUrl] = useState(() => parametrosUrl.get('desde'))
-  const [hastaUrl] = useState(() => parametrosUrl.get('hasta'))
-  const desde = desdeUrl || rango.desde
-  const hasta = hastaUrl || rango.hasta
-  const rangoForzado = Boolean(desdeUrl || hastaUrl)
+  // Siempre el rango de la barra superior —los combos de "desde"/"hasta"—, nunca un rango
+  // propio de esta pantalla. Hubo una versión de "ver comprobantes" (en PaginaClientes) que
+  // forzaba un rango desde 2015 para prometer "todo el histórico" de una contraparte, pero
+  // barrer el histórico completo por un clic no es aceptable: ese enlace ahora navega sin
+  // fechas propias, y por eso esta pantalla no necesita adoptar ningún override.
+  const { desde, hasta } = rango
 
   const textoDiferido = useDebounce(texto, 400)
   const emisorDiferido = useDebounce(emisor, 400)
@@ -233,13 +227,6 @@ export default function PaginaComprobantes() {
       </div>
 
       {consulta.error && <div className="aviso error">{consulta.error.message}</div>}
-
-      {rangoForzado && (
-        <div className="aviso pequeno">
-          Mostrando {desde || '(sin piso)'} a {hasta || '(sin techo)'} — el rango de este enlace,
-          no el de la barra superior.
-        </div>
-      )}
 
       {datos?.truncado && (
         <div className="aviso">
