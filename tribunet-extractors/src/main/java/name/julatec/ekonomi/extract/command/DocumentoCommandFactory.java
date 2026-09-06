@@ -45,7 +45,13 @@ public class DocumentoCommandFactory {
     public <P extends BaseCommand<P>> DocumentCommand<?>
     getCommand(BaseCommand<P> parentCommand, Document document) throws JAXBException {
         final String namespace = document.getDocumentElement().getNamespaceURI();
-        parentCommand.context.logger.warn("[{}][{}] Adapting namespace: {}",
+        // `debug` y no `warn`: esto se escribe una vez por cada documento que entra bien, o sea
+        // 9.256 líneas el 5 de setiembre de 2026 entre este mensaje y el de «Adapted». Un WARN
+        // que se emite en el camino feliz no avisa de nada y ademas entierra a los que sí: ese
+        // día producción se cayó a las 20:05 y nadie lo vio, con el error dentro de un
+        // catalina.out de 17,9 MB. El único de los tres que se queda en WARN es el de abajo, el
+        // de no poder adaptar, que es el que señala un comprobante perdido.
+        parentCommand.context.logger.debug("[{}][{}] Adapting namespace: {}",
                 parentCommand.context.getAttribute(EMAIL_ATTRIBUTE),
                 parentCommand.context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
                 namespace);
@@ -59,7 +65,7 @@ public class DocumentoCommandFactory {
                             namespace);
                     return null;
                 }
-                parentCommand.context.logger.warn("[{}][{}] Adapted namespace: {}",
+                parentCommand.context.logger.debug("[{}][{}] Adapted namespace: {}",
                         parentCommand.context.getAttribute(EMAIL_ATTRIBUTE),
                         parentCommand.context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
                         namespace);

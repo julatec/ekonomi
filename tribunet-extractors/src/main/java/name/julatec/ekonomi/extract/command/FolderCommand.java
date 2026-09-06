@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static jakarta.mail.search.ComparisonTerm.GE;
@@ -29,6 +30,17 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 public class FolderCommand extends BaseCommand<FolderCommand> {
 
     protected final Folder folder;
+
+    /**
+     * Se levanta cuando la conexión con el buzón se cae a mitad del lote.
+     * <p>
+     * Sin esto, cada mensaje que queda por procesar vuelve a intentar abrir el folder, falla, y
+     * escribe su propia traza completa: el 5 de setiembre de 2026, con el correo del hosting
+     * caído, fueron <b>1.553 trazas idénticas en una hora</b>. Es la misma razón por la que
+     * {@code process} ya se rinde en silencio durante un redespliegue —«insistir acá es lo que
+     * llenó catalina.out»—, aplicada al otro caso en que el lote está perdido de antemano.
+     */
+    private final AtomicBoolean conexionPerdida = new AtomicBoolean(false);
 
     private Environment environment;
 
@@ -88,8 +100,22 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
         if (extractExecutor.isShuttingDown()) {
             return;
         }
+        // El buzón ya se cayó en este lote: los mensajes que faltan no se van a poder leer.
+        if (conexionPerdida.get()) {
+            return;
+        }
         try {
             ensureOpen();
+        } catch (MessagingException e) {
+            // Una sola línea por lote, y con la causa. Que el resto se rinda callado no esconde
+            // nada: el lote entero falló por lo mismo.
+            if (conexionPerdida.compareAndSet(false, true)) {
+                getLogger().error("[{}] Se perdió la conexión con el buzón; se abandona el lote",
+                        context.getAttribute(EMAIL_ATTRIBUTE), e);
+            }
+            return;
+        }
+        try {
             final Date receivedDate = message.getReceivedDate();
             if (message.getContentType().contains("multipart")) {
                 getLogger().info("[{}][{}/{}]: {}",
