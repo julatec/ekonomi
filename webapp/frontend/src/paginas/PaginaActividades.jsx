@@ -4,13 +4,15 @@ import { api } from '../api/client.js'
 import { useDebounce } from '../hooks/useDebounce.js'
 
 /**
- * Buscador de la correspondencia de actividades económicas: el código ATV que Hacienda pone en
- * cada comprobante (`codigoActividadEmisor`/`codigoActividadReceptor`) contra su subclase
- * TRIBU-CR (CIIU 4).
+ * Buscador de la correspondencia de actividades económicas: el código TRIBU-CR (CIIU4) que usa
+ * Hacienda hoy, contra el código ATV (CIIU3) que traían los comprobantes antes de esa
+ * migración.
  * <p>
  * No filtra la contabilidad de nadie: es un catálogo público de Hacienda, el mismo para
  * cualquier tenant — igual que CABYS. Sirve para la pregunta que hoy la pantalla de
- * comprobantes no puede contestar: «¿qué actividad es el código 722003 que puso el emisor?».
+ * comprobantes no puede contestar: «¿qué actividad es este código?». El backend prioriza un
+ * código CIIU4 exacto sobre una coincidencia de texto —ver
+ * {@code ActividadEconomicaRepository.buscar}—, así que buscar por código es lo más directo.
  */
 export default function PaginaActividades() {
   const [texto, setTexto] = useState('')
@@ -30,7 +32,7 @@ export default function PaginaActividades() {
       <div className="buscador">
         <input
           type="search"
-          placeholder="Código ATV (6 dígitos) o parte del nombre de la actividad…"
+          placeholder="Código Tribu-CR (CIIU4), código ATV, o parte del nombre de la actividad…"
           autoFocus
           value={texto}
           onChange={(evento) => setTexto(evento.target.value)}
@@ -54,9 +56,9 @@ export default function PaginaActividades() {
             <table>
               <thead>
                 <tr>
-                  <th>ATV (Hacienda)</th>
+                  <th>ATV</th>
                   <th>Nombre ATV</th>
-                  <th>CIIU4 (TRIBU-CR)</th>
+                  <th>Tribu-CR</th>
                   <th>Nombre CIIU4</th>
                   <th>Especialidad</th>
                 </tr>

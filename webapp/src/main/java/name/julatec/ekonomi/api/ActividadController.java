@@ -4,7 +4,6 @@ import name.julatec.ekonomi.actividad.ActividadEconomica;
 import name.julatec.ekonomi.actividad.ActividadEconomicaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +42,13 @@ public class ActividadController {
     public record BusquedaActividadDto(int devueltos, List<ActividadEconomicaDto> actividades) {
     }
 
-    /** Por código ATV (empieza con lo escrito) o por nombre (lo contiene, en cualquiera de los dos). */
+    /**
+     * Por código CIIU4/TRIBU-CR o ATV (empieza con lo escrito) o por nombre (lo contiene, en
+     * cualquiera de los dos). Sin {@code Sort} en el {@code PageRequest} a propósito: el orden
+     * lo define el {@code case} de {@link ActividadEconomicaRepository#buscar}, que prioriza un
+     * código CIIU4 exacto sobre una coincidencia de texto — un {@code Sort} acá se agregaría
+     * DESPUÉS de ese {@code order by}, no lo reemplazaría, y solo confundiría.
+     */
     @GetMapping("/api/actividades")
     public BusquedaActividadDto buscar(
             @RequestParam String q,
@@ -53,7 +58,7 @@ public class ActividadController {
         }
         final int filas = Math.clamp(limite == null ? FILAS_POR_DEFECTO : limite, 1, TOPE_FILAS);
         final List<ActividadEconomicaDto> resultado = actividades
-                .buscar(q.trim(), PageRequest.of(0, filas, Sort.by("atv", "ciiu4")))
+                .buscar(q.trim(), PageRequest.of(0, filas))
                 .stream()
                 .map(ActividadEconomicaDto::de)
                 .toList();

@@ -595,10 +595,11 @@ public class EkonomiMcpTools {
 
     @McpTool(name = "consultar_actividad",
             description = "Busca en la correspondencia de actividades económicas de Hacienda: el código "
-                    + "ATV de 6 dígitos que trae cada comprobante (codigoActividadEmisor/Receptor) contra "
-                    + "su subclase TRIBU-CR (CIIU4). Por código (prefijo) o por un fragmento del nombre de "
-                    + "la actividad, en cualquiera de los dos nombres. No pertenece a ninguna contabilidad: "
-                    + "es el mismo catálogo para todos los tenants.",
+                    + "TRIBU-CR (CIIU4) vigente contra el código ATV (CIIU3) que traían los comprobantes "
+                    + "antes de esa migración. Por código (prefijo, cualquiera de los dos) o por un "
+                    + "fragmento del nombre de la actividad, en cualquiera de los dos nombres — un código "
+                    + "CIIU4 exacto se prioriza sobre una coincidencia de texto. No pertenece a ninguna "
+                    + "contabilidad: es el mismo catálogo para todos los tenants.",
             annotations = @McpTool.McpAnnotations(
                     readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
     public Map<String, Object> consultarActividad(
@@ -611,10 +612,10 @@ public class EkonomiMcpTools {
         }
         final int tope = Math.clamp(
                 limite == null || limite <= 0 ? ACTIVIDAD_FILAS_POR_DEFECTO : limite, 1, ACTIVIDAD_TOPE_FILAS);
+        // Sin Sort: el orden lo define el case de ActividadEconomicaRepository.buscar, que
+        // prioriza un código CIIU4 exacto sobre una coincidencia de texto.
         final List<ActividadEconomica> encontradas = actividades.buscar(
-                q.trim(),
-                org.springframework.data.domain.PageRequest.of(0, tope,
-                        org.springframework.data.domain.Sort.by("atv", "ciiu4")));
+                q.trim(), org.springframework.data.domain.PageRequest.of(0, tope));
 
         final Map<String, Object> salida = new LinkedHashMap<>();
         salida.put("filas", encontradas.size());
