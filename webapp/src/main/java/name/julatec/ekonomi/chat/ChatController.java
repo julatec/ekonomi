@@ -110,8 +110,9 @@ public class ChatController {
                   {"etiqueta": "Nota de crédito", "valor": 85000}
                 ]}
                 ```
-                `moneda` es opcional: si los valores son conteos (número de comprobantes) en
-                vez de montos, omitila. `resumen_periodo` ya trae los totales agrupados por
+                Si los valores son montos, incluí siempre `moneda` —si no, se muestran como
+                números sueltos, no como plata—; si son conteos (número de comprobantes),
+                omitila. `resumen_periodo` ya trae los totales agrupados por
                 tipo y moneda en una sola llamada; para una serie por mes, llamalo una vez por
                 mes con su propio `desde`/`hasta`. Sacá el JSON de los números reales de las
                 herramientas, nunca lo inventes.
