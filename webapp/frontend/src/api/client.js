@@ -85,6 +85,8 @@ export const api = {
   comprobante: (clave, parametros) => pedir(`/api/comprobantes/${encodeURIComponent(clave)}`, parametros),
   estadoDelChat: () => pedir('/api/chat'),
   preguntar: (mensaje, historial) => enviar('/api/chat', { mensaje, historial }),
+  cabys: (parametros) => pedir('/api/cabys', parametros),
+  cabysVersiones: () => pedir('/api/cabys/version'),
 }
 
 /** La cookie que el backend ya usa para resolver el tenant y el rango de fechas. */

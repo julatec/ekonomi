@@ -7,6 +7,7 @@ import CajonAsistente from './componentes/CajonAsistente.jsx'
 import PaginaComprobantes from './paginas/PaginaComprobantes.jsx'
 import PaginaComprobante from './paginas/PaginaComprobante.jsx'
 import PaginaClientes from './paginas/PaginaClientes.jsx'
+import PaginaCabys from './paginas/PaginaCabys.jsx'
 
 /**
  * Un `fetch` no puede hacer que el navegador vuelva a presentar el certificado: eso solo pasa
@@ -33,6 +34,9 @@ function Lateral() {
         </NavLink>
         <NavLink to="/clientes" className={({ isActive }) => (isActive ? 'activo' : '')}>
           Contrapartes
+        </NavLink>
+        <NavLink to="/cabys" className={({ isActive }) => (isActive ? 'activo' : '')}>
+          Catálogo CABYS
         </NavLink>
       </nav>
     </aside>
@@ -63,6 +67,7 @@ function Contenido() {
             <Route path="/comprobantes" element={<PaginaComprobantes />} />
             <Route path="/comprobantes/:clave" element={<PaginaComprobante />} />
             <Route path="/clientes" element={<PaginaClientes />} />
+            <Route path="/cabys" element={<PaginaCabys />} />
             <Route path="*" element={<div className="vacio">Esa página no existe.</div>} />
           </Routes>
         </main>

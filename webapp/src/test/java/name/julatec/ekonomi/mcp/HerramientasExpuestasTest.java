@@ -3,6 +3,8 @@ package name.julatec.ekonomi.mcp;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import name.julatec.ekonomi.cabys.CabysItemRepository;
+import name.julatec.ekonomi.cabys.CabysVersionRepository;
 import name.julatec.ekonomi.report.ComprobanteReportService;
 import name.julatec.ekonomi.storage.StorageConfig;
 import name.julatec.ekonomi.tribunet.storage.FacturaRepository;
@@ -36,7 +38,7 @@ class HerramientasExpuestasTest {
     private static final Set<String> ESPERADAS = Set.of(
             "listar_tenants", "estado_ekonomi", "esquema", "buscar_comprobantes",
             "detalle_comprobante", "resumen_periodo", "clientes_frecuentes", "consulta_sql",
-            "reporte_compras", "reporte_ventas");
+            "reporte_compras", "reporte_ventas", "consultar_cabys");
 
     private final ApplicationContextRunner contexto = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
@@ -56,7 +58,9 @@ class HerramientasExpuestasTest {
                     mock(BusquedaComprobantes.class),
                     mock(ResumenComprobantes.class),
                     mock(ComprobanteReportService.class),
-                    mock(FacturaRepository.class)));
+                    mock(FacturaRepository.class),
+                    mock(CabysItemRepository.class),
+                    mock(CabysVersionRepository.class)));
 
     @SuppressWarnings("unchecked")
     private static List<McpServerFeatures.SyncToolSpecification> especificaciones(
@@ -68,8 +72,8 @@ class HerramientasExpuestasTest {
     }
 
     @Test
-    @DisplayName("el escáner publica exactamente las diez herramientas de Ekonomi")
-    void publicaLasDiezHerramientas() {
+    @DisplayName("el escáner publica exactamente las once herramientas de Ekonomi")
+    void publicaLasOnceHerramientas() {
         contexto.run(context -> {
             assertNull(context.getStartupFailure(), "el contexto no debería fallar");
             final Set<String> publicadas = especificaciones(context).stream()

@@ -4,6 +4,10 @@ import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import name.julatec.ekonomi.accounting.Voucher;
+import name.julatec.ekonomi.cabys.CabysItem;
+import name.julatec.ekonomi.cabys.CabysItemRepository;
+import name.julatec.ekonomi.cabys.CabysVersion;
+import name.julatec.ekonomi.cabys.CabysVersionRepository;
 import name.julatec.ekonomi.report.ComprobanteReportService;
 import name.julatec.ekonomi.security.User;
 import name.julatec.ekonomi.storage.StorageConfig;
@@ -69,6 +73,8 @@ public class EkonomiMcpTools {
     private final ResumenComprobantes resumen;
     private final ComprobanteReportService reportes;
     private final FacturaRepository facturas;
+    private final CabysItemRepository cabysItems;
+    private final CabysVersionRepository cabysVersiones;
 
     @PersistenceContext(unitName = StorageConfig.PERSISTENCE_UNIT)
     private EntityManager entityManager;
@@ -78,12 +84,16 @@ public class EkonomiMcpTools {
             BusquedaComprobantes busqueda,
             ResumenComprobantes resumen,
             ComprobanteReportService reportes,
-            FacturaRepository facturas) {
+            FacturaRepository facturas,
+            CabysItemRepository cabysItems,
+            CabysVersionRepository cabysVersiones) {
         this.acceso = acceso;
         this.busqueda = busqueda;
         this.resumen = resumen;
         this.reportes = reportes;
         this.facturas = facturas;
+        this.cabysItems = cabysItems;
+        this.cabysVersiones = cabysVersiones;
     }
 
     private static int limite(Integer pedido) {
@@ -519,5 +529,55 @@ public class EkonomiMcpTools {
             salida.put("resultados", filas.stream().map(Arrays::asList).toList());
             return salida;
         });
+    }
+
+    // ------------------------------------------------------------------
+    // CABYS
+    // ------------------------------------------------------------------
+
+    private static final int CABYS_FILAS_POR_DEFECTO = 30;
+    private static final int CABYS_TOPE_FILAS = 200;
+
+    @McpTool(name = "consultar_cabys",
+            description = "Busca en el Catálogo de Bienes y Servicios de Hacienda/BCCR, por código "
+                    + "(completo o un prefijo, para ver toda una rama de la jerarquía) o por un fragmento "
+                    + "de la descripción. No pertenece a ninguna contabilidad: es el mismo catálogo para "
+                    + "todos los tenants.",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+    public Map<String, Object> consultarCabys(
+            @McpToolParam(description = "Código (13 dígitos o un prefijo) o texto de la descripción.",
+                    required = true) String q,
+            @McpToolParam(description = "Versión del catálogo; por omisión la más reciente cargada.",
+                    required = false) String version,
+            @McpToolParam(description = "Máximo de filas; por omisión 30, tope 200.",
+                    required = false) Integer limite) {
+        if (q == null || q.isBlank()) {
+            throw new IllegalArgumentException("Hace falta `q`.");
+        }
+        final String versionEfectiva = version != null && !version.isBlank()
+                ? version
+                : cabysVersiones.masReciente()
+                        .map(CabysVersion::getVersion)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "No hay ninguna versión del catálogo CABYS cargada."));
+        final int tope = Math.clamp(
+                limite == null || limite <= 0 ? CABYS_FILAS_POR_DEFECTO : limite, 1, CABYS_TOPE_FILAS);
+        final List<CabysItem> encontrados = cabysItems.buscar(
+                versionEfectiva, q.trim(),
+                org.springframework.data.domain.PageRequest.of(0, tope,
+                        org.springframework.data.domain.Sort.by("id.codigo")));
+
+        final Map<String, Object> salida = new LinkedHashMap<>();
+        salida.put("version", versionEfectiva);
+        salida.put("filas", encontrados.size());
+        salida.put("items", encontrados.stream().map(item -> Map.of(
+                "codigo", item.getCodigo(),
+                "descripcion", item.getDescripcion(),
+                "categoria1", item.getCategoria1() == null ? "" : item.getCategoria1(),
+                "tarifa", item.isExento() ? "exento"
+                        : item.getTarifa() == null ? "n/a" : item.getTarifa().toString()
+        )).toList());
+        return salida;
     }
 }

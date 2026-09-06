@@ -28,7 +28,12 @@ import java.util.Properties;
         entityManagerFactoryRef = SecurityConfig.ENTITY_MANAGER_FACTORY,
         transactionManagerRef = SecurityConfig.TRANSACTION_MANAGER,
         basePackageClasses = {
-                name.julatec.ekonomi.security.User.class
+                name.julatec.ekonomi.security.User.class,
+                // CABYS comparte esta base y esta unidad de persistencia con la seguridad
+                // porque ninguna de las dos pertenece a un tenant — ver el javadoc de
+                // CabysItem. No es una tabla de seguridad; está acá por dónde vive, no por
+                // qué es.
+                name.julatec.ekonomi.cabys.CabysItem.class,
         }
 )
 public class SecurityConfig {
@@ -75,7 +80,7 @@ public class SecurityConfig {
         lef.setDataSource(dataSource);
         lef.setJpaVendorAdapter(jpaVendorAdapter);
         lef.setJpaProperties(getJpaProperties());
-        lef.setPackagesToScan("name.julatec.ekonomi.security");
+        lef.setPackagesToScan("name.julatec.ekonomi.security", "name.julatec.ekonomi.cabys");
         return lef;
     }
 

@@ -93,6 +93,13 @@ class HerramientasDeclaradasTest {
             if ("listar_tenants".equals(tool.name()) || "estado_ekonomi".equals(tool.name())) {
                 continue; // son justamente las de orientación previa
             }
+            if ("consultar_cabys".equals(tool.name())) {
+                // El catálogo CABYS no pertenece a ninguna contabilidad —lo publica Hacienda
+                // y es idéntico para todas—, así que no tiene sentido pedirle un tenant.
+                // Forzar el parámetro solo para cumplir esta convención mentiría sobre qué
+                // datos toca la herramienta.
+                continue;
+            }
             final Parameter primero = metodo.getParameters()[0];
             assertEquals("tenant", primero.getName(),
                     tool.name() + " debería recibir el tenant como primer parámetro");

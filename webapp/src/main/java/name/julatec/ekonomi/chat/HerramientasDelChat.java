@@ -53,7 +53,8 @@ public class HerramientasDelChat {
             "buscar_comprobantes",
             "detalle_comprobante",
             "resumen_periodo",
-            "clientes_frecuentes");
+            "clientes_frecuentes",
+            "consultar_cabys");
 
     private final Map<String, McpServerFeatures.SyncToolSpecification> porNombre;
 
