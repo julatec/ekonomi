@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { api } from '../api/client.js'
@@ -21,7 +21,7 @@ const TARIFAS_IVA = [
 ]
 
 export default function PaginaComprobantes() {
-  const { tenant, rango, cambiarRango } = useSesion()
+  const { tenant, rango } = useSesion()
   const navegar = useNavigate()
   const [parametrosUrl, setParametrosUrl] = useSearchParams()
 
@@ -55,18 +55,18 @@ export default function PaginaComprobantes() {
   )
   const [limite, setLimite] = useState(Number(parametrosUrl.get('limite')) || LIMITES[0])
 
-  // Un enlace compartido puede traer su propio rango. Se adopta una sola vez, al abrir: de
-  // ahí en adelante manda la barra superior, que es el rango de toda la aplicación.
-  const rangoAdoptado = useRef(false)
-  useEffect(() => {
-    if (rangoAdoptado.current) return
-    rangoAdoptado.current = true
-    const desdeUrl = parametrosUrl.get('desde')
-    const hastaUrl = parametrosUrl.get('hasta')
-    if (desdeUrl || hastaUrl) cambiarRango(desdeUrl, hastaUrl)
-  }, [parametrosUrl, cambiarRango])
-
-  const { desde, hasta } = rango
+  // Un enlace como el «ver comprobantes» de una contraparte trae su propio rango para mostrar
+  // TODO su histórico, sin importar qué haya puesto la barra superior. Antes esto se adoptaba
+  // con cambiarRango(), que escribe la cookie del rango de TODA la aplicación: un solo clic ahí
+  // dejaba la barra superior —y cualquier otra pantalla— pegada a «desde 2015» hasta que
+  // alguien la cambiara a mano otra vez. Ahora es un override local a esta pantalla nada más:
+  // se lee una sola vez al abrir (por eso useState y no useSearchParams directo, que cambiaría
+  // en cada edición de los demás filtros) y no toca la cookie ni el estado global.
+  const [desdeUrl] = useState(() => parametrosUrl.get('desde'))
+  const [hastaUrl] = useState(() => parametrosUrl.get('hasta'))
+  const desde = desdeUrl || rango.desde
+  const hasta = hastaUrl || rango.hasta
+  const rangoForzado = Boolean(desdeUrl || hastaUrl)
 
   const textoDiferido = useDebounce(texto, 400)
   const emisorDiferido = useDebounce(emisor, 400)
@@ -233,6 +233,13 @@ export default function PaginaComprobantes() {
       </div>
 
       {consulta.error && <div className="aviso error">{consulta.error.message}</div>}
+
+      {rangoForzado && (
+        <div className="aviso pequeno">
+          Mostrando {desde || '(sin piso)'} a {hasta || '(sin techo)'} — el rango de este enlace,
+          no el de la barra superior.
+        </div>
+      )}
 
       {datos?.truncado && (
         <div className="aviso">
