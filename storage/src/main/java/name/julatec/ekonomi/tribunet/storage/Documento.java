@@ -57,10 +57,22 @@ public class Documento {
      * `modify column ... longtext` sin charset. Con la tabla en utf8mb4, un eventual
      * `hbm2ddl.auto=update` conserva el juego en vez de revertirlo a latin1.
      *
-     * Estado al 5 sep 2026: los dos esquemas y las diez tablas ya tienen utf8mb4 por
-     * omision. Las columnas `document` estan convertidas en cuatro tablas de
-     * `julatec_invoices`; faltan `julatec_invoices.factura` y las cinco de
-     * `julatec_tribuconta` — son reconstrucciones de tabla, la mayor de 753 MB.
+     * Estado al 6 sep 2026: CONVERSION COMPLETA. Las columnas de texto largo de los dos
+     * esquemas (`document` en factura/factura_compra/factura_exportacion/nota_credito/
+     * nota_debito, y `mensaje_hacienda`/`mensaje_receptor` en `mensaje`) estan en utf8mb4
+     * en las dos bases. La de `julatec_tribuconta.factura` (751 MB, 55.991 filas) tardo 5
+     * segundos: `ALTER TABLE ... MODIFY ... CHARACTER SET utf8mb4` no reescribe el dato
+     * caracter por caracter — solo cambia la interpretacion de los mismos bytes, porque
+     * todo byte que YA estaba en la columna es, por construccion, valido en latin1: un
+     * caracter fuera de ese juego jamas se pudo insertar, que es justo el bug que esto
+     * corrige. No hubo que tocar una fila.
+     *
+     * Antes de convertir se buscaron indicios de doble codificacion (texto UTF-8 guardado
+     * crudo en una columna latin1, que una `ALTER ... CHARACTER SET` preserva tal cual en
+     * vez de arreglar). Se encontraron 6 en `julatec_tribuconta.factura` — una Ñ guardada
+     * como dos caracteres latin1 (`Ã±`) en vez de uno — de una importacion previa que no
+     * paso por este codigo. No las corrompio esta conversion: ya estaban asi. Quedan para
+     * revisarlas aparte; las claves estan en el commit que aplico esto.
      */
     @Lob
     @Column(length = Integer.MAX_VALUE)
