@@ -12,6 +12,14 @@ import BandaTotales from '../componentes/BandaTotales.jsx'
 
 const LIMITES = [50, 200, 500]
 
+// Mismo orden y mismas etiquetas que arma el backend en ComprobanteResumen.TARIFAS —el orden
+// del Excel (Voucher), no el numérico de los códigos de Hacienda—. Se fija acá para que los
+// encabezados salgan siempre, incluso con la tabla vacía, en vez de depender de la primera fila.
+const TARIFAS_IVA = [
+  '0% Art.32', '0.5%', '1%', '2%', '4%',
+  'Transitorio 0%', 'Transitorio 4%', '8%', '13%', 'Exenta', '0% sin crédito',
+]
+
 export default function PaginaComprobantes() {
   const { tenant, rango, cambiarRango } = useSesion()
   const navegar = useNavigate()
@@ -256,7 +264,12 @@ export default function PaginaComprobantes() {
                 <th>Consecutivo</th>
                 <th>Emisor</th>
                 <th>Receptor</th>
-                <th style={{ textAlign: 'right' }}>Impuesto</th>
+                {TARIFAS_IVA.map((etiqueta) => (
+                  <React.Fragment key={etiqueta}>
+                    <th style={{ textAlign: 'right' }}>Base {etiqueta}</th>
+                    <th style={{ textAlign: 'right' }}>Impuesto {etiqueta}</th>
+                  </React.Fragment>
+                ))}
                 <th style={{ textAlign: 'right' }}>Total</th>
               </tr>
             </thead>
@@ -288,9 +301,16 @@ export default function PaginaComprobantes() {
                         <div className="tenue mono pequeno">act. {fila.codigoActividadReceptor}</div>
                       )}
                     </td>
-                    <td className={`monto ${negativo ? 'negativo' : ''}`}>
-                      {formatearMonto(conSigno(fila.totalImpuesto, fila.tipo), fila.moneda)}
-                    </td>
+                    {(fila.impuestosPorTarifa || []).map((tasa) => (
+                      <React.Fragment key={tasa.codigo}>
+                        <td className={`monto ${negativo ? 'negativo' : ''}`}>
+                          {formatearMonto(conSigno(tasa.baseImponible, fila.tipo), fila.moneda)}
+                        </td>
+                        <td className={`monto ${negativo ? 'negativo' : ''}`}>
+                          {formatearMonto(conSigno(tasa.impuesto, fila.tipo), fila.moneda)}
+                        </td>
+                      </React.Fragment>
+                    ))}
                     <td className={`monto ${negativo ? 'negativo' : ''}`}>
                       {formatearMonto(conSigno(fila.totalComprobante, fila.tipo), fila.moneda)}
                     </td>
