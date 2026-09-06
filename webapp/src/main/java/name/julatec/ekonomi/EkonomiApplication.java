@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootApplication(
@@ -62,37 +64,56 @@ public class EkonomiApplication {
     }
 
     /**
-     * Con la lista vacía NO se registra ninguna regla, y esa condición es el arreglo de un
-     * error medido el 5 sep 2026 contra la contabilidad real.
+     * El propio origen SIEMPRE pasa; la lista solo agrega los ajenos.
      * <p>
-     * Vite emite los tags del bundle con el atributo {@code crossorigin}, y eso obliga al
-     * navegador a mandar el encabezado {@code Origin} <b>aunque la petición sea del mismo
-     * origen</b>. Spring trata como petición CORS a cualquiera que traiga ese encabezado, así
-     * que con la lista vacía —el valor de producción— el filtro respondía <b>403 a los propios
-     * assets de la aplicación</b> y la página quedaba en blanco:
-     * <pre>
-     *   GET /dist/assets/index-….js                 200
-     *   GET /dist/assets/index-….js  con Origin     403
-     * </pre>
-     * Registrando la regla solo cuando hay orígenes configurados, producción se comporta como
-     * antes de que existiera este bean —el filtro deja pasar— y el dev server de Vite sigue
-     * teniendo su permiso donde la propiedad lo define.
+     * Spring trata como petición CORS a cualquiera que traiga el encabezado {@code Origin}, y el
+     * navegador lo manda <b>aunque la petición sea del mismo origen</b> en dos casos que esta
+     * aplicación produce todo el tiempo: los tags que Vite emite con {@code crossorigin} para el
+     * bundle, y cualquier {@code POST} de {@code fetch}. Con una lista de orígenes que no
+     * incluyera el propio host, el filtro respondía <b>403 a los assets de la propia página</b>
+     * y a {@code POST /api/chat}. Medido las dos veces: primero en producción con la lista
+     * vacía, después en local con la lista puesta pero llegando por otro puerto.
+     * <p>
+     * De ahí que la configuración se arme por petición: se permite el origen desde el que se
+     * pidió —que por definición no es cross-origin— más los que declare la propiedad. Un origen
+     * ajeno no listado sigue recibiendo 403, que es lo que se quiere.
      */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
-            return source;
-        }
-        final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(List.of("*"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return request -> {
+            final String origen = request.getHeader(HttpHeaders.ORIGIN);
+            if (origen == null) {
+                return null;
+            }
+            final List<String> permitidos = new ArrayList<>(
+                    allowedOrigins == null ? List.of() : allowedOrigins);
+            final String propio = propio(request);
+            if (propio != null && !permitidos.contains(propio)) {
+                permitidos.add(propio);
+            }
+            if (permitidos.isEmpty()) {
+                return null;
+            }
+            final CorsConfiguration configuracion = new CorsConfiguration();
+            configuracion.setAllowedOrigins(permitidos);
+            configuracion.setAllowedMethods(List.of("*"));
+            configuracion.setAllowedHeaders(List.of("*"));
+            configuracion.setAllowCredentials(true);
+            return configuracion;
+        };
     }
 
+    /**
+     * El origen de la propia petición, reconstruido del pedido y no del encabezado {@code Origin}
+     * —que lo elige el cliente y por lo tanto no prueba nada—.
+     */
+    private static String propio(jakarta.servlet.http.HttpServletRequest request) {
+        final String esquema = request.getScheme();
+        final int puerto = request.getServerPort();
+        final boolean estandar = ("http".equals(esquema) && puerto == 80)
+                || ("https".equals(esquema) && puerto == 443);
+        return esquema + "://" + request.getServerName() + (estandar ? "" : ":" + puerto);
+    }
 
     /**
      * Autenticación únicamente por certificado de firma digital.

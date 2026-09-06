@@ -55,11 +55,36 @@ export async function pedir(ruta, parametros) {
   return respuesta.json()
 }
 
+/**
+ * POST con cuerpo JSON. Existe solo para el asistente: todo lo demás de esta interfaz lee.
+ *
+ * Comparte con `pedir` el manejo del 401 —un `fetch` no puede hacer que el navegador vuelva a
+ * presentar el certificado, así que se avisa hacia arriba— y la lectura del mensaje de error.
+ */
+export async function enviar(ruta, cuerpo) {
+  const respuesta = await fetch(new URL(ruta, window.location.origin), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(cuerpo),
+  })
+  if (respuesta.status === 401) {
+    window.dispatchEvent(new CustomEvent(SESION_VENCIDA))
+    throw new ErrorApi(401, 'El certificado ya no es válido para esta sesión.')
+  }
+  if (!respuesta.ok) {
+    throw new ErrorApi(respuesta.status, await mensajeDeError(respuesta))
+  }
+  return respuesta.json()
+}
+
 export const api = {
   sesion: () => pedir('/api/session'),
   clientes: (parametros) => pedir('/api/clients', parametros),
   comprobantes: (parametros) => pedir('/api/comprobantes', parametros),
   comprobante: (clave, parametros) => pedir(`/api/comprobantes/${encodeURIComponent(clave)}`, parametros),
+  estadoDelChat: () => pedir('/api/chat'),
+  preguntar: (mensaje, historial) => enviar('/api/chat', { mensaje, historial }),
 }
 
 /** La cookie que el backend ya usa para resolver el tenant y el rango de fechas. */

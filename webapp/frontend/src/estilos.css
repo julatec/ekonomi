@@ -216,10 +216,50 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   padding: 12px 14px;
   border-bottom: 1px solid var(--borde);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 6px;
 }
-.cajon .cuerpo { flex: 1; overflow-y: auto; padding: 14px; }
+/* El botón de cerrar se empuja al borde con margin-left:auto y no con space-between: el
+   encabezado lleva tres cosas —título, contabilidad y cierre— y space-between las separaría a
+   las tres por igual, dejando la contabilidad flotando en el medio. */
+.cajon header .cerrar {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.cajon .conversacion {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* `pre-wrap`: el modelo contesta con saltos de línea y listas, y colapsarlos vuelve ilegible
+   cualquier respuesta que tenga más de un dato. */
+.cajon .burbuja {
+  padding: 8px 10px;
+  border-radius: 10px;
+  max-width: 92%;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.cajon .burbuja.user { align-self: flex-end; background: #dbeafe; color: #1e3a5f; }
+.cajon .burbuja.assistant { align-self: flex-start; background: #f1f5f9; }
+.cajon .burbuja.error { background: #fee2e2; color: #7f1d1d; }
+.cajon .redactar {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--borde);
+}
+.cajon .redactar input { flex: 1; }
 
 /* Los reportes se bajan, no se navegan: un enlace de texto no lo comunica. Sigue siendo un
    <a> por debajo —el servidor manda Content-Disposition y el navegador descarga solo— pero
@@ -238,3 +278,4 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
 }
 .boton:hover { background: #eff6ff; border-color: #93c5fd; }
 .boton:active { background: #dbeafe; }
+
