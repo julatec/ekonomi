@@ -29,11 +29,12 @@ import java.util.Properties;
         transactionManagerRef = SecurityConfig.TRANSACTION_MANAGER,
         basePackageClasses = {
                 name.julatec.ekonomi.security.User.class,
-                // CABYS comparte esta base y esta unidad de persistencia con la seguridad
-                // porque ninguna de las dos pertenece a un tenant — ver el javadoc de
-                // CabysItem. No es una tabla de seguridad; está acá por dónde vive, no por
-                // qué es.
+                // CABYS y ActividadEconomica comparten esta base y esta unidad de persistencia
+                // con la seguridad porque ninguna pertenece a un tenant — ver el javadoc de
+                // CabysItem/ActividadEconomica. No son tablas de seguridad; están acá por dónde
+                // viven, no por qué son.
                 name.julatec.ekonomi.cabys.CabysItem.class,
+                name.julatec.ekonomi.actividad.ActividadEconomica.class,
         }
 )
 public class SecurityConfig {
@@ -80,7 +81,8 @@ public class SecurityConfig {
         lef.setDataSource(dataSource);
         lef.setJpaVendorAdapter(jpaVendorAdapter);
         lef.setJpaProperties(getJpaProperties());
-        lef.setPackagesToScan("name.julatec.ekonomi.security", "name.julatec.ekonomi.cabys");
+        lef.setPackagesToScan(
+                "name.julatec.ekonomi.security", "name.julatec.ekonomi.cabys", "name.julatec.ekonomi.actividad");
         return lef;
     }
 

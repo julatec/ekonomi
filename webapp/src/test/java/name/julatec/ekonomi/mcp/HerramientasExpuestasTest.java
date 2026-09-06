@@ -3,6 +3,7 @@ package name.julatec.ekonomi.mcp;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import name.julatec.ekonomi.actividad.ActividadEconomicaRepository;
 import name.julatec.ekonomi.cabys.CabysItemRepository;
 import name.julatec.ekonomi.cabys.CabysVersionRepository;
 import name.julatec.ekonomi.report.ComprobanteReportService;
@@ -38,7 +39,7 @@ class HerramientasExpuestasTest {
     private static final Set<String> ESPERADAS = Set.of(
             "listar_tenants", "estado_ekonomi", "esquema", "buscar_comprobantes",
             "detalle_comprobante", "resumen_periodo", "clientes_frecuentes", "consulta_sql",
-            "reporte_compras", "reporte_ventas", "consultar_cabys");
+            "reporte_compras", "reporte_ventas", "consultar_cabys", "consultar_actividad");
 
     private final ApplicationContextRunner contexto = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
@@ -60,7 +61,8 @@ class HerramientasExpuestasTest {
                     mock(ComprobanteReportService.class),
                     mock(FacturaRepository.class),
                     mock(CabysItemRepository.class),
-                    mock(CabysVersionRepository.class)));
+                    mock(CabysVersionRepository.class),
+                    mock(ActividadEconomicaRepository.class)));
 
     @SuppressWarnings("unchecked")
     private static List<McpServerFeatures.SyncToolSpecification> especificaciones(
@@ -72,7 +74,7 @@ class HerramientasExpuestasTest {
     }
 
     @Test
-    @DisplayName("el escáner publica exactamente las once herramientas de Ekonomi")
+    @DisplayName("el escáner publica exactamente las doce herramientas de Ekonomi")
     void publicaLasOnceHerramientas() {
         contexto.run(context -> {
             assertNull(context.getStartupFailure(), "el contexto no debería fallar");

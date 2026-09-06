@@ -87,6 +87,7 @@ export const api = {
   preguntar: (mensaje, historial) => enviar('/api/chat', { mensaje, historial }),
   cabys: (parametros) => pedir('/api/cabys', parametros),
   cabysVersiones: () => pedir('/api/cabys/version'),
+  actividades: (parametros) => pedir('/api/actividades', parametros),
 }
 
 /** La cookie que el backend ya usa para resolver el tenant y el rango de fechas. */

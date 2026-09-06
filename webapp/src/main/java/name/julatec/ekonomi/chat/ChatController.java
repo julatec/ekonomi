@@ -3,6 +3,7 @@ package name.julatec.ekonomi.chat;
 import jakarta.servlet.http.HttpServletRequest;
 import name.julatec.ekonomi.session.Workspace;
 import name.julatec.ekonomi.session.WorkspaceService;
+import name.julatec.util.algebraic.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -46,21 +49,37 @@ public class ChatController {
     public record Pregunta(String mensaje, List<Map<String, String>> historial) {
     }
 
+    private static String comoFecha(Date fecha) {
+        return fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString();
+    }
+
     /**
      * El mensaje de sistema, armado una sola vez y SIEMPRE primero.
      * <p>
      * La plantilla de Ministral rechaza un {@code system} que no esté en la primera posición
      * —devuelve HTTP 500—, así que acá va todo lo que el modelo tiene que saber de entrada: qué
-     * contabilidad está abierta, qué día es hoy, y las tres convenciones contables que de otro
-     * modo inventaría.
+     * contabilidad está abierta, qué día es hoy, qué rango tiene puesto la barra superior, y las
+     * convenciones contables que de otro modo inventaría.
+     * <p>
+     * El rango va acá y no en las herramientas: {@code buscar_comprobantes}/{@code
+     * resumen_periodo} siguen aceptando fechas explícitas y sin ellas siguen sin filtro de
+     * fecha —no hay un valor por omisión escondido ahí—. Esto es solo para que el modelo sepa
+     * qué está mirando la persona ahora mismo y pueda usarlo, no para que las herramientas
+     * adivinen algo en silencio.
      */
-    private String sistema(String tenant) {
+    private String sistema(String tenant, Date desde, Date hasta) {
         return """
                 Sos el asistente de Ekonomi, que guarda comprobantes electrónicos de Costa Rica
                 (facturas, facturas de compra, de exportación, y notas de crédito y débito).
 
                 La contabilidad abierta es `%s`. Usá ese tenant en las herramientas salvo que la
                 persona pida otro explícitamente. Hoy es %s.
+
+                La barra superior tiene puesto el rango %s a %s. Es el rango que la persona está
+                mirando en pantalla ahora mismo: usalo en buscar_comprobantes/resumen_periodo
+                cuando la pregunta no traiga sus propias fechas («¿cuánto facturé?», sin más,
+                es de ESTE rango). Si la persona pide un período distinto («todo el año pasado»,
+                «desde que empecé»), usá ese en vez del de la barra superior.
 
                 Reglas que no podés deducir de los datos:
                 - Las fechas van AAAA-MM-DD.
@@ -78,7 +97,7 @@ public class ChatController {
                 citas, y tablas cuando compares varias filas—. Si te piden un diagrama, un
                 flujo o un organigrama, dibujalo en un bloque de código con el lenguaje
                 `mermaid`; si no te lo piden, no dibujes nada.
-                """.formatted(tenant, LocalDate.now());
+                """.formatted(tenant, LocalDate.now(), comoFecha(desde), comoFecha(hasta));
     }
 
     @GetMapping("/api/chat")
@@ -99,8 +118,9 @@ public class ChatController {
         }
         final Workspace workspace = workspaceService.getWorkspace(authentication, request);
         final String tenant = workspace.getSession().getTenant();
+        final Interval<Date> rango = workspace.getDateInterval();
         return modelo.conversar(
-                sistema(tenant),
+                sistema(tenant, rango.lower, rango.upper),
                 pregunta.historial() == null ? List.of() : pregunta.historial(),
                 pregunta.mensaje());
     }

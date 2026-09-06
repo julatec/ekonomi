@@ -4,6 +4,8 @@ import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import name.julatec.ekonomi.accounting.Voucher;
+import name.julatec.ekonomi.actividad.ActividadEconomica;
+import name.julatec.ekonomi.actividad.ActividadEconomicaRepository;
 import name.julatec.ekonomi.cabys.CabysItem;
 import name.julatec.ekonomi.cabys.CabysItemRepository;
 import name.julatec.ekonomi.cabys.CabysVersion;
@@ -75,6 +77,7 @@ public class EkonomiMcpTools {
     private final FacturaRepository facturas;
     private final CabysItemRepository cabysItems;
     private final CabysVersionRepository cabysVersiones;
+    private final ActividadEconomicaRepository actividades;
 
     @PersistenceContext(unitName = StorageConfig.PERSISTENCE_UNIT)
     private EntityManager entityManager;
@@ -86,7 +89,8 @@ public class EkonomiMcpTools {
             ComprobanteReportService reportes,
             FacturaRepository facturas,
             CabysItemRepository cabysItems,
-            CabysVersionRepository cabysVersiones) {
+            CabysVersionRepository cabysVersiones,
+            ActividadEconomicaRepository actividades) {
         this.acceso = acceso;
         this.busqueda = busqueda;
         this.resumen = resumen;
@@ -94,6 +98,7 @@ public class EkonomiMcpTools {
         this.facturas = facturas;
         this.cabysItems = cabysItems;
         this.cabysVersiones = cabysVersiones;
+        this.actividades = actividades;
     }
 
     private static int limite(Integer pedido) {
@@ -577,6 +582,48 @@ public class EkonomiMcpTools {
                 "categoria1", item.getCategoria1() == null ? "" : item.getCategoria1(),
                 "tarifa", item.isExento() ? "exento"
                         : item.getTarifa() == null ? "n/a" : item.getTarifa().toString()
+        )).toList());
+        return salida;
+    }
+
+    // ------------------------------------------------------------------
+    // Actividades económicas (ATV Hacienda ↔ CIIU4 TRIBU-CR)
+    // ------------------------------------------------------------------
+
+    private static final int ACTIVIDAD_FILAS_POR_DEFECTO = 30;
+    private static final int ACTIVIDAD_TOPE_FILAS = 200;
+
+    @McpTool(name = "consultar_actividad",
+            description = "Busca en la correspondencia de actividades económicas de Hacienda: el código "
+                    + "ATV de 6 dígitos que trae cada comprobante (codigoActividadEmisor/Receptor) contra "
+                    + "su subclase TRIBU-CR (CIIU4). Por código (prefijo) o por un fragmento del nombre de "
+                    + "la actividad, en cualquiera de los dos nombres. No pertenece a ninguna contabilidad: "
+                    + "es el mismo catálogo para todos los tenants.",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, idempotentHint = true, openWorldHint = false))
+    public Map<String, Object> consultarActividad(
+            @McpToolParam(description = "Código ATV (6 dígitos o un prefijo) o texto del nombre de la actividad.",
+                    required = true) String q,
+            @McpToolParam(description = "Máximo de filas; por omisión 30, tope 200.",
+                    required = false) Integer limite) {
+        if (q == null || q.isBlank()) {
+            throw new IllegalArgumentException("Hace falta `q`.");
+        }
+        final int tope = Math.clamp(
+                limite == null || limite <= 0 ? ACTIVIDAD_FILAS_POR_DEFECTO : limite, 1, ACTIVIDAD_TOPE_FILAS);
+        final List<ActividadEconomica> encontradas = actividades.buscar(
+                q.trim(),
+                org.springframework.data.domain.PageRequest.of(0, tope,
+                        org.springframework.data.domain.Sort.by("atv", "ciiu4")));
+
+        final Map<String, Object> salida = new LinkedHashMap<>();
+        salida.put("filas", encontradas.size());
+        salida.put("actividades", encontradas.stream().map(actividad -> Map.of(
+                "atv", actividad.getAtv(),
+                "atvNombre", actividad.getAtvNombre(),
+                "ciiu4", actividad.getCiiu4(),
+                "ciiu4Nombre", actividad.getCiiu4Nombre(),
+                "especialidad", actividad.getEspecialidad() == null ? "N/A" : actividad.getEspecialidad()
         )).toList());
         return salida;
     }
