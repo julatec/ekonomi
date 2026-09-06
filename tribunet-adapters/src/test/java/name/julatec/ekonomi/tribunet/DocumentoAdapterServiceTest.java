@@ -39,6 +39,9 @@ class DocumentoAdapterServiceTest {
     @Value("classpath:notaDebito.xml")
     Resource notaDebito;
 
+    @Value("classpath:tiquete_v44_sin_receptor.xml")
+    Resource tiqueteSinReceptor;
+
     @Test
     void adaptFactura() throws IOException {
         Optional<Documento> optionalDocumento = documentoAdapterService.adapt(factura.getInputStream(), e -> fail());
@@ -132,6 +135,41 @@ class DocumentoAdapterServiceTest {
         assertEquals(1, documento.getDetalleServicio().getLineaDetalle().count());
         assertEquals(new BigDecimal("729.00000"), documento.getResumenFactura().getTotalComprobante());
         assertTrue(documento instanceof NotaDebito);
+    }
+
+    /**
+     * Un tiquete sin nodo Receptor tiene que adaptarse igual.
+     * <p>
+     * En {@code TiqueteElectronico_V4.4.xsd} el Receptor es {@code minOccurs="0"}: un tiquete a
+     * consumidor final no lleva identificación de quien compra, y es el documento que más emite
+     * un comercio de mostrador. Antes de este arreglo, el constructor del adaptador generado
+     * hacía {@code new IdentificacionFactory...(target.getIdentificacion())} sobre un
+     * {@code target} nulo y lanzaba {@link NullPointerException}. Como
+     * {@link DocumentoAdapterService#adapt(org.w3c.dom.Document)} la atrapa y devuelve vacío, el
+     * comprobante se perdía en silencio: 120 documentos el 5 de setiembre de 2026 en producción,
+     * todos con la misma traza.
+     * <p>
+     * Lo que se fija es que el documento entre completo y que la ausencia del receptor se
+     * exprese como campos nulos, no como una excepción ni como un documento que no existe.
+     */
+    @Test
+    void adaptTiqueteSinReceptor() throws IOException {
+        Optional<Documento> optionalDocumento =
+                documentoAdapterService.adapt(tiqueteSinReceptor.getInputStream(), e -> fail());
+        assertFalse(optionalDocumento.isEmpty(), "un tiquete sin receptor no debe perderse");
+        Documento documento = optionalDocumento.get();
+        assertEquals("50610012000310231549000100004010000054357101884012", documento.getClave());
+        assertEquals("00100004010000040012", documento.getNumeroConsecutivo());
+        assertEquals("INVERSIONES ABC", documento.getEmisor().getNombre());
+        assertEquals("55102565590", documento.getEmisor().getIdentificacion().getNumero());
+        // El receptor sigue siendo un adaptador —nunca nulo— pero todo lo suyo es nulo. Esa es
+        // la forma que el resto del sistema ya sabe leer: `Voucher` encadena
+        // getReceptor().getIdentificacion().getNumero() sin comprobar nada.
+        assertNotNull(documento.getReceptor());
+        assertNull(documento.getReceptor().getNombre());
+        assertNotNull(documento.getReceptor().getIdentificacion());
+        assertNull(documento.getReceptor().getIdentificacion().getNumero());
+        assertEquals(1, documento.getDetalleServicio().getLineaDetalle().count());
     }
 
     @Test

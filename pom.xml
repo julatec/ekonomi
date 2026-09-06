@@ -33,7 +33,11 @@
         <dependency>
             <groupId>name.julatec.ekonomi</groupId>
             <artifactId>tribunet</artifactId>
-            <version>1.1.5</version>
+            <!-- 1.1.6 arregla el generador de adaptadores: un nodo opcional ausente en el XML
+                 —el Receptor de un tiquete, que en el esquema de Hacienda es minOccurs="0"—
+                 hacía que el constructor generado lanzara NullPointerException y el comprobante
+                 se perdiera en silencio. 120 documentos el 5 sep 2026 en producción. -->
+            <version>1.1.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

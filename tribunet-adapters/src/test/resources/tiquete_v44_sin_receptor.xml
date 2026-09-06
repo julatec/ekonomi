@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!-- Tiquete electronico v4.4 SIN nodo Receptor.
+     No es un caso inventado: en TiqueteElectronico_V4.4.xsd el Receptor es minOccurs="0",
+     porque un tiquete a consumidor final no lleva identificacion de quien compra. Es el
+     documento que mas emite un comercio de mostrador. -->
+<TiqueteElectronico xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/tiqueteElectronico">
+    <Clave>50610012000310231549000100004010000054357101884012</Clave>
+    <ProveedorSistemas>3101123456</ProveedorSistemas>
+    <CodigoActividadEmisor>523402</CodigoActividadEmisor>
+    <NumeroConsecutivo>00100004010000040012</NumeroConsecutivo>
+    <FechaEmision>2025-06-10T00:00:00-06:00</FechaEmision>
+    <Emisor>
+        <Nombre>INVERSIONES ABC</Nombre>
+        <Identificacion>
+            <Tipo>02</Tipo>
+            <Numero>55102565590</Numero>
+        </Identificacion>
+        <NombreComercial>Example ABC</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>05</Distrito>
+            <Barrio>04</Barrio>
+            <OtrasSenas>Some where.</OtrasSenas>
+        </Ubicacion>
+        <Telefono>
+            <CodigoPais>506</CodigoPais>
+            <NumTelefono>12345678</NumTelefono>
+        </Telefono>
+        <CorreoElectronico>emmiter@test.com</CorreoElectronico>
+    </Emisor>
+    <CondicionVenta>01</CondicionVenta>
+    <PlazoCredito>0</PlazoCredito>
+    <MedioPago>01</MedioPago>
+    <DetalleServicio>
+        <LineaDetalle>
+            <NumeroLinea>1</NumeroLinea>
+            <Cantidad>1</Cantidad>
+            <UnidadMedida>Unid</UnidadMedida>
+            <Detalle>Cafe con leche - consumidor final sin identificar</Detalle>
+            <PrecioUnitario>10000</PrecioUnitario>
+            <MontoTotal>10000</MontoTotal>
+            <SubTotal>10000</SubTotal>
+            <Impuesto>
+                <Codigo>01</Codigo>
+                <CodigoTarifaIVA>09</CodigoTarifaIVA>
+                <Tarifa>0.5</Tarifa>
+                <Monto>50</Monto>
+            </Impuesto>
+            <ImpuestoNeto>50</ImpuestoNeto>
+            <MontoTotalLinea>10050</MontoTotalLinea>
+        </LineaDetalle>
+    </DetalleServicio>
+    <ResumenFactura>
+        <TotalMercanciasGravadas>10000</TotalMercanciasGravadas>
+        <TotalGravado>10000</TotalGravado>
+        <TotalExento>0</TotalExento>
+        <TotalVenta>10000</TotalVenta>
+        <TotalVentaNeta>10000</TotalVentaNeta>
+        <TotalImpuesto>50</TotalImpuesto>
+        <TotalComprobante>10050</TotalComprobante>
+    </ResumenFactura>
+</TiqueteElectronico>
