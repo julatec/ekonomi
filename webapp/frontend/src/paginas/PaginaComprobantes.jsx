@@ -271,13 +271,16 @@ export default function PaginaComprobantes() {
                 <th>Consecutivo</th>
                 <th>Emisor</th>
                 <th>Receptor</th>
+                {/* Total va pegado a Receptor, antes del desglose de 22 columnas por tarifa: es
+                    el número que casi siempre importa primero, y así queda visible sin tener
+                    que desplazar la tabla hacia la derecha. */}
+                <th style={{ textAlign: 'right' }}>Total</th>
                 {TARIFAS_IVA.map((etiqueta) => (
                   <React.Fragment key={etiqueta}>
                     <th style={{ textAlign: 'right' }}>Base {etiqueta}</th>
                     <th style={{ textAlign: 'right' }}>Impuesto {etiqueta}</th>
                   </React.Fragment>
                 ))}
-                <th style={{ textAlign: 'right' }}>Total</th>
               </tr>
             </thead>
             <tbody>
@@ -308,6 +311,9 @@ export default function PaginaComprobantes() {
                         <div className="tenue mono pequeno">act. {fila.codigoActividadReceptor}</div>
                       )}
                     </td>
+                    <td className={`monto ${negativo ? 'negativo' : ''}`}>
+                      {formatearMonto(conSigno(fila.totalComprobante, fila.tipo), fila.moneda)}
+                    </td>
                     {(fila.impuestosPorTarifa || []).map((tasa) => (
                       <React.Fragment key={tasa.codigo}>
                         <td className={`monto ${negativo ? 'negativo' : ''}`}>
@@ -318,9 +324,6 @@ export default function PaginaComprobantes() {
                         </td>
                       </React.Fragment>
                     ))}
-                    <td className={`monto ${negativo ? 'negativo' : ''}`}>
-                      {formatearMonto(conSigno(fila.totalComprobante, fila.tipo), fila.moneda)}
-                    </td>
                   </tr>
                 )
               })}
