@@ -80,4 +80,23 @@ public interface FacturaCompra extends Documento {
      * @return informacion referencia.
      */
     Stream<InformacionReferencia> getInformacionReferencia();
+
+    /** v4.3: único campo. Ver {@link Documento#getCodigoActividad()}. */
+    default String getCodigoActividad() {
+        return null;
+    }
+
+    /**
+     * v4.4: el del emisor — acá es <b>opcional</b>. En la factura de compra el rol se
+     * invierte: quien firma y transmite es el receptor, así que es su código el
+     * obligatorio y el del proveedor puede faltar.
+     */
+    default String getCodigoActividadEmisor() {
+        return null;
+    }
+
+    /** v4.4: el del receptor — acá es el <b>obligatorio</b>, por la inversión de roles. */
+    default String getCodigoActividadReceptor() {
+        return null;
+    }
 }

@@ -35,13 +35,22 @@ public record FiltroComprobantes(
         Date hasta,
         BigDecimal montoMinimo,
         BigDecimal montoMaximo,
-        String moneda) {
+        String moneda,
+        /**
+         * Código de actividad económica de 6 dígitos, de cualquiera de las dos partes.
+         * <p>
+         * Existe desde v4.3 de Hacienda; los comprobantes de v4.2 (2016/2017) siempre dan
+         * {@code null} acá, así que este filtro nunca los va a traer. Es una limitación del
+         * formato, no de la búsqueda.
+         */
+        String codigoActividad) {
 
     public boolean vacio() {
         return clave == null && consecutivo == null && cedula == null && nombre == null
                 && emisor == null && receptor == null
                 && desde == null && hasta == null
-                && montoMinimo == null && montoMaximo == null && moneda == null;
+                && montoMinimo == null && montoMaximo == null && moneda == null
+                && codigoActividad == null;
     }
 
     public static Date fecha(String nombre, String valor) {
@@ -90,10 +99,13 @@ public record FiltroComprobantes(
         return valor == null || valor.isBlank() ? null : valor.trim();
     }
 
+    private static final java.util.regex.Pattern CODIGO_ACTIVIDAD = java.util.regex.Pattern.compile("\\d{6}");
+
     public static FiltroComprobantes de(
             String clave, String consecutivo, String cedula, String nombre,
             String emisor, String receptor,
-            String desde, String hasta, String montoMinimo, String montoMaximo, String moneda) {
+            String desde, String hasta, String montoMinimo, String montoMaximo, String moneda,
+            String codigoActividad) {
         final BigDecimal minimo = monto("monto_minimo", montoMinimo);
         final BigDecimal maximo = monto("monto_maximo", montoMaximo);
         if (minimo != null && maximo != null && minimo.compareTo(maximo) > 0) {
@@ -105,10 +117,15 @@ public record FiltroComprobantes(
         if (inicio != null && fin != null && inicio.after(fin)) {
             throw new IllegalArgumentException("La fecha `desde` es posterior a `hasta`.");
         }
+        final String actividad = limpio(codigoActividad);
+        if (actividad != null && !CODIGO_ACTIVIDAD.matcher(actividad).matches()) {
+            throw new IllegalArgumentException(
+                    "El código de actividad son 6 dígitos exactos; llegó: " + actividad);
+        }
         return new FiltroComprobantes(
                 limpio(clave), limpio(consecutivo), limpio(cedula), limpio(nombre),
                 limpio(emisor), limpio(receptor),
-                inicio, fin, minimo, maximo, limpio(moneda));
+                inicio, fin, minimo, maximo, limpio(moneda), actividad);
     }
 
     /** Traduce los criterios a un filtro aplicable a cualquiera de los cinco tipos. */
@@ -130,6 +147,7 @@ public record FiltroComprobantes(
                 hasta == null ? null : ComprobanteSpecs.<T>hasta(hasta),
                 montoMinimo == null ? null : ComprobanteSpecs.<T>montoDesde(montoMinimo),
                 montoMaximo == null ? null : ComprobanteSpecs.<T>montoHasta(montoMaximo),
-                moneda == null ? null : ComprobanteSpecs.<T>moneda(moneda));
+                moneda == null ? null : ComprobanteSpecs.<T>moneda(moneda),
+                codigoActividad == null ? null : ComprobanteSpecs.<T>codigoActividad(codigoActividad));
     }
 }

@@ -18,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class FiltroComprobantesTest {
 
     private static FiltroComprobantes filtro(String desde, String hasta) {
-        return FiltroComprobantes.de(null, null, null, null, null, null, desde, hasta, null, null, null);
+        return FiltroComprobantes.de(null, null, null, null, null, null, desde, hasta, null, null, null, null);
     }
 
     @Test
     @DisplayName("una búsqueda sin ningún criterio se reconoce como vacía")
     void reconoceElFiltroVacio() {
-        assertTrue(FiltroComprobantes.de(null, null, null, null, null, null, null, null, null, null, null).vacio());
-        assertFalse(FiltroComprobantes.de(null, null, "3-101-000000", null, null, null, null, null, null, null, null).vacio());
+        assertTrue(FiltroComprobantes.de(null, null, null, null, null, null, null, null, null, null, null, null).vacio());
+        assertFalse(FiltroComprobantes.de(null, null, "3-101-000000", null, null, null, null, null, null, null, null, null).vacio());
     }
 
     @Test
@@ -61,33 +61,33 @@ class FiltroComprobantesTest {
     @DisplayName("un rango de montos al revés se rechaza")
     void montosInvertidosSeRechazan() {
         assertThrows(IllegalArgumentException.class,
-                () -> FiltroComprobantes.de(null, null, null, null, null, null, null, null, "5000", "100", null));
+                () -> FiltroComprobantes.de(null, null, null, null, null, null, null, null, "5000", "100", null, null));
     }
 
     @Test
     @DisplayName("un monto con separador de miles se rechaza en vez de truncarse")
     void montoConSeparadorSeRechaza() {
         final IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> FiltroComprobantes.de(null, null, null, null, null, null, null, null, "1,500.00", null, null));
+                () -> FiltroComprobantes.de(null, null, null, null, null, null, null, null, "1,500.00", null, null, null));
         assertTrue(error.getMessage().contains("separador de miles"));
     }
 
     @Test
     @DisplayName("los espacios sobrantes no cuentan como criterio")
     void losEspaciosNoSonCriterio() {
-        assertTrue(FiltroComprobantes.de("  ", " ", "", null, null, null, null, null, null, null, "  ").vacio());
+        assertTrue(FiltroComprobantes.de("  ", " ", "", null, null, null, null, null, null, null, "  ", null).vacio());
     }
 
     @Test
     @DisplayName("emisor y receptor cuentan como criterio, cada uno por su lado")
     void emisorYReceptorSonCriterio() {
         assertFalse(FiltroComprobantes.de(null, null, null, null, "Auto Mercado", null,
-                null, null, null, null, null).vacio());
+                null, null, null, null, null, null).vacio());
         assertFalse(FiltroComprobantes.de(null, null, null, null, null, "3101007186",
-                null, null, null, null, null).vacio());
+                null, null, null, null, null, null).vacio());
         // Y no se confunden entre si: cada uno viaja en su propio campo.
         final FiltroComprobantes filtro = FiltroComprobantes.de(null, null, null, null,
-                "3101007186", "503590732", null, null, null, null, null);
+                "3101007186", "503590732", null, null, null, null, null, null);
         assertEquals("3101007186", filtro.emisor());
         assertEquals("503590732", filtro.receptor());
         assertNull(filtro.cedula());
@@ -98,8 +98,31 @@ class FiltroComprobantesTest {
     void laClaveCompletaSigueSiendoCriterio() {
         final String completa = "5".repeat(50);
         assertFalse(FiltroComprobantes.de(completa, null, null, null, null, null,
-                null, null, null, null, null).vacio());
+                null, null, null, null, null, null).vacio());
         assertEquals(completa, FiltroComprobantes.de(completa, null, null, null, null, null,
-                null, null, null, null, null).clave());
+                null, null, null, null, null, null).clave());
+    }
+
+    @Test
+    @DisplayName("el código de actividad cuenta como criterio")
+    void codigoActividadEsCriterio() {
+        assertFalse(FiltroComprobantes.de(null, null, null, null, null, null,
+                null, null, null, null, null, "523402").vacio());
+        assertEquals("523402", FiltroComprobantes.de(null, null, null, null, null, null,
+                null, null, null, null, null, "523402").codigoActividad());
+    }
+
+    @Test
+    @DisplayName("un código de actividad que no son 6 dígitos se rechaza")
+    void codigoActividadInvalidoSeRechaza() {
+        // Ni de más ni de menos: 5 dígitos, o con letras, o con separadores — nada de eso es
+        // un código de actividad real, y dejarlo pasar solo pospone el error a un `equal`
+        // que nunca va a coincidir con nada.
+        for (String invalido : new String[]{"52340", "5234022", "52340a", "523-402"}) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> FiltroComprobantes.de(null, null, null, null, null, null,
+                            null, null, null, null, null, invalido),
+                    "debió rechazar: " + invalido);
+        }
     }
 }

@@ -25,6 +25,13 @@ public record ComprobanteResumen(
         String emisorNombre,
         String receptorNumero,
         String receptorNombre,
+        /**
+         * Código de actividad económica de 6 dígitos, del emisor y del receptor por
+         * separado. Solo existe desde v4.3 de Hacienda; en un comprobante de v4.2
+         * (2016/2017) los dos vienen {@code null}.
+         */
+        String codigoActividadEmisor,
+        String codigoActividadReceptor,
         String moneda,
         BigDecimal tipoCambio,
         BigDecimal totalGravado,
@@ -52,6 +59,10 @@ public record ComprobanteResumen(
                 receipt.getEmisor().map(e -> e.getNombre()).orElse(null),
                 receipt.getReceptor().map(r -> r.getNumero()).orElse(null),
                 receipt.getReceptor().map(r -> r.getNombre()).orElse(null),
+                Optional.ofNullable(receipt.getDocumento())
+                        .map(d -> d.getCodigoActividadEmisor()).orElse(null),
+                Optional.ofNullable(receipt.getDocumento())
+                        .map(d -> d.getCodigoActividadReceptor()).orElse(null),
                 resumen == null ? null : resumen.getCodigoMoneda(),
                 resumen == null ? null : resumen.getTipoCambio(),
                 resumen == null ? null : resumen.getTotalGravado(),

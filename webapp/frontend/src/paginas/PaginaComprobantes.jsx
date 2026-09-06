@@ -36,6 +36,12 @@ export default function PaginaComprobantes() {
   const [emisor, setEmisor] = useState(parametrosUrl.get('emisor') || '')
   const [receptor, setReceptor] = useState(parametrosUrl.get('receptor') || '')
 
+  // Código de actividad económica: 6 dígitos, existe desde v4.3 de Hacienda. No lleva
+  // debounce como los de texto libre —es un código exacto, no hay «coincide parcial» que
+  // valga la pena mostrar mientras se escribe— pero sí espera a que tenga los 6 dígitos
+  // antes de mandarlo, para no gastar peticiones en un prefijo que el backend va a rechazar.
+  const [codigoActividad, setCodigoActividad] = useState(parametrosUrl.get('codigoActividad') || '')
+
   const [tiposActivos, setTiposActivos] = useState(
     () => new Set((parametrosUrl.get('tipos') || '').split(',').filter(Boolean)),
   )
@@ -57,6 +63,7 @@ export default function PaginaComprobantes() {
   const textoDiferido = useDebounce(texto, 400)
   const emisorDiferido = useDebounce(emisor, 400)
   const receptorDiferido = useDebounce(receptor, 400)
+  const codigoActividadDiferido = useDebounce(codigoActividad, 400)
   const interpretacion = useMemo(() => interpretarConsulta(textoDiferido), [textoDiferido])
   const campo = campoForzado || interpretacion.campo
 
@@ -70,6 +77,7 @@ export default function PaginaComprobantes() {
     ...comoParametros(campo, interpretacion.valor, lado),
     ...(emisorDiferido.trim() ? { emisor: emisorDiferido.trim() } : {}),
     ...(receptorDiferido.trim() ? { receptor: receptorDiferido.trim() } : {}),
+    ...(codigoActividadDiferido.trim().length === 6 ? { codigoActividad: codigoActividadDiferido.trim() } : {}),
     ...(tiposActivos.size ? { tiposDeComprobante: [...tiposActivos].join(',') } : {}),
   }
 
@@ -138,11 +146,23 @@ export default function PaginaComprobantes() {
           value={receptor}
           onChange={(evento) => { setReceptor(evento.target.value); ponerEnUrl('receptor', evento.target.value) }}
         />
-        {(emisor || receptor) && (
+        <input
+          type="search"
+          placeholder="Actividad: 6 dígitos…"
+          className="mono"
+          style={{ maxWidth: 140 }}
+          maxLength={6}
+          value={codigoActividad}
+          onChange={(evento) => {
+            const valor = evento.target.value.replace(/\D/g, '').slice(0, 6)
+            setCodigoActividad(valor); ponerEnUrl('codigoActividad', valor)
+          }}
+        />
+        {(emisor || receptor || codigoActividad) && (
           <button className="chip" onClick={() => {
-            setEmisor(''); setReceptor('')
+            setEmisor(''); setReceptor(''); setCodigoActividad('')
             const url = new URLSearchParams(parametrosUrl)
-            url.delete('emisor'); url.delete('receptor')
+            url.delete('emisor'); url.delete('receptor'); url.delete('codigoActividad')
             setParametrosUrl(url, { replace: true })
           }}>
             limpiar
@@ -255,10 +275,18 @@ export default function PaginaComprobantes() {
                     <td>
                       {fila.emisorNombre || '—'}
                       <div className="tenue mono">{fila.emisorNumero}</div>
+                      {/* El código solo se muestra filtrando por actividad: fuera de ese
+                          caso es un dato que nadie pidió ver y que no cabe cómodo. */}
+                      {codigoActividad && fila.codigoActividadEmisor && (
+                        <div className="tenue mono pequeno">act. {fila.codigoActividadEmisor}</div>
+                      )}
                     </td>
                     <td>
                       {fila.receptorNombre || '—'}
                       <div className="tenue mono">{fila.receptorNumero}</div>
+                      {codigoActividad && fila.codigoActividadReceptor && (
+                        <div className="tenue mono pequeno">act. {fila.codigoActividadReceptor}</div>
+                      )}
                     </td>
                     <td className={`monto ${negativo ? 'negativo' : ''}`}>
                       {formatearMonto(conSigno(fila.totalImpuesto, fila.tipo), fila.moneda)}

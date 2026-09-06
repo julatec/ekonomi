@@ -146,6 +146,20 @@ public final class ComprobanteSpecs {
     }
 
     /**
+     * El código de actividad económica de cualquiera de las dos partes.
+     * <p>
+     * Igual que {@link #parteNumero}, no distingue emisor de receptor: quien busca por
+     * actividad quiere «todo lo relacionado con esta actividad», sea quien la ejerció al
+     * vender o al comprar. El código son 6 dígitos exactos —no hay fragmento razonable de
+     * un código de actividad— así que va por igualdad, no por {@code like}.
+     */
+    public static <T> Specification<T> codigoActividad(String codigo) {
+        return (root, query, cb) -> cb.or(
+                cb.equal(root.get("documento").get("codigoActividadEmisor"), codigo),
+                cb.equal(root.get("documento").get("codigoActividadReceptor"), codigo));
+    }
+
+    /**
      * Combina los filtros no nulos con Y lógico.
      * <p>
      * Spring Data 4 dejó de aceptar {@code null} en {@code and()}, así que los

@@ -39,6 +39,11 @@ public class DocumentoMapper extends BaseMapper<
                         target.map(name.julatec.ekonomi.tribunet.storage.Documento::getResumen),
                         source.getResumenFactura()))
                 .setFechaEmision(source.getFechaEmisionAsDate())
+                // `Efectivo` resuelve v4.3 (un único campo) contra v4.4 (partido en dos): ver
+                // el javadoc del adaptador. El receptor no tiene ese problema — existe solo
+                // desde v4.4.
+                .setCodigoActividadEmisor(source.getCodigoActividadEmisorEfectivo())
+                .setCodigoActividadReceptor(source.getCodigoActividadReceptor())
                 ;
     }
 }

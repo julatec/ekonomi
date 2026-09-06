@@ -13,6 +13,30 @@ public class Documento {
     @Column(name = "fecha_emision")
     private Date fechaEmision;
 
+    /**
+     * Código de actividad económica del emisor, de 6 dígitos.
+     * <p>
+     * Existe desde v4.3 de Hacienda (v4.2 no lo traía). En v4.3 era un único campo sin
+     * distinguir de quién; v4.4 lo partió en emisor/receptor, y acá guarda siempre el del
+     * emisor — {@code Documento.getCodigoActividadEmisorEfectivo()} en el adaptador ya
+     * resuelve esa diferencia de versión antes de llegar a esta columna.
+     * <p>
+     * No hay {@code columnDefinition}: por lo mismo que el charset de {@link #document} no
+     * se declara acá, un {@code VARCHAR(6)} le basta a Hibernate para el DDL, y no hace
+     * falta nada más específico de un motor.
+     */
+    @Column(name = "codigo_actividad_emisor", length = 6)
+    private String codigoActividadEmisor;
+
+    /**
+     * Código de actividad económica del receptor, cuando el documento lo trae.
+     * <p>
+     * Solo existe en v4.4, y ahí casi siempre es opcional — la excepción es la factura de
+     * compra, donde es obligatorio porque el receptor es quien declara el gasto.
+     */
+    @Column(name = "codigo_actividad_receptor", length = 6)
+    private String codigoActividadReceptor;
+
     @Embedded
     private Emisor emisor;
 
@@ -84,6 +108,24 @@ public class Documento {
 
     public Documento setFechaEmision(Date fechaEmision) {
         this.fechaEmision = fechaEmision;
+        return this;
+    }
+
+    public String getCodigoActividadEmisor() {
+        return codigoActividadEmisor;
+    }
+
+    public Documento setCodigoActividadEmisor(String codigoActividadEmisor) {
+        this.codigoActividadEmisor = codigoActividadEmisor;
+        return this;
+    }
+
+    public String getCodigoActividadReceptor() {
+        return codigoActividadReceptor;
+    }
+
+    public Documento setCodigoActividadReceptor(String codigoActividadReceptor) {
+        this.codigoActividadReceptor = codigoActividadReceptor;
         return this;
     }
 

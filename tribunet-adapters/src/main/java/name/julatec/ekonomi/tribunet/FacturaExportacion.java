@@ -77,4 +77,20 @@ public interface FacturaExportacion extends Documento {
      * @return informacion referencia.
      */
     Stream<InformacionReferencia> getInformacionReferencia();
+
+    /** v4.3: único campo. Ver {@link Documento#getCodigoActividad()}. */
+    default String getCodigoActividad() {
+        return null;
+    }
+
+    /** v4.4: el del emisor. */
+    default String getCodigoActividadEmisor() {
+        return null;
+    }
+
+    /** v4.4: el del receptor — no existe en el esquema; siempre null. */
+    default String getCodigoActividadReceptor() {
+        return null;
+    }
+
 }

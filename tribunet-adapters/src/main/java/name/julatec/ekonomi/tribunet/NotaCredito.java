@@ -92,4 +92,20 @@ public interface NotaCredito extends Documento {
      * @return informacion referencia.
      */
     Stream<InformacionReferencia> getInformacionReferencia();
+
+    /** v4.3: único campo. Ver {@link Documento#getCodigoActividad()}. */
+    default String getCodigoActividad() {
+        return null;
+    }
+
+    /** v4.4: el del emisor, cuando el documento lo trae (opcional). */
+    default String getCodigoActividadEmisor() {
+        return null;
+    }
+
+    /** v4.4: el del receptor, cuando el documento lo trae (opcional). */
+    default String getCodigoActividadReceptor() {
+        return null;
+    }
+
 }
