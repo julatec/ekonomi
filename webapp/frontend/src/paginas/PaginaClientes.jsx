@@ -13,6 +13,17 @@ export default function PaginaClientes() {
   const [pagina, setPagina] = useState(0)
   const nombre = useDebounce(texto, 300)
 
+  // Los botones de reporte son <a href> directos a propósito (ver el comentario más abajo):
+  // el navegador arma la descarga solo, sin fetch ni blob, así que no hay forma de saber
+  // desde acá cuándo termina. Este estado es una aproximación visual nada más —"generando…"
+  // por unos segundos tras el clic—, no una medición real del progreso.
+  const [descargando, setDescargando] = useState(null)
+
+  function marcarDescarga(clave) {
+    setDescargando(clave)
+    setTimeout(() => setDescargando((actual) => (actual === clave ? null : actual)), 8000)
+  }
+
   // Cambiar el término y quedarse en la página 4 mostraría "sin resultados" sobre una
   // búsqueda que sí los tiene.
   React.useEffect(() => setPagina(0), [nombre, tenant])
@@ -83,16 +94,18 @@ export default function PaginaClientes() {
                       href={`/report/sales?id=${encodeURIComponent(cliente.numero)}`}
                       title={`Comprobantes donde ${cliente.nombre} es el EMISOR — lo que vendió. `
                         + `En el rango de la barra superior.`}
+                      onClick={() => marcarDescarga(`${cliente.numero}-ventas`)}
                     >
-                      ↓ sus ventas
+                      {descargando === `${cliente.numero}-ventas` ? 'generando…' : '↓ sus ventas'}
                     </a>
                     <a
                       className="boton"
                       href={`/report/purchases?id=${encodeURIComponent(cliente.numero)}`}
                       title={`Comprobantes donde ${cliente.nombre} es el RECEPTOR — lo que compró. `
                         + `En el rango de la barra superior.`}
+                      onClick={() => marcarDescarga(`${cliente.numero}-compras`)}
                     >
-                      ↓ sus compras
+                      {descargando === `${cliente.numero}-compras` ? 'generando…' : '↓ sus compras'}
                     </a>
                     {/* El conteo de la columna es de TODO el histórico —la consulta de
                         contrapartes no filtra por fecha—, pero el enlace SÍ respeta el rango

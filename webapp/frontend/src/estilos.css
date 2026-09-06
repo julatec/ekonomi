@@ -20,6 +20,11 @@
   --acento: #6b1f2a;
   --acento-suave: #fbedf0;
   --acento-vivido: #f43f5e;
+  /* Azul oscuro para tribuconta — sin herencia de ninguna paleta existente, elegido a
+     propósito para que no se confunda con el vino de julatec ni con el celeste que usa
+     el libro "TRIBU-CR" (el portal de Hacienda) en la paleta de julatec-ops, que es una
+     entidad distinta pese al nombre parecido. */
+  --tenant-tribuconta: #1e3a5f;
   --alerta: #b45309;
   --alerta-suave: #fef3c7;
   --negativo: #b91c1c;
@@ -85,21 +90,24 @@ a { color: var(--acento); }
 .superior label { font-size: 12px; color: var(--tenue); margin-right: 5px; }
 
 /*
- * La franja de arriba y el punto junto al selector solo aparecen con `julatec` activo, para
- * que confundir esa contabilidad con `tribuconta` —dos libros de verdad distintos— salte a
- * la vista sin tener que leer el nombre del desplegable. No es el acento general: ese ya es
- * este mismo vino en toda la interfaz; esto es la señal puntual de CUÁL de los dos está
- * abierto ahora mismo.
+ * La franja de arriba y el punto junto al selector cambian según el tenant activo, para que
+ * confundir julatec con tribuconta —dos libros de verdad distintos— salte a la vista sin
+ * tener que leer el nombre del desplegable. No es el acento general: ese ya es el vino en
+ * toda la interfaz; esto es la señal puntual de CUÁL de los dos está abierto ahora mismo.
+ * Un tenant nuevo que no sea ninguno de estos dos simplemente no tiene franja ni insignia,
+ * en vez de fallar: agregar el color es cosa de sumar una regla acá y en BarraSuperior.jsx.
  */
 .superior.tenant-julatec { border-top-color: var(--acento-vivido); }
+.superior.tenant-tribuconta { border-top-color: var(--tenant-tribuconta); }
 .insignia-tenant {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--acento-vivido);
   margin-left: 6px;
 }
+.insignia-tenant.tenant-julatec { background: var(--acento-vivido); }
+.insignia-tenant.tenant-tribuconta { background: var(--tenant-tribuconta); }
 
 .contenido { padding: 20px; flex: 1; }
 
@@ -281,6 +289,19 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
 .cajon .burbuja.user { align-self: flex-end; background: #dbeafe; color: #1e3a5f; }
 .cajon .burbuja.assistant { align-self: flex-start; background: #f1f5f9; }
 .cajon .burbuja.error { background: #fee2e2; color: #7f1d1d; }
+/* Tres puntos que se prenden uno por uno, para que "pensando" no se vea igual a los 2
+   segundos que a los 20. `animation-delay` escalonado en vez de JS: no hace falta ningún
+   estado ni timer en el componente para algo puramente visual. */
+.puntos-pensando span {
+  opacity: .2;
+  animation: parpadeo-punto 1.2s infinite;
+}
+.puntos-pensando span:nth-child(2) { animation-delay: .2s; }
+.puntos-pensando span:nth-child(3) { animation-delay: .4s; }
+@keyframes parpadeo-punto {
+  0%, 80%, 100% { opacity: .2; }
+  40% { opacity: 1; }
+}
 .cajon .redactar {
   display: flex;
   gap: 6px;
@@ -363,6 +384,22 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
 .cajon .burbuja .diagrama[role="button"] { cursor: zoom-in; }
 .cajon .burbuja .diagrama.fallido { background: var(--alerta-suave); border-color: #fcd9a4; }
 .cajon .burbuja .diagrama.fallido .bloque-codigo { background: rgba(255, 255, 255, .6); }
+
+/* --- Gráficos de barras (respuesta del asistente) ---------------------------- */
+
+.cajon .burbuja .grafico {
+  margin: 0 0 8px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+}
+.grafico-titulo { font-size: 11px; font-weight: 600; fill: var(--texto); }
+.grafico-etiqueta { font-size: 10px; fill: var(--tenue); }
+.grafico-valor { font-size: 10px; fill: var(--texto); }
+.grafico-barra { fill: var(--acento-vivido); }
+.cajon .burbuja .grafico.fallido { background: var(--alerta-suave); border-color: #fcd9a4; }
+.cajon .burbuja .grafico.fallido .bloque-codigo { background: rgba(255, 255, 255, .6); }
 
 /* Los reportes se bajan, no se navegan: un enlace de texto no lo comunica. Sigue siendo un
    <a> por debajo —el servidor manda Content-Disposition y el navegador descarga solo— pero

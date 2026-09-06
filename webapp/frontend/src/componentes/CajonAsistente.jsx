@@ -111,7 +111,15 @@ export default function CajonAsistente({ onCerrar }) {
           </div>
         ))}
 
-        {preguntar.isPending && <div className="burbuja assistant tenue literal">pensando…</div>}
+        {/* Puntos animados y no solo el texto "pensando…" quieto: la respuesta puede tardar
+            varios segundos —el modelo corre a ~29 tokens/s, y una pregunta con herramientas
+            de por medio suma más— y un texto inmóvil no distingue "está trabajando" de
+            "se colgó". La animación es puro CSS, ver .puntos-pensando en estilos.css. */}
+        {preguntar.isPending && (
+          <div className="burbuja assistant tenue literal">
+            pensando<span className="puntos-pensando"><span>.</span><span>.</span><span>.</span></span>
+          </div>
+        )}
         <div ref={fin} />
       </div>
 

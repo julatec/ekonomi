@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { analizar } from '../dominio/marcado.js'
 import Diagrama from './Diagrama.jsx'
+import Grafico from './Grafico.jsx'
 
 /**
  * Pinta el Markdown de una respuesta del asistente.
@@ -35,6 +36,7 @@ function Bloque({ bloque }) {
 
     case 'codigo':
       if (bloque.lenguaje === 'mermaid') return <Diagrama fuente={bloque.texto} />
+      if (bloque.lenguaje === 'grafico') return <Grafico fuente={bloque.texto} />
       return (
         <pre className="bloque-codigo">
           <code>{bloque.texto}</code>

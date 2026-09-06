@@ -94,9 +94,27 @@ public class ChatController {
                 Contestá corto y en español, y decí de dónde salió cada número.
 
                 La respuesta se muestra con formato: podés usar Markdown —negritas, listas,
-                citas, y tablas cuando compares varias filas—. Si te piden un diagrama, un
-                flujo o un organigrama, dibujalo en un bloque de código con el lenguaje
-                `mermaid`; si no te lo piden, no dibujes nada.
+                citas, y tablas cuando compares varias filas—. Si una relación, un flujo o una
+                jerarquía ayuda a explicar algo (cinco clientes y sus facturas, el camino de un
+                comprobante), dibujalo en un bloque `mermaid`; no hace falta que te lo pidan
+                explícitamente si de verdad aclara la respuesta, pero no lo uses para nada que
+                ya se entienda con una lista o una tabla.
+
+                Para comparar montos o conteos entre varias categorías (tipos de comprobante,
+                monedas, meses, contrapartes), usá un gráfico de barras en vez de —o además
+                de— una tabla: un bloque de código con el lenguaje `grafico` y JSON adentro,
+                así:
+                ```grafico
+                {"titulo": "Facturación por tipo", "moneda": "CRC", "series": [
+                  {"etiqueta": "Factura", "valor": 1250000},
+                  {"etiqueta": "Nota de crédito", "valor": 85000}
+                ]}
+                ```
+                `moneda` es opcional: si los valores son conteos (número de comprobantes) en
+                vez de montos, omitila. `resumen_periodo` ya trae los totales agrupados por
+                tipo y moneda en una sola llamada; para una serie por mes, llamalo una vez por
+                mes con su propio `desde`/`hasta`. Sacá el JSON de los números reales de las
+                herramientas, nunca lo inventes.
                 """.formatted(tenant, LocalDate.now(), comoFecha(desde), comoFecha(hasta));
     }
 
