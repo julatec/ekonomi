@@ -41,14 +41,32 @@ public class Workspace {
     private Map<String, Set<String>> importTransactionMapByOwnerId = new HashMap<>();
     private String targetPersistanceUnit;
 
+    /**
+     * Rango por omisión cuando todavía no hay cookies de fecha: el mes en curso completo,
+     * del día 1 al último, no "los últimos 3 meses" contados desde hoy.
+     * <p>
+     * Antes de esto, "desde"/"hasta" arrancaban recortados al día de hoy —el 6 de un mes de
+     * 30 días mostraba 6 días, no el mes—, así que un usuario que entraba a media semana veía
+     * una vista parcial sin haber tocado ningún filtro. Fijar el límite superior en el último
+     * día del mes (23:59:59.999) es lo que hace que la vista por omisión sea "el mes completo"
+     * y no "lo que va del mes".
+     */
     public static Interval<Date> getDefaultDateInterval() {
-        final Date today = new Date();
-        // convert date to calendar
-        final Calendar c = Calendar.getInstance();
-        c.setTime(today);
-        c.add(Calendar.MONTH, -3);
-        final Date start = c.getTime();
-        return Interval.of(start, today);
+        final Calendar inicio = Calendar.getInstance();
+        inicio.set(Calendar.DAY_OF_MONTH, 1);
+        inicio.set(Calendar.HOUR_OF_DAY, 0);
+        inicio.set(Calendar.MINUTE, 0);
+        inicio.set(Calendar.SECOND, 0);
+        inicio.set(Calendar.MILLISECOND, 0);
+
+        final Calendar fin = (Calendar) inicio.clone();
+        fin.set(Calendar.DAY_OF_MONTH, fin.getActualMaximum(Calendar.DAY_OF_MONTH));
+        fin.set(Calendar.HOUR_OF_DAY, 23);
+        fin.set(Calendar.MINUTE, 59);
+        fin.set(Calendar.SECOND, 59);
+        fin.set(Calendar.MILLISECOND, 999);
+
+        return Interval.of(inicio.getTime(), fin.getTime());
     }
 
     public String getTargetPersistanceUnit() {
