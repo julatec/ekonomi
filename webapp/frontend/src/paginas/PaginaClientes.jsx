@@ -80,19 +80,29 @@ export default function PaginaClientes() {
                         Rutas absolutas: la aplicación se despliega como ROOT.war y estas
                         cuelgan de la raíz, no de la pantalla que las dibuja. El rango que
                         lleva el reporte es el de la barra superior. */}
-                    <a
-                      className="boton"
-                      href={`/report/purchases?id=${encodeURIComponent(cliente.numero)}`}
-                      title="Descargar el .xlsx de compras del rango seleccionado"
-                    >
-                      ↓ compras
-                    </a>
+                    {/* «SUS» ventas y «SUS» compras, y el posesivo no es un adorno.
+                        `/report/sales?id=X` devuelve los comprobantes donde X es el EMISOR,
+                        o sea lo que X vendió — que desde esta contabilidad suelen ser
+                        compras. Rotularlo «ventas» a secas sobre la fila de un proveedor
+                        hacía que el botón dijera lo contrario de lo que baja.
+                        Es la misma convención que los chips de la búsqueda: relativa a la
+                        cédula, no al dueño de la contabilidad —que la aplicación no conoce—.
+                        Orden emisor-primero, igual que los chips. */}
                     <a
                       className="boton"
                       href={`/report/sales?id=${encodeURIComponent(cliente.numero)}`}
-                      title="Descargar el .xlsx de ventas del rango seleccionado"
+                      title={`Comprobantes donde ${cliente.nombre} es el EMISOR — lo que vendió. `
+                        + `En el rango de la barra superior.`}
                     >
-                      ↓ ventas
+                      ↓ sus ventas
+                    </a>
+                    <a
+                      className="boton"
+                      href={`/report/purchases?id=${encodeURIComponent(cliente.numero)}`}
+                      title={`Comprobantes donde ${cliente.nombre} es el RECEPTOR — lo que compró. `
+                        + `En el rango de la barra superior.`}
+                    >
+                      ↓ sus compras
                     </a>
                     {/* El conteo de la columna es de TODO el histórico —la consulta de
                         contrapartes no filtra por fecha—, así que el enlace tiene que llevar

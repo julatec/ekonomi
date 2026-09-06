@@ -15,6 +15,18 @@ const RUTA_P12 = process.env.EKONOMI_DEV_P12
   || fileURLToPath(new URL('../../docker/certs/dev-client.p12', import.meta.url))
 const CLAVE_P12 = process.env.EKONOMI_DEV_P12_PASS || 'changeit'
 
+// A dónde manda el proxy las llamadas del API. Por omisión, el backend local.
+//
+// Se puede apuntar a otro lado con EKONOMI_DEV_API, y eso tiene un uso concreto: mirar la
+// interfaz contra datos REALES sin desplegar nada. Se levanta un puente que presente el
+// certificado de cliente contra el 9443 de producción y se apunta acá. Sirve también cuando
+// el backend local no arranca —por ejemplo si la base del hosting está intermitente— y no se
+// quiere perder el rato por un cambio que es solo de pantalla.
+//
+// ⚠️ Apuntado a producción, la interfaz LEE la contabilidad real. Sigue siendo solo lectura
+// —la aplicación no escribe desde la UI— pero conviene saber qué se está mirando.
+const DESTINO_API = process.env.EKONOMI_DEV_API || 'https://localhost:8443'
+
 // El certificado va en un `Agent` propio y no suelto en las opciones del proxy: `http-proxy`
 // solo reenvía `key`/`cert`/`pfx` cuando la conexión de entrada también es TLS, y acá la de
 // entrada es HTTP plano. Con el agente explícito el material siempre viaja.
@@ -78,10 +90,12 @@ export default defineConfig(({ command }) => ({
       ['/api', '/report', '/upload', '/mcp'].map((ruta) => [
         ruta,
         {
-          target: 'https://localhost:8443',
+          target: DESTINO_API,
           changeOrigin: true,
           secure: false,
-          agent: AGENTE,
+          // El agente con el certificado solo hace falta cuando el destino es https: contra un
+          // puente en http plano sobra, y pasarlo rompería la conexión.
+          ...(DESTINO_API.startsWith('https:') ? { agent: AGENTE } : {}),
         },
       ]),
     ),
