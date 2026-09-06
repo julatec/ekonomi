@@ -62,9 +62,37 @@ const AGENTE = agenteDeCliente()
 //
 // La salida va a una subcarpeta propia de `static/` y no a su raíz porque `emptyOutDir`
 // borra el destino, y en la raíz se llevaría por delante lo que haya vendorizado ahí.
+// Mermaid llega al build partido en unos setenta trozos —uno por tipo de diagrama— y sus mapas
+// de fuente pesan 12 de los 16 MB de la salida. Son 12 MB que viajan adentro del WAR hasta el
+// Pi para no servir jamás: nadie va a poner un punto de interrupción adentro de Mermaid, y el
+// navegador ni siquiera los pide salvo que alguien abra las herramientas de desarrollo.
+//
+// Los mapas del código propio sí se conservan, que son los que convierten un error de
+// producción en un número de línea de un archivo que existe en el repositorio.
+function sinMapasDeDependencias() {
+  return {
+    name: 'sin-mapas-de-dependencias',
+    generateBundle(_opciones, paquete) {
+      for (const salida of Object.values(paquete)) {
+        if (salida.type !== 'chunk') continue
+        // Un trozo mezclado —el principal lleva React y el código de la aplicación juntos—
+        // conserva su mapa: lo que se descarta es el que es solo dependencia.
+        const propio = Object.keys(salida.modules).some((m) => !m.includes('node_modules'))
+        if (propio) continue
+        // El mapa ya es un archivo aparte del paquete cuando corre este gancho, así que no
+        // alcanza con soltarlo del trozo: hay que quitar el archivo, y además el comentario
+        // `sourceMappingURL` que quedaría apuntando a un 404 que el navegador sí pide.
+        salida.map = null
+        delete paquete[`${salida.fileName}.map`]
+        salida.code = salida.code.replace(/\n?\/\/# sourceMappingURL=\S+\s*$/, '\n')
+      }
+    },
+  }
+}
+
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/dist/' : '/',
-  plugins: [react()],
+  plugins: [react(), sinMapasDeDependencias()],
   build: {
     outDir: '../src/main/resources/static/dist',
     emptyOutDir: true,

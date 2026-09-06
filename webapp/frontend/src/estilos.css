@@ -240,16 +240,18 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   flex-direction: column;
   gap: 10px;
 }
-/* `pre-wrap`: el modelo contesta con saltos de línea y listas, y colapsarlos vuelve ilegible
-   cualquier respuesta que tenga más de un dato. */
 .cajon .burbuja {
   padding: 8px 10px;
   border-radius: 10px;
   max-width: 92%;
-  white-space: pre-wrap;
   font-size: 13px;
   line-height: 1.45;
 }
+/* `pre-wrap` solo donde el texto se muestra tal cual: la pregunta de quien escribe y los
+   errores. La respuesta del asistente pasa por el intérprete de Markdown, y ahí los saltos de
+   línea ya son párrafos y viñetas de verdad — dejarle `pre-wrap` encima le agregaría una línea
+   en blanco a cada bloque. */
+.cajon .burbuja .literal { white-space: pre-wrap; }
 .cajon .burbuja.user { align-self: flex-end; background: #dbeafe; color: #1e3a5f; }
 .cajon .burbuja.assistant { align-self: flex-start; background: #f1f5f9; }
 .cajon .burbuja.error { background: #fee2e2; color: #7f1d1d; }
@@ -260,6 +262,81 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   border-top: 1px solid var(--borde);
 }
 .cajon .redactar input { flex: 1; }
+
+/* --- El Markdown de las respuestas ------------------------------------------
+ *
+ * Todo va calificado por `.cajon .burbuja` y no suelto: el cajón mide 380 px y estas reglas
+ * describen un texto de chat, no el resto de la aplicación. Sin el prefijo, la primera tabla
+ * que contestara el asistente redefiniría las tablas de comprobantes.
+ */
+
+.cajon .burbuja > :first-child { margin-top: 0; }
+.cajon .burbuja > :last-child { margin-bottom: 0; }
+.cajon .burbuja p { margin: 0 0 8px; }
+
+.cajon .burbuja h4,
+.cajon .burbuja h5,
+.cajon .burbuja h6 {
+  margin: 10px 0 4px;
+  line-height: 1.3;
+}
+.cajon .burbuja h4 { font-size: 14px; }
+.cajon .burbuja h5 { font-size: 13px; }
+.cajon .burbuja h6 { font-size: 13px; color: var(--tenue); }
+
+.cajon .burbuja ul,
+.cajon .burbuja ol { margin: 0 0 8px; padding-left: 20px; }
+.cajon .burbuja li { margin: 2px 0; }
+/* Un ítem de lista es un párrafo por dentro, y ese párrafo no lleva su margen: si no, cada
+   viñeta abre un renglón en blanco. */
+.cajon .burbuja li > p { margin: 0; }
+
+.cajon .burbuja code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: rgba(15, 23, 42, .06);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.cajon .burbuja .bloque-codigo {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  background: rgba(15, 23, 42, .05);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.cajon .burbuja .bloque-codigo code { background: none; padding: 0; }
+
+.cajon .burbuja blockquote {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--borde);
+  color: var(--tenue);
+}
+
+.cajon .burbuja hr { border: 0; border-top: 1px solid var(--borde); margin: 10px 0; }
+
+/* La tabla de la aplicación tiene 8×12 de relleno y encabezado pegajoso, que en una burbuja de
+   chat no tienen sentido y no entran. */
+.cajon .burbuja table { font-size: 12px; }
+.cajon .burbuja th,
+.cajon .burbuja td { padding: 4px 8px; }
+.cajon .burbuja th { position: static; text-transform: none; letter-spacing: 0; }
+
+/* --- Diagramas --------------------------------------------------------------- */
+
+.cajon .burbuja .diagrama {
+  margin: 0 0 8px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.cajon .burbuja .diagrama svg { max-width: 100%; height: auto; }
+.cajon .burbuja .diagrama[role="button"] { cursor: zoom-in; }
+.cajon .burbuja .diagrama.fallido { background: var(--alerta-suave); border-color: #fcd9a4; }
+.cajon .burbuja .diagrama.fallido .bloque-codigo { background: rgba(255, 255, 255, .6); }
 
 /* Los reportes se bajan, no se navegan: un enlace de texto no lo comunica. Sigue siendo un
    <a> por debajo —el servidor manda Content-Disposition y el navegador descarga solo— pero
@@ -279,3 +356,30 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
 .boton:hover { background: #eff6ff; border-color: #93c5fd; }
 .boton:active { background: #dbeafe; }
 
+
+/* La ampliación del diagrama. Vive fuera del cajón aunque el elemento esté adentro: es
+   `position: fixed`, así que el ancho de 380 px del cajón no la limita. */
+.lupa {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, .55);
+  cursor: zoom-out;
+}
+/* Ancho definido y no `max-width`: Mermaid emite el SVG con `width="100%"`, y un porcentaje
+   contra un contenedor que se encoge al contenido da un diagrama del tamaño de una estampilla,
+   que es exactamente lo que pasaba. */
+.lupa-lienzo {
+  background: #fff;
+  border-radius: var(--radio);
+  padding: 16px;
+  width: min(96vw, 1400px);
+  max-height: 92vh;
+  overflow: auto;
+  cursor: default;
+}
+.lupa-lienzo svg { width: 100%; max-width: none; height: auto; }

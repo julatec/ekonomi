@@ -95,6 +95,48 @@
   <build>
     <plugins>
       <!--
+        Borra la salida anterior del frontend de `target/classes` antes de que se copie la
+        nueva.
+
+        `emptyOutDir` de Vite vacía `src/main/resources/static/dist`, pero la copia de recursos
+        de Maven es incremental: no borra lo que ya no existe en el origen. Y como cada build
+        le pone a los archivos un nombre distinto —el hash del contenido—, lo viejo se
+        acumulaba: un `mvn package` sin `clean` metía en el WAR tres copias de Mermaid y cuatro
+        del bundle principal, dos megas de código muerto que ningún `index.html` referencia.
+        Nada se rompía, y esa es justamente la razón para arreglarlo: el artefacto dejaba de
+        corresponder al fuente sin que nada lo dijera.
+
+        Va en `generate-resources`, antes de que Vite escriba y antes de que Maven copie.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>limpiar la salida anterior del frontend</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset>
+                  <directory>${project.build.outputDirectory}/static/dist</directory>
+                </fileset>
+                <!-- Y la misma carpeta en el WAR explotado, que el maven-war-plugin también
+                     arma de forma incremental: sin esto `target/classes` queda limpio y el
+                     WAR igual sale con lo viejo adentro. -->
+                <fileset>
+                  <directory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes/static/dist</directory>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--
         El bundle del frontend se construye acá y no a mano.
 
         Antes esto vivía en <pluginManagement>, que declara la configuración pero no ejecuta

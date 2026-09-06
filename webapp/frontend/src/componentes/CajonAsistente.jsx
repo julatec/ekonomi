@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '../api/client.js'
 import { useSesion } from '../estado/SesionContexto.jsx'
+import Marcado from './Marcado.jsx'
 
 /**
  * El asistente: se le pregunta en palabras corrientes y contesta consultando la contabilidad
@@ -62,6 +63,7 @@ export default function CajonAsistente({ onCerrar }) {
     `¿Cuántas facturas hubo este mes?`,
     `¿Cuánto le facturé a Auto Mercado este año?`,
     `Resumen del último trimestre por moneda`,
+    `Diagrama de mis cinco clientes más frecuentes`,
   ]
 
   return (
@@ -95,7 +97,12 @@ export default function CajonAsistente({ onCerrar }) {
 
         {mensajes.map((m, i) => (
           <div key={i} className={`burbuja ${m.rol} ${m.error ? 'error' : ''}`}>
-            <div>{m.texto}</div>
+            {/* Solo la respuesta se interpreta como Markdown. La pregunta se muestra tal cual
+                se escribió —si alguien buscó `**Flores**`, eso es lo que preguntó— y el error
+                también, porque un mensaje de error no es un documento. */}
+            {m.rol === 'assistant' && !m.error
+              ? <Marcado texto={m.texto} />
+              : <div className="literal">{m.texto}</div>}
             {m.herramientas?.length > 0 && (
               <div className="tenue pequeno" style={{ marginTop: 6 }}>
                 consultó: {m.herramientas.join(' · ')}
@@ -104,7 +111,7 @@ export default function CajonAsistente({ onCerrar }) {
           </div>
         ))}
 
-        {preguntar.isPending && <div className="burbuja assistant tenue">pensando…</div>}
+        {preguntar.isPending && <div className="burbuja assistant tenue literal">pensando…</div>}
         <div ref={fin} />
       </div>
 

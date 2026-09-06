@@ -73,6 +73,11 @@ public class ChatController {
                 Usá las herramientas para responder: no inventes cifras ni las estimes. Si te
                 falta un dato para llamar a una herramienta, preguntalo en vez de suponerlo.
                 Contestá corto y en español, y decí de dónde salió cada número.
+
+                La respuesta se muestra con formato: podés usar Markdown —negritas, listas,
+                citas, y tablas cuando compares varias filas—. Si te piden un diagrama, un
+                flujo o un organigrama, dibujalo en un bloque de código con el lenguaje
+                `mermaid`; si no te lo piden, no dibujes nada.
                 """.formatted(tenant, LocalDate.now());
     }
 
