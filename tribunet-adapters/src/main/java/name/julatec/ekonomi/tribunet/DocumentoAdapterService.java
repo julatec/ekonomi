@@ -13,7 +13,6 @@ import org.xml.sax.SAXParseException;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.ValidationEvent;
 import jakarta.xml.bind.ValidationEventHandler;
@@ -69,7 +68,7 @@ public class DocumentoAdapterService implements ErrorHandler {
         try {
             if (namespace != null && lifecycleMap.containsKey(namespace)) {
                 final DocumentLifecycle lifecycle = lifecycleMap.get(namespace);
-                final Object entity = lifecycle.unmarshaller.unmarshal(document);
+                final Object entity = lifecycle.nuevoUnmarshaller().unmarshal(document);
                 final Object adaptedEntity = lifecycle.adapter.adapt(entity);
                 return Optional.ofNullable(adaptedEntity);
             }
@@ -121,17 +120,45 @@ public class DocumentoAdapterService implements ErrorHandler {
 
         final AdapterFactory adapter;
         final Class<?> document;
+
+        /**
+         * Compartido a propósito: {@code JAXBContext} SÍ es thread-safe y construirlo es lo
+         * caro. Lo que no se comparte es el {@code Unmarshaller}.
+         */
         final JAXBContext jaxbContext;
-        final Unmarshaller unmarshaller;
-        final Marshaller marshaller;
 
         private DocumentLifecycle(AdapterFactory adapter, Class<?> document) throws JAXBException {
             this.adapter = adapter;
             this.document = document;
             this.jaxbContext = JAXBContext.newInstance(document.getPackageName());
-            this.unmarshaller = jaxbContext.createUnmarshaller();
-            this.marshaller = jaxbContext.createMarshaller();
-            this.unmarshaller.setEventHandler(new CustomValidationEventHandler());
+        }
+
+        /**
+         * Uno nuevo por conversión, y no un campo compartido.
+         * <p>
+         * Antes era un campo. Este servicio es un {@code @Service} —singleton— y la ingesta lo
+         * llama desde {@code ExtractExecutor}, que arranca con {@code min(8, núcleos)} hilos:
+         * cuatro en el Pi de producción. La especificación de JAXB declara que un
+         * {@code Unmarshaller} <b>no</b> es reentrante, y compartirlo corrompía su máquina de
+         * estados interna.
+         * <p>
+         * En producción se veía como <b>125 «Unable to adapt» repartidos parejo entre los
+         * cuatro hilos</b> (33/29/35/28). Ese reparto uniforme es la firma del estado mutable
+         * compartido: unos pocos documentos rotos se concentrarían en quien los procesó. Cada
+         * uno de esos fallos es un comprobante que llegó por correo y no se guardó.
+         * <p>
+         * 🔴 Y el modo de falla era peor que un fallo: JAXB lanza {@link AssertionError} desde
+         * {@code UnmarshallingContext$State.pop}, que es un {@code Error} y NO lo atrapa el
+         * {@code catch} de {@link #adapt(InputStream, Consumer)} —que solo lista excepciones
+         * comprobadas—, así que se llevaba puesta la tarea de extracción entera y no solo el
+         * documento. En los logs eso es «Tarea de extracción terminada con error».
+         * <p>
+         * Crearlo por llamada es barato: lo caro es el {@code JAXBContext}, que se comparte.
+         */
+        Unmarshaller nuevoUnmarshaller() throws JAXBException {
+            final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            unmarshaller.setEventHandler(new CustomValidationEventHandler());
+            return unmarshaller;
         }
 
         private static class CustomValidationEventHandler implements ValidationEventHandler {
