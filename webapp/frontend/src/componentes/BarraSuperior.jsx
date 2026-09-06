@@ -10,7 +10,7 @@ export default function BarraSuperior() {
   const { sesion, tenants, tenant, rango, cambiarTenant, cambiarRango } = useSesion()
 
   return (
-    <header className="superior">
+    <header className={`superior ${tenant === 'julatec' ? 'tenant-julatec' : ''}`}>
       <div>
         <label htmlFor="tenant">Contabilidad</label>
         <select
@@ -22,6 +22,11 @@ export default function BarraSuperior() {
             <option key={nombre} value={nombre}>{nombre}</option>
           ))}
         </select>
+        {/* Un punto y no una palabra: la franja de arriba ya dice qué contabilidad es esta,
+            esto solo lo confirma junto al control mismo con el que se cambia. */}
+        {tenant === 'julatec' && (
+          <span className="insignia-tenant" title="Contabilidad personal (julatec)" />
+        )}
       </div>
 
       <div>

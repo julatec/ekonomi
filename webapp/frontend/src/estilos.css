@@ -10,8 +10,16 @@
   --borde: #e2e5ea;
   --texto: #1f2430;
   --tenue: #6b7280;
-  --acento: #2f5d8a;
-  --acento-suave: #eaf1f8;
+  /*
+   * El vino de «finanzas-personales» en la paleta de actividades de los libros contables
+   * (documentos-latex/_template-libro-contable/paleta-actividades.tex): el mismo par
+   * oscuro/vivid que ese sistema ya usa para el libro personal (PER), aplicado acá como el
+   * acento general de la interfaz — no solo de julatec, ver `.tenant-julatec` más abajo para
+   * la insignia puntual.
+   */
+  --acento: #6b1f2a;
+  --acento-suave: #fbedf0;
+  --acento-vivido: #f43f5e;
   --alerta: #b45309;
   --alerta-suave: #fef3c7;
   --negativo: #b91c1c;
@@ -66,6 +74,7 @@ a { color: var(--acento); }
 .superior {
   background: var(--panel);
   border-bottom: 1px solid var(--borde);
+  border-top: 3px solid transparent;
   padding: 10px 20px;
   display: flex;
   gap: 14px;
@@ -74,6 +83,23 @@ a { color: var(--acento); }
 }
 .superior .separador { flex: 1; }
 .superior label { font-size: 12px; color: var(--tenue); margin-right: 5px; }
+
+/*
+ * La franja de arriba y el punto junto al selector solo aparecen con `julatec` activo, para
+ * que confundir esa contabilidad con `tribuconta` —dos libros de verdad distintos— salte a
+ * la vista sin tener que leer el nombre del desplegable. No es el acento general: ese ya es
+ * este mismo vino en toda la interfaz; esto es la señal puntual de CUÁL de los dos está
+ * abierto ahora mismo.
+ */
+.superior.tenant-julatec { border-top-color: var(--acento-vivido); }
+.insignia-tenant {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acento-vivido);
+  margin-left: 6px;
+}
 
 .contenido { padding: 20px; flex: 1; }
 
@@ -196,7 +222,7 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
   z-index: 20;
 }
-.boton-chat:hover { background: #24486b; }
+.boton-chat:hover { background: #4d1620; }
 
 .cajon {
   position: fixed;
@@ -345,16 +371,16 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   display: inline-block;
   padding: 3px 10px;
   margin-right: 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--borde);
   border-radius: 6px;
   background: #fff;
-  color: #1d4ed8;
+  color: var(--acento);
   font-size: 12px;
   text-decoration: none;
   white-space: nowrap;
 }
-.boton:hover { background: #eff6ff; border-color: #93c5fd; }
-.boton:active { background: #dbeafe; }
+.boton:hover { background: var(--acento-suave); border-color: var(--acento-vivido); }
+.boton:active { background: var(--acento-suave); }
 
 
 /* La ampliación del diagrama. Vive fuera del cajón aunque el elemento esté adentro: es
