@@ -48,6 +48,19 @@ final class ClientesSql {
             """;
 
     /**
+     * El filtro de fecha, repetido en las diez ramas — igual que {@code :patron}, no se puede
+     * factorizar a un {@code where} de afuera porque el rango entra {@code UNION ALL} adentro.
+     * Sin esto la columna "Comprobantes" era de TODO el histórico, sin importar qué rango
+     * tuviera puesto la barra superior: prometía un número que "ver comprobantes" —que sí
+     * respeta ese rango— nunca podía mostrar completo.
+     * <p>
+     * Concatenada con {@code +} y no con {@code String.formatted}: {@code @Query} exige una
+     * constante de compilación, y una llamada a método —aunque el resultado sea siempre el
+     * mismo— deja de serlo.
+     */
+    private static final String EN_RANGO = "and fecha_emision between :desde and :hasta\n";
+
+    /**
      * El {@code from} completo. Es una constante de compilación —concatenación de literales—
      * para poder pegarla dentro de {@code @Query}, que no admite interpolación.
      */
@@ -55,47 +68,57 @@ final class ClientesSql {
             from (
                 select emisor_numero as numero, emisor_nombre as nombre, count(*) as c
                   from factura where emisor_numero is not null and emisor_nombre is not null
+                   """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
+                   """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from factura_compra where emisor_numero is not null and emisor_nombre is not null
+                   """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_compra where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
+                   """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from factura_exportacion where emisor_numero is not null and emisor_nombre is not null
+                   """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_exportacion where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
+                   """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from nota_credito where emisor_numero is not null and emisor_nombre is not null
+                   """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_credito where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
+                   """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from nota_debito where emisor_numero is not null and emisor_nombre is not null
+                   """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_debito where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
+                   """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
             ) v
             group by v.numero

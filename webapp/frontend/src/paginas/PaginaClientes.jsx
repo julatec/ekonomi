@@ -7,7 +7,7 @@ import { useDebounce } from '../hooks/useDebounce.js'
 import { formatearEntero } from '../dominio/formato.js'
 
 export default function PaginaClientes() {
-  const { tenant } = useSesion()
+  const { tenant, rango } = useSesion()
   const navegar = useNavigate()
   const [texto, setTexto] = useState('')
   const [pagina, setPagina] = useState(0)
@@ -28,8 +28,13 @@ export default function PaginaClientes() {
   // búsqueda que sí los tiene.
   React.useEffect(() => setPagina(0), [nombre, tenant])
 
+  // El conteo de "Comprobantes" ahora es del rango de la barra superior, no de todo el
+  // histórico -ver ClienteController.clientes()-, así que cambiar el rango tiene que traer
+  // números nuevos. cambiarRango() ya invalida todas las queries al cambiar, pero el rango
+  // igual va en la queryKey: sin eso, volver a esta pantalla después de cambiar el rango en
+  // otra podría mostrar un resultado en caché de un rango que ya no es el actual.
   const consulta = useQuery({
-    queryKey: ['clientes', tenant, nombre, pagina],
+    queryKey: ['clientes', tenant, nombre, pagina, rango.desde, rango.hasta],
     queryFn: () => api.clientes({ nombre, page: pagina, size: 20 }),
     // Sin esto la tabla parpadea a vacío entre páginas.
     placeholderData: keepPreviousData,
@@ -62,7 +67,9 @@ export default function PaginaClientes() {
               <tr>
                 <th>Cédula</th>
                 <th>Nombre</th>
-                <th style={{ textAlign: 'right' }}>Comprobantes</th>
+                <th style={{ textAlign: 'right' }} title="En el rango de la barra superior">
+                  Comprobantes
+                </th>
                 <th>Reportes</th>
               </tr>
             </thead>
@@ -107,12 +114,9 @@ export default function PaginaClientes() {
                     >
                       {descargando === `${cliente.numero}-compras` ? 'generando…' : '↓ sus compras'}
                     </a>
-                    {/* El conteo de la columna es de TODO el histórico —la consulta de
-                        contrapartes no filtra por fecha—, pero el enlace SÍ respeta el rango
-                        de la barra superior: no hay forma de "ver todo desde siempre" sin
-                        arriesgarse a traer miles de filas de golpe. Que el número de acá no
-                        siempre coincida con lo que aparece al hacer clic es el costo aceptado
-                        de no barrer el histórico completo por un clic. */}
+                    {/* El conteo de la columna y este enlace usan el mismo rango —el de la
+                        barra superior—, así que el número de acá sí coincide con lo que
+                        aparece al hacer clic. */}
                     <button
                       className="chip"
                       onClick={() =>

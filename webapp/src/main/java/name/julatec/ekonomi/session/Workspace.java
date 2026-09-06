@@ -18,6 +18,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -110,6 +111,22 @@ public class Workspace {
     }
 
     /**
+     * El último instante del día de {@code medianoche} (23:59:59.999), no medianoche misma.
+     * <p>
+     * {@link #getDateFromIsoCookie} parsea "aaaa-mm-dd" a las 00:00:00 del día, correcto para
+     * el límite inferior pero no para el superior: un {@code hasta} en medianoche deja fuera
+     * de cualquier {@code BETWEEN}/{@code <=} directo contra esa fecha prácticamente todo el
+     * día que la persona sí quiso incluir —lo mismo que ya resuelve
+     * {@code FiltroComprobantes.fechaFinal} para el buscador de comprobantes, aplicado acá
+     * para todo lo que usa {@link #getDateInterval()} directo: los reportes y el conteo de
+     * comprobantes por contraparte.
+     */
+    private static Date finDelDia(Date medianoche) {
+        return Date.from(medianoche.toInstant().atZone(ZoneId.systemDefault())
+                .toLocalDate().plusDays(1).atStartOfDay(ZoneId.systemDefault()).minusNanos(1).toInstant());
+    }
+
+    /**
      * Determina el tenant activo a partir de la cookie del cliente.
      * <p>
      * La cookie la controla quien hace la petición, así que su valor solo se
@@ -159,7 +176,9 @@ public class Workspace {
     public Workspace setRequest(HttpServletRequest request) {
         final Interval<Date> dateInterval = this.dateInterval;
         final Date lower = getDateFromIsoCookie(request, Interval_LOWER_COOKIE).orElse(dateInterval.lower);
-        final Date upper = getDateFromIsoCookie(request, Interval_UPPER_COOKIE).orElse(dateInterval.upper);
+        final Date upper = getDateFromIsoCookie(request, Interval_UPPER_COOKIE)
+                .map(Workspace::finDelDia)
+                .orElse(dateInterval.upper);
         final String tenant = getTenantFromCookie(
                 request,
                 TENANT_COOKIE,

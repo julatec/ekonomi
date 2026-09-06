@@ -5,6 +5,7 @@ import name.julatec.ekonomi.mcp.AccesoTenant;
 import name.julatec.ekonomi.session.Workspace;
 import name.julatec.ekonomi.session.WorkspaceService;
 import name.julatec.ekonomi.tribunet.storage.FacturaRepository;
+import name.julatec.util.algebraic.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -56,6 +58,11 @@ public class ClienteController {
 
         final Workspace workspace = workspaceService.getWorkspace(authentication, request);
         final String tenant = workspace.getSession().getTenant();
+        // El mismo rango que gobierna los reportes .xlsx y la búsqueda de comprobantes: el
+        // conteo de "Comprobantes" es de esta ventana, no de todo el histórico. Antes no
+        // filtraba por fecha en absoluto, y prometía un número que "ver comprobantes" —que sí
+        // respeta el rango de la barra superior— nunca podía mostrar completo.
+        final Interval<Date> rango = workspace.getDateInterval();
 
         // El patrón se arma acá y no en el SQL para que "sin filtro" sea un `like '%'` y la
         // consulta tenga una sola forma: un `having` condicional obligaría a duplicarla.
@@ -72,7 +79,7 @@ public class ClienteController {
 
         return accesoTenant.en(tenant, () -> {
             final Page<FacturaRepository.ClienteProyeccion> pagina =
-                    facturas.buscarClientes(patron, pageable);
+                    facturas.buscarClientes(patron, rango.lower, rango.upper, pageable);
             return new PaginaDto(
                     pagina.getContent().stream()
                             .map(c -> new ClienteDto(c.getNumero(), c.getNombre(),
