@@ -135,9 +135,37 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
         }
     }
 
+    /**
+     * Ventana por omisión del perfil {@code production}, en días.
+     * <p>
+     * Eran <b>1</b>, y un día es poco: si la aplicación pasa una noche caída —el 5 de setiembre
+     * de 2026 estuvo doce horas abajo porque la base del hosting no respondía— la primera
+     * pasada al volver ya no alcanza a ver los correos del hueco, y esos comprobantes no se
+     * vuelven a mirar nunca. La pasada es idempotente: un comprobante que ya está guardado se
+     * reconoce por su clave, así que solapar cuesta tiempo, no correctitud.
+     * <p>
+     * Siete días cubren un fin de semana largo con la casa sin luz y siguen siendo ~500 mensajes
+     * por buzón, contra los 3.138 de {@code month-import}.
+     */
+    private static final int VENTANA_PRODUCCION_POR_OMISION = 7;
+
+    /**
+     * Cuántos días atrás mirar en el buzón.
+     * <p>
+     * Configurable a propósito, y no una constante: el número correcto depende de cuánto
+     * estuvo caído el servicio, que es justo lo que no se sabe de antemano. Poder subirlo desde
+     * {@code catalina.properties} y reiniciar —sin recompilar ni desplegar— es la diferencia
+     * entre recuperar una semana perdida en dos minutos o en una tarde. El perfil
+     * {@code month-import} existía precisamente porque este número estaba clavado en el código.
+     */
+    int ventanaDeProduccion() {
+        return environment.getProperty("ekonomi.extract.ventana-dias", Integer.class,
+                VENTANA_PRODUCCION_POR_OMISION);
+    }
+
     protected Stream<Message> getMessages() throws MessagingException {
         final Set<String> profiles = Set.of(environment.getActiveProfiles());
-        return profiles.contains("production") ? getMessagesSince(-1, TimeUnit.DAYS) :
+        return profiles.contains("production") ? getMessagesSince(-ventanaDeProduccion(), TimeUnit.DAYS) :
                 profiles.contains("month-import") ? getMessagesSince(-45, TimeUnit.DAYS) :
                         profiles.contains("full-import") ? getAllMessages() :
                                 Stream.empty();
