@@ -1,0 +1,9 @@
+# .mailmap — una sola firma en las herramientas de git.
+#
+# Los correos ya están correctos (se reescribió el histórico el 6 set 2026;
+# venían de configuración local mal puesta). Lo que queda son variantes del
+# nombre —«J Ulate C», «julatec», «Jose de Jesus Ulate Cardenas»— acumuladas
+# por años de configuraciones distintas. Esto las unifica sin tocar commits.
+
+José de Jesús Ulate Cárdenas <me@julatec.name> <me@julatec.name>
+José de Jesús Ulate Cárdenas <me@julatec.name> <julatec@gmail.com>
