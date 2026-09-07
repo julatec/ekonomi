@@ -58,7 +58,7 @@ export default function PaginaClientes() {
 
       <div className="panel">
         <h2>
-          Contrapartes
+          Ventas y compras
           {datos ? <span className="tenue pequeno"> · {formatearEntero(datos.total)}</span> : null}
         </h2>
         <div className="desplazable">

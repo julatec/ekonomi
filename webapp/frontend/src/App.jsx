@@ -30,11 +30,14 @@ function Lateral() {
     <aside className="lateral">
       <h1>Ekonomi</h1>
       <nav>
+        {/* Primera opción a propósito: es donde se bajan los reportes .xlsx de ventas y
+            compras, lo que más se usa día a día — "Contrapartes" describía la tabla que
+            arma la pantalla, no para qué la abre alguien. */}
+        <NavLink to="/clientes" className={({ isActive }) => (isActive ? 'activo' : '')}>
+          Ventas y compras
+        </NavLink>
         <NavLink to="/comprobantes" className={({ isActive }) => (isActive ? 'activo' : '')}>
           Comprobantes
-        </NavLink>
-        <NavLink to="/clientes" className={({ isActive }) => (isActive ? 'activo' : '')}>
-          Contrapartes
         </NavLink>
         <NavLink to="/cabys" className={({ isActive }) => (isActive ? 'activo' : '')}>
           Catálogo CABYS
