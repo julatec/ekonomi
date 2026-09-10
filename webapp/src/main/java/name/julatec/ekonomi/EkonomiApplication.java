@@ -10,10 +10,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -123,6 +128,33 @@ public class EkonomiApplication {
      * —dato público— desde internet. La aplicación nunca tuvo contraseñas
      * reales, así que retirar el mecanismo no le quita acceso a nadie.
      */
+    /**
+     * ROLE_KILLA -- el certificado de servicio de Django/Killa -- sólo entra
+     * a /latex/**, /pitia/** y /firma/**. Todo lo demás pide autenticación,
+     * igual que hoy, pero le queda vedado a ese certificado en particular.
+     * <p>
+     * No se usa {@code hasRole("USER")} para "todo lo demás" porque, hoy,
+     * {@code user_roles} tiene cero filas en producción para los dos
+     * usuarios reales (ver {@link MethodSecurityConfig}): cualquier regla
+     * basada en rol para ellos repetiría el mismo incidente que method
+     * security ya evitó una vez, dejándolos afuera de su propia aplicación.
+     * Esta regla no le exige ningún rol a nadie más que a Killa -- sólo lo
+     * excluye a él del resto.
+     */
+    static AuthorizationManager<RequestAuthorizationContext> autenticadoYNoEsKilla() {
+        return (authentication, context) -> {
+            final Authentication auth = authentication.get();
+            final boolean autenticado = auth != null && auth.isAuthenticated()
+                    && !(auth instanceof AnonymousAuthenticationToken);
+            if (!autenticado) {
+                return new AuthorizationDecision(false);
+            }
+            final boolean esKilla = auth.getAuthorities().stream()
+                    .anyMatch(autoridad -> "ROLE_KILLA".equals(autoridad.getAuthority()));
+            return new AuthorizationDecision(!esKilla);
+        };
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
@@ -132,7 +164,9 @@ public class EkonomiApplication {
                 // proxy de Vite hace que todo viaje al mismo origen, pero el dia que alguien
                 // llame al API desde otro puerto va a buscar el error en el lugar equivocado.
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/latex/**", "/pitia/**", "/firma/**").hasRole("KILLA")
+                        .anyRequest().access(autenticadoYNoEsKilla()))
                 .x509(x509 -> x509.authenticationUserDetailsService(this.authenticationUserDetailsService))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(this.authenticationUserDetailsService))
