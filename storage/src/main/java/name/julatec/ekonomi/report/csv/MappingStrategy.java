@@ -14,6 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -123,25 +124,41 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
     }
 
     public Workbook toWorkbook(Iterable<T> iterable) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+        return toWorkbook(iterable, null);
+    }
+
+    /**
+     * El libro con las columnas pedidas, en el orden pedido.
+     *
+     * @param seleccion nombres de encabezado —los mismos que {@code @CsvBindByName}— en el
+     *                  orden en que se quieren. {@code null} o vacía escribe todas en el orden
+     *                  de {@code @CsvBindByNameOrder}, que es el comportamiento de siempre.
+     */
+    public Workbook toWorkbook(Iterable<T> iterable, List<String> seleccion)
+            throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
         int rowCount = 0;
         final Workbook workbook = new XSSFWorkbook();
         final Map<XlsxFieldWriter, CellStyle> styleMap = XlsxFieldWriter.getStyles(workbook);
         Sheet sheet = null;
-        String[] headers = null;
+        // Índice en el encabezado completo de cada columna que se escribe, en el orden pedido:
+        // la posición en el libro y la posición del campo en el bean dejan de coincidir en
+        // cuanto alguien reordena, y `findField` sigue hablando de la segunda.
+        int[] columnas = null;
         for (T bean : iterable) {
             if (rowCount == 0) {
                 sheet = workbook.createSheet(bean.getClass().getSimpleName());
                 int columnCount = 0;
                 final Row row = sheet.createRow(rowCount++);
-                headers = generateHeader(bean);
-                for (String header : headers) {
+                final String[] headers = generateHeader(bean);
+                columnas = columnasPedidas(headers, seleccion);
+                for (int indice : columnas) {
                     final Cell cell = row.createCell(columnCount++, CellType.STRING);
-                    cell.setCellValue(header);
+                    cell.setCellValue(headers[indice]);
                 }
             }
             final Row row = sheet.createRow(rowCount++);
-            for (int column = 0; column < headers.length; column++) {
-                final BeanField<T, String> beanField = findField(column);
+            for (int column = 0; column < columnas.length; column++) {
+                final BeanField<T, String> beanField = findField(columnas[column]);
                 final Object value = beanField.getFieldValue(bean);
                 final XlsxFieldWriter writer = XlsxFieldWriter.getWriter(value);
                 writer.write(writer == XlsxFieldWriter.DefaultWriter ? beanField.write(bean, "")[0] : value,
@@ -149,6 +166,35 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
             }
         }
         return workbook;
+    }
+
+    /**
+     * Traduce nombres de encabezado a posiciones, descartando los que este bean no tiene.
+     * <p>
+     * Una selección que no reconoce ninguna columna cae al libro completo, y no a uno vacío: un
+     * archivo sin ninguna columna no se distingue de un reporte sin datos. Queda en el log
+     * porque es señal de una preferencia guardada contra una versión anterior del bean —caso
+     * que {@code ColumnasDeReporte.reconciliar} ya filtra antes de llegar acá—.
+     */
+    private int[] columnasPedidas(String[] headers, List<String> seleccion) {
+        if (seleccion == null || seleccion.isEmpty()) {
+            return IntStream.range(0, headers.length).toArray();
+        }
+        final Map<String, Integer> porNombre = new LinkedHashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            porNombre.putIfAbsent(headers[i], i);
+        }
+        final int[] columnas = seleccion.stream()
+                .map(porNombre::get)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .toArray();
+        if (columnas.length == 0) {
+            logger.warn("Ninguna de las columnas pedidas {} existe en {}; se escriben todas.",
+                    seleccion, type.getSimpleName());
+            return IntStream.range(0, headers.length).toArray();
+        }
+        return columnas;
     }
 
     private enum XlsxFieldWriter {

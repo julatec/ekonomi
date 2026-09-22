@@ -35,6 +35,9 @@ import java.util.Properties;
                 // viven, no por qué son.
                 name.julatec.ekonomi.cabys.CabysItem.class,
                 name.julatec.ekonomi.actividad.ActividadEconomica.class,
+                // La preferencia de columnas de los reportes: es de la persona, no de la
+                // contabilidad, así que vive con el usuario y no con ningún tenant.
+                name.julatec.ekonomi.preferencias.PreferenciaColumnas.class,
         }
 )
 public class SecurityConfig {
@@ -82,7 +85,8 @@ public class SecurityConfig {
         lef.setJpaVendorAdapter(jpaVendorAdapter);
         lef.setJpaProperties(getJpaProperties());
         lef.setPackagesToScan(
-                "name.julatec.ekonomi.security", "name.julatec.ekonomi.cabys", "name.julatec.ekonomi.actividad");
+                "name.julatec.ekonomi.security", "name.julatec.ekonomi.cabys",
+                "name.julatec.ekonomi.actividad", "name.julatec.ekonomi.preferencias");
         return lef;
     }
 

@@ -446,3 +446,48 @@ tbody tr.clicable:hover { background: var(--acento-suave); }
   cursor: default;
 }
 .lupa-lienzo svg { width: 100%; max-width: none; height: auto; }
+
+/* --- Configuración de columnas ---------------------------------------------- */
+
+.explicacion { padding: 12px 14px; border-bottom: 1px solid var(--borde); }
+.explicacion p { margin: 0 0 6px; max-width: 70ch; }
+.explicacion p:last-child { margin-bottom: 0; }
+
+.barra-acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--borde);
+}
+.barra-acciones .separador { flex: 1; }
+
+/*
+ * El encabezado que va a salir en la hoja, en una línea. Es la única forma de ver el efecto
+ * sin bajar el archivo: la lista de abajo dice qué columnas hay, esta dice cómo van a quedar.
+ */
+.vista-previa {
+  padding: 10px 14px;
+  background: #fafbfc;
+  border-bottom: 1px solid var(--borde);
+}
+.vista-previa .mono { margin-top: 4px; overflow-x: auto; white-space: nowrap; }
+
+.lista-columnas { list-style: none; margin: 0; padding: 0; }
+.lista-columnas li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--panel);
+}
+.lista-columnas li:last-child { border-bottom: 0; }
+.lista-columnas li .separador { flex: 1; }
+.lista-columnas li label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+/* Apagada, no borrada: sigue ocupando su lugar en el orden y se ve que está ahí. */
+.lista-columnas li.apagada label { color: var(--tenue); text-decoration: line-through; }
+.lista-columnas li.arrastrando { opacity: .4; }
+.lista-columnas li:hover { background: var(--acento-suave); }
+.lista-columnas .asa { color: #cbd5e1; cursor: grab; user-select: none; }

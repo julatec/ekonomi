@@ -9,6 +9,7 @@ import PaginaComprobante from './paginas/PaginaComprobante.jsx'
 import PaginaClientes from './paginas/PaginaClientes.jsx'
 import PaginaCabys from './paginas/PaginaCabys.jsx'
 import PaginaActividades from './paginas/PaginaActividades.jsx'
+import PaginaConfiguracion from './paginas/PaginaConfiguracion.jsx'
 
 /**
  * Un `fetch` no puede hacer que el navegador vuelva a presentar el certificado: eso solo pasa
@@ -45,6 +46,11 @@ function Lateral() {
         <NavLink to="/actividades" className={({ isActive }) => (isActive ? 'activo' : '')}>
           Actividades Hacienda
         </NavLink>
+        {/* Última y separada: no es una pantalla de consulta como las otras cuatro, es donde
+            se acomoda lo que bajan los reportes. */}
+        <NavLink to="/configuracion" className={({ isActive }) => (isActive ? 'activo' : '')}>
+          Configuración
+        </NavLink>
       </nav>
     </aside>
   )
@@ -76,6 +82,7 @@ function Contenido() {
             <Route path="/clientes" element={<PaginaClientes />} />
             <Route path="/cabys" element={<PaginaCabys />} />
             <Route path="/actividades" element={<PaginaActividades />} />
+            <Route path="/configuracion" element={<PaginaConfiguracion />} />
             <Route path="*" element={<div className="vacio">Esa página no existe.</div>} />
           </Routes>
         </main>

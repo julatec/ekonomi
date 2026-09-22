@@ -97,3 +97,41 @@ Dos detalles del dev server que cuestan una tarde si no se saben:
   simplemente no conectaba.
 - El nombre está en `server.allowedHosts`. Vite 6 rechaza con 403 toda petición cuyo `Host` no
   reconozca —es su protección contra DNS rebinding— y de fábrica solo trae `localhost`.
+
+### Las columnas de los reportes
+
+La pantalla **Configuración** decide qué columnas lleva el `.xlsx` que se baja de «Ventas y
+compras» (`/report/sales` y `/report/purchases`) y en qué orden salen. La preferencia es **de
+la persona, no de la contabilidad** —quien abre julatec y tribuconta el mismo día no quiere
+reacomodar treinta y cinco columnas al cambiar de libro— y vive en la base primaria, no en una
+cookie: tiene que aguantar cambiar de navegador, y quien la aplica es el servidor al escribir
+el libro.
+
+Las columnas apagadas se guardan igual, con su posición. Apagar no es botar: volver a prender
+una columna la devuelve a donde estaba.
+
+El catálogo sale de `@CsvBindByNameOrder` sobre `Voucher`, que ya es lo que ordena la hoja; no
+hay una segunda lista que mantener. Una preferencia guardada contra un catálogo viejo se
+reconcilia al leerla (`ColumnasDeReporte`): lo que ya no existe se descarta y **lo que el
+catálogo tiene de más entra visible**, para que agregar una columna al reporte —como las seis
+tarifas de la v4.4 en agosto de 2026— no se la esconda a quien ya tenía configuración guardada.
+
+No toca la tabla de comprobantes en pantalla ni los libros que bajan las herramientas MCP
+`reporte_compras`/`reporte_ventas`: ahí el consumidor es un programa, y cambiarle el esquema
+según quién esté conectado sería romperlo a discreción. Lo mismo vale para cualquier hoja de
+cálculo que lea el auxiliar por nombre de columna.
+
+#### Lo que hace falta en producción
+
+Dos cosas, y ninguna es código:
+
+1. **Las tablas.** Contra la base real `ddl-auto` es `none`, así que se crean a mano. El DDL
+   está en el javadoc de `PreferenciaColumnas`, copiado del `SHOW CREATE TABLE` del ambiente
+   local —que sí crea el esquema— y no de lo que uno supone que genera Hibernate.
+2. **Permiso de escritura en la base primaria.** Es lo primero de la aplicación que escribe ahí
+   en operación normal; hasta hoy solo escribían las siembras, y la primera corrida de
+   `SembradorKilla` falló justamente porque la base estaba en `--read-only`.
+
+Sin ninguna de las dos la aplicación sigue en pie: los reportes salen con el orden por omisión
+—que es el de siempre— y guardar responde 503 con el mensaje de la base. Falla a la vista, no
+en silencio.

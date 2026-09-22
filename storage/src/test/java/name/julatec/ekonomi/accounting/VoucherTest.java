@@ -1,8 +1,10 @@
 package name.julatec.ekonomi.accounting;
 
+import name.julatec.ekonomi.preferencias.ColumnasDeReporte;
 import name.julatec.ekonomi.report.csv.CsvBindByNameOrder;
 import name.julatec.ekonomi.tribunet.Documento;
 import name.julatec.ekonomi.tribunet.DocumentoAdapterService;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,6 +122,63 @@ class VoucherTest {
         for (String columna : columnasNuevas) {
             assertTrue(columnas.contains(columna), "falta la columna nueva: " + columna);
         }
+    }
+
+    private static List<String> encabezadoDe(Workbook workbook) {
+        final Row encabezado = workbook.getSheetAt(0).getRow(0);
+        final List<String> columnas = new ArrayList<>();
+        for (int celda = 0; celda < encabezado.getLastCellNum(); celda++) {
+            columnas.add(encabezado.getCell(celda).getStringCellValue());
+        }
+        return columnas;
+    }
+
+    @Test
+    void catalogo_esElEncabezadoDeVerdadDelLibro() throws Exception {
+        // ColumnasDeReporte lee el catálogo de la anotación; el libro lo arma opencsv con el
+        // comparador que esa misma anotación instala. Son dos caminos distintos hasta la misma
+        // lista, y la pantalla de configuración ofrece columnas por el primero mientras que el
+        // archivo sale por el segundo: el día que dejen de coincidir, alguien va a apagar una
+        // columna y va a seguir viéndola en el archivo.
+        assertEquals(ColumnasDeReporte.catalogo(), encabezadoDe(Voucher.toWorkbook(List.of(voucherMultiTarifa()))));
+    }
+
+    @Test
+    void toWorkbook_conSeleccionEscribeSoloEsasColumnasYEnEseOrden() throws Exception {
+        final Voucher voucher = voucherMultiTarifa();
+        assertNotNull(voucher.getClave());
+        // A propósito en un orden que no es el del reporte y salteando columnas del medio: si
+        // el valor se tomara de la posición en la hoja en vez de la del campo en el bean, esto
+        // saldría corrido.
+        final List<String> seleccion = List.of("Total Comprobante", "Clave", "Nombre Emisor");
+
+        final Workbook workbook = Voucher.toWorkbook(List.of(voucher), seleccion);
+
+        assertEquals(seleccion, encabezadoDe(workbook));
+        final Row fila = workbook.getSheetAt(0).getRow(1);
+        assertEquals(voucher.getTotalComprobante().doubleValue(), fila.getCell(0).getNumericCellValue(), 0.001);
+        assertEquals(voucher.getClave(), fila.getCell(1).getStringCellValue());
+        assertEquals(voucher.getEmisorNombre(), fila.getCell(2).getStringCellValue());
+    }
+
+    @Test
+    void toWorkbook_sinSeleccionSigueSaliendoElReporteCompleto() throws Exception {
+        final Voucher voucher = voucherMultiTarifa();
+
+        assertEquals(encabezadoDe(Voucher.toWorkbook(List.of(voucher))),
+                encabezadoDe(Voucher.toWorkbook(List.of(voucher), null)));
+        assertEquals(encabezadoDe(Voucher.toWorkbook(List.of(voucher))),
+                encabezadoDe(Voucher.toWorkbook(List.of(voucher), List.of())));
+    }
+
+    @Test
+    void toWorkbook_conUnaSeleccionQueYaNoExisteNoDevuelveUnLibroVacio() throws Exception {
+        // Un archivo sin columnas no se distingue de un reporte sin datos. Ver
+        // MappingStrategy.columnasPedidas: cae al libro completo y lo deja en el log.
+        final Workbook workbook = Voucher.toWorkbook(
+                List.of(voucherMultiTarifa()), List.of("Columna Que No Existe"));
+
+        assertEquals(ColumnasDeReporte.catalogo(), encabezadoDe(workbook));
     }
 
     @Test

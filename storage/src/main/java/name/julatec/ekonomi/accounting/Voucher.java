@@ -302,6 +302,19 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
         return MAPPING_STRATEGY.toWorkbook(transactionList);
     }
 
+    /**
+     * El mismo libro, con las columnas que haya elegido quien lo pide.
+     *
+     * @param columnas encabezados en el orden en que se quieren —los nombres de
+     *                 {@link CsvBindByNameOrder}—; {@code null} o vacía da el reporte completo
+     *                 de siempre. Lo que arma la lista es
+     *                 {@code name.julatec.ekonomi.preferencias.ColumnasDeReporte}.
+     */
+    public static Workbook toWorkbook(Iterable<Voucher> transactionList, List<String> columnas)
+            throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+        return MAPPING_STRATEGY.toWorkbook(transactionList, columnas);
+    }
+
     private static <T extends Comparable<T>> T min(Function<Voucher, T> property, Voucher l, Voucher r) {
         return min(property.apply(l), property.apply(r));
     }

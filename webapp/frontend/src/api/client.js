@@ -56,17 +56,20 @@ export async function pedir(ruta, parametros) {
 }
 
 /**
- * POST con cuerpo JSON. Existe solo para el asistente: todo lo demás de esta interfaz lee.
+ * Escritura con cuerpo JSON: el asistente (POST) y la configuración de columnas (PUT/DELETE).
+ * Todo lo demás de esta interfaz lee.
  *
  * Comparte con `pedir` el manejo del 401 —un `fetch` no puede hacer que el navegador vuelva a
  * presentar el certificado, así que se avisa hacia arriba— y la lectura del mensaje de error.
+ *
+ * `cuerpo` en `null` manda la petición sin cuerpo, que es lo que quiere un DELETE.
  */
-export async function enviar(ruta, cuerpo) {
+export async function enviar(ruta, cuerpo, metodo = 'POST') {
   const respuesta = await fetch(new URL(ruta, window.location.origin), {
-    method: 'POST',
+    method: metodo,
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     credentials: 'same-origin',
-    body: JSON.stringify(cuerpo),
+    ...(cuerpo === null || cuerpo === undefined ? {} : { body: JSON.stringify(cuerpo) }),
   })
   if (respuesta.status === 401) {
     window.dispatchEvent(new CustomEvent(SESION_VENCIDA))
@@ -88,6 +91,12 @@ export const api = {
   cabys: (parametros) => pedir('/api/cabys', parametros),
   cabysVersiones: () => pedir('/api/cabys/version'),
   actividades: (parametros) => pedir('/api/actividades', parametros),
+  // Las columnas del `.xlsx` de compras y ventas: qué lleva y en qué orden. La preferencia
+  // vive en la base y no en una cookie —a diferencia del tenant y del rango— porque tiene que
+  // aguantar cambiar de navegador, y porque quien la aplica es el servidor al armar el libro.
+  columnasDelReporte: () => pedir('/api/report/columns'),
+  guardarColumnasDelReporte: (columnas) => enviar('/api/report/columns', { columnas }, 'PUT'),
+  restaurarColumnasDelReporte: () => enviar('/api/report/columns', null, 'DELETE'),
 }
 
 /** La cookie que el backend ya usa para resolver el tenant y el rango de fechas. */

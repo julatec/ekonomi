@@ -3,6 +3,8 @@ package name.julatec.ekonomi.report;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import name.julatec.ekonomi.accounting.Voucher;
+import name.julatec.ekonomi.preferencias.ColumnasDeReporte;
+import name.julatec.ekonomi.preferencias.PreferenciaColumnasService;
 import name.julatec.ekonomi.report.bank.BankOperation;
 import name.julatec.ekonomi.report.bank.BankTransaction;
 import name.julatec.ekonomi.security.ImportBankOperation;
@@ -25,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,6 +48,14 @@ public class ReportController {
     ReportService service;
     @Autowired
     WorkspaceService workspaceService;
+    /**
+     * Qué columnas lleva el libro y en qué orden, según quién lo pide. Sin nada guardado
+     * devuelve el catálogo completo, que es el reporte de siempre.
+     *
+     * @see ColumnasReporteController
+     */
+    @Autowired
+    PreferenciaColumnasService preferenciasDeColumnas;
 
     public static String getUploadTransactionReportEndpoint(ImportTransaction importBankAccount) {
         return String.format("./upload/%s", uuidToString(importBankAccount.getAccount()));
@@ -61,7 +72,7 @@ public class ReportController {
                 id, workspace.getDateInterval().lower, workspace.getDateInterval().upper);
         try {
             final Iterable<Voucher> transactionList = service.purchases(id, workspace);
-            generateTransactionReport(response, reportName, transactionList);
+            generateTransactionReport(response, reportName, transactionList, columnasDe(authentication));
         } catch (Exception ex) {
             final String message = workspace.getLocalizedMessage(ReportNotGenerated, ex.getMessage());
             logger.error(message, ex);
@@ -80,7 +91,7 @@ public class ReportController {
                 id, workspace.getDateInterval().lower, workspace.getDateInterval().upper).replace('/', '-');
         try {
             final Iterable<Voucher> transactionList = service.sales(id, workspace);
-            generateTransactionReport(response, reportName, transactionList);
+            generateTransactionReport(response, reportName, transactionList, columnasDe(authentication));
         } catch (Exception ex) {
             final String message = workspace.getLocalizedMessage(ReportNotGenerated, ex.getMessage());
             logger.error(message, ex);
@@ -88,9 +99,16 @@ public class ReportController {
         }
     }
 
-    private void generateTransactionReport(HttpServletResponse response, String reportName, Iterable<Voucher> transactionList)
+    /** Las columnas elegidas por quien pide el reporte; el catálogo completo si no eligió. */
+    private List<String> columnasDe(Authentication authentication) {
+        return preferenciasDeColumnas.columnasVisibles(
+                ColumnasReporteController.username(authentication), ColumnasDeReporte.REPORTE_COMPROBANTES);
+    }
+
+    private void generateTransactionReport(HttpServletResponse response, String reportName,
+                                           Iterable<Voucher> transactionList, List<String> columnas)
             throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-        final Workbook workbook = Voucher.toWorkbook(transactionList);
+        final Workbook workbook = Voucher.toWorkbook(transactionList, columnas);
         reportName = reportName.replace(',', '-');
         response.addHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", reportName));
         workbook.write(response.getOutputStream());
