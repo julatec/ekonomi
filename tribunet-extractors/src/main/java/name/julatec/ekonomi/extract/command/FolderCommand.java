@@ -122,9 +122,6 @@ public class FolderCommand extends BaseCommand<FolderCommand> {
                         context.getAttribute(EMAIL_ATTRIBUTE),
                         receivedDate,
                         message.getMessageNumber(), message.getSubject());
-                if (message.getSubject().contains("00200001010000015211")) {
-                    getLogger().info("[{}] stop", context.getAttribute(EMAIL_ATTRIBUTE));
-                }
                 final MessageCommand command = commandFactory.getCommand(this, message);
                 command.run();
             } else {
