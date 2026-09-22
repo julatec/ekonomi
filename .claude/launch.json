@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ekonomi-backend",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export JAVA_HOME=/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; exec mvn -f webapp/pom.xml spring-boot:run -Dspring-boot.run.profiles=local"
+      ],
+      "port": 8443,
+      "url": "https://localhost:8443"
+    },
+    {
+      "name": "ekonomi-frontend",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PATH=\"$PWD/webapp/target/node:$PATH\"; exec webapp/target/node/npm --prefix webapp/frontend run dev"
+      ],
+      "port": 5173,
+      "url": "http://127.0.0.1:5173"
+    }
+  ]
+}
