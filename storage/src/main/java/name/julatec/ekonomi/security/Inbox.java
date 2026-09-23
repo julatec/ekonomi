@@ -1,16 +1,11 @@
 package name.julatec.ekonomi.security;
 
 
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.data.annotation.Transient;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.persistence.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.Set;
 
@@ -19,8 +14,6 @@ import static jakarta.mail.Session.getInstance;
 @Entity(name = "inbox")
 public class Inbox {
 
-    private static final String key = "aesEncryptionKey";
-    private static final String initVector = "encryptionIntVec";
     @Transient
     private transient final Authenticator authenticator = new Authenticator();
     @Id
@@ -35,39 +28,6 @@ public class Inbox {
     private boolean active = false;
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> datasources;
-
-    public static String encrypt(String value) {
-        try {
-            IvParameterSpec iv = new IvParameterSpec(initVector.getBytes(StandardCharsets.UTF_8));
-            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
-
-            byte[] encrypted = cipher.doFinal(value.getBytes());
-            return Base64.encodeBase64String(encrypted);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String decrypt(String encrypted) {
-        try {
-            IvParameterSpec iv = new IvParameterSpec(initVector.getBytes(StandardCharsets.UTF_8));
-            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
-            byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
-
-            return new String(original);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        return null;
-    }
 
     public jakarta.mail.Session getSession() {
         final Properties properties = new Properties();
@@ -160,10 +120,28 @@ public class Inbox {
         this.datasources = persistanceUnits;
     }
 
+    /**
+     * Acá había, comentada, una llamada a {@code decrypt(password)}.
+     * <p>
+     * Se quitó el 22 set 2026 junto con los métodos {@code encrypt}/{@code decrypt} que la
+     * acompañaban. Cifraban con una llave y un IV <b>escritos en esta misma clase</b>
+     * ({@code "aesEncryptionKey"} / {@code "encryptionIntVec"}, las cadenas de ejemplo de un
+     * fragmento muy copiado), en un repositorio <b>público</b>. Una llave publicada no
+     * protege de nada: lo único que aportaba era parecer que sí.
+     * <p>
+     * No estaban en uso —ninguna llamada en todo el repositorio— y las contraseñas guardadas
+     * están en claro, comprobado por su largo: AES/CBC con relleno daría 24 caracteres Base64
+     * para cualquiera de ellas, y miden 8, 8, 19 y 20.
+     * <p>
+     * <b>El problema de fondo sigue abierto</b>, y borrar esto no lo toca: la contraseña vive
+     * en claro en la columna {@code inbox.password}, o sea también en cada respaldo de la
+     * base. El arreglo es sacarla a {@code /etc/tomcat/secrets.env}, que es el patrón que esta
+     * aplicación ya usa para todos los demás secretos y que no inventa un manejo de llaves
+     * nuevo.
+     */
     private class Authenticator extends jakarta.mail.Authenticator {
         @Override
         protected PasswordAuthentication getPasswordAuthentication() {
-            //return new PasswordAuthentication(email, decrypt(password));
             return new PasswordAuthentication(email, password);
         }
     }
