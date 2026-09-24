@@ -36,8 +36,13 @@
             <!-- 1.1.6 arregla el generador de adaptadores: un nodo opcional ausente en el XML
                  —el Receptor de un tiquete, que en el esquema de Hacienda es minOccurs="0"—
                  hacía que el constructor generado lanzara NullPointerException y el comprobante
-                 se perdiera en silencio. 120 documentos el 5 sep 2026 en producción. -->
-            <version>1.1.6</version>
+                 se perdiera en silencio. 120 documentos el 5 sep 2026 en producción.
+
+                 1.1.7 sube cxf-core (4.1.1 -> 4.1.8) por GHSA-ghvc-7hp8-2g2v / CVE-2026-50645
+                 (sin restricción en encabezados de adjunto por mensaje). Es scope compile sin
+                 override acá, así que la versión vulnerable quedaba de verdad en WEB-INF/lib
+                 del WAR desplegado (confirmado con `mvn dependency:tree` antes de subirla). -->
+            <version>1.1.7</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
