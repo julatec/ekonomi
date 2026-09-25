@@ -23,6 +23,26 @@ Y una línea en `/etc/hosts`, que necesita `sudo`:
 127.0.0.1       ekonomi.promyse.home.julatec.name
 ```
 
+### El JDK 25 no es el `java` del PATH
+
+El proyecto compila con `release 25`, pero el `java` por omisión de esta Mac es el **19** de
+Oracle. El 25 está por Homebrew y es *keg-only*: no aparece en
+`/usr/libexec/java_home -V` ni en `/Library/Java/JavaVirtualMachines`. Hay que fijarlo:
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home
+```
+
+⚠️ **`/usr/libexec/java_home -v 25` no sirve para esto: devuelve el JDK 19 y sale con
+código 0.** O sea que el patrón `JAVA_HOME=$(/usr/libexec/java_home -v 25 || echo <ruta>)`
+nunca cae al respaldo, y el error sale mucho después y hablando de otra cosa —«release
+version 25 not supported», que suena a problema del compilador—. Por eso
+`.claude/launch.json` lleva la ruta escrita.
+
+Y `make build` (o sea `mvn clean install`) **antes** de `make run-local`: arrancar solo el
+módulo `webapp` resuelve `storage` desde `~/.m2`, no desde el reactor, así que sin instalar
+primero se compila contra la versión anterior de la biblioteca.
+
 ### Por qué un nombre y no `localhost`
 
 Con `localhost` el navegador **no muestra el diálogo del certificado y entra sin ninguno**,
