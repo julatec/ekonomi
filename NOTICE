@@ -1,0 +1,23 @@
+Ekonomi
+Copyright 2020-2026 José de Jesús Ulate Cárdenas
+
+Este producto incluye software desarrollado por José de Jesús Ulate Cárdenas
+(https://julatec.name).
+
+Distribuido bajo la Licencia Apache, Versión 2.0. El texto completo está en
+LICENSE.txt y en https://www.apache.org/licenses/LICENSE-2.0
+
+--------------------------------------------------------------------------------
+
+Qué cubre y qué no
+
+  La licencia cubre el CÓDIGO de este repositorio. No cubre los datos que el
+  código procesa: los comprobantes electrónicos, las cédulas y los montos de
+  cada contabilidad viven en la base de datos de su tenant y no se distribuyen
+  con el fuente.
+
+  Los esquemas XML de Hacienda y el catálogo CABYS son publicaciones del Estado
+  costarricense; acá se consumen, no se redistribuyen bajo esta licencia.
+
+  Las dependencias de terceros conservan sus propias licencias. Las declara
+  cada pom.xml y Maven las resuelve; ninguna se vendoriza en este repositorio.

@@ -14,6 +14,46 @@
     <packaging>pom</packaging>
     <name>ekonomi</name>
     <url>https://github.com/julatec/ekonomi</url>
+    <inceptionYear>2020</inceptionYear>
+
+    <!--
+      La licencia estaba en LICENSE.txt desde 2020 y en ningun otro lado: ni el POM la
+      declaraba, ni el README la mencionaba, ni los artefactos la llevaban. Un WAR sin
+      metadatos de licencia obliga a abrir el jar y leer el archivo para saber bajo que
+      terminos se recibio, que es justo lo que estos bloques evitan.
+
+      Cubre el CODIGO. La contabilidad que el codigo procesa (facturas electronicas,
+      cedulas, montos) no es parte de la obra licenciada: vive en la base de cada tenant
+      y no se distribuye con el fuente. Ver la seccion "Licencia" del README.
+
+      (Sin guiones dobles adentro: un comentario XML no los admite.)
+    -->
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>José de Jesús Ulate Cárdenas</name>
+            <email>me@julatec.name</email>
+            <url>https://julatec.name</url>
+            <roles>
+                <role>Diseño, implementación y operación</role>
+            </roles>
+            <timezone>America/Costa_Rica</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/julatec/ekonomi</url>
+        <connection>scm:git:https://github.com/julatec/ekonomi.git</connection>
+        <developerConnection>scm:git:git@github.com:julatec/ekonomi.git</developerConnection>
+    </scm>
+
     <properties>
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -155,3 +155,24 @@ Dos cosas, y ninguna es código:
 Sin ninguna de las dos la aplicación sigue en pie: los reportes salen con el orden por omisión
 —que es el de siempre— y guardar responde 503 con el mensaje de la base. Falla a la vista, no
 en silencio.
+
+## Licencia
+
+Apache 2.0 desde 2020 — el texto completo en [`LICENSE.txt`](LICENSE.txt), el aviso de
+atribución en [`NOTICE`](NOTICE), y ahora también declarada en el POM raíz (`<licenses>`),
+que es lo que hace que el WAR y los jars la lleven en sus metadatos en vez de obligar a
+abrir el archivo para saber bajo qué términos se recibieron.
+
+**Cubre el código, no la contabilidad.** Los comprobantes, las cédulas y los montos viven en
+la base de datos de cada tenant; no son parte de la obra licenciada y no se distribuyen con
+el fuente. Que el código sea Apache 2.0 no vuelve público ningún dato, ni obliga a publicar
+el repositorio: la licencia fija los términos para quien reciba una copia, no obliga a
+repartirla.
+
+Los esquemas de Hacienda y el catálogo CABYS son publicaciones del Estado; acá se consumen,
+no se redistribuyen bajo esta licencia. Las dependencias de terceros conservan las suyas y
+ninguna está vendorizada en el repositorio.
+
+> Los archivos fuente **no** llevan el encabezado de licencia que recomienda el apéndice de
+> Apache 2.0. Son 224 `.java` y 89 `.js`/`.jsx`: ponerlo es un cambio mecánico pero enorme, y
+> se decidió aparte.
