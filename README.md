@@ -148,13 +148,16 @@ Dos cosas, y ninguna es código:
 1. **Las tablas.** Contra la base real `ddl-auto` es `none`, así que se crean a mano. El DDL
    está en el javadoc de `PreferenciaColumnas`, copiado del `SHOW CREATE TABLE` del ambiente
    local —que sí crea el esquema— y no de lo que uno supone que genera Hibernate.
-2. **Permiso de escritura en la base primaria.** Es lo primero de la aplicación que escribe ahí
-   en operación normal; hasta hoy solo escribían las siembras, y la primera corrida de
-   `SembradorKilla` falló justamente porque la base estaba en `--read-only`.
+2. ~~**Permiso de escritura en la base primaria.**~~ **Ya lo hay.** Era el otro requisito
+   —esta es la primera cosa de la aplicación que escribe en la base primaria en operación
+   normal, y la primera corrida de `SembradorKilla` había fallado porque estaba en
+   `--read-only`—, pero la base volvió a read-write el 12 set 2026. Verificado el 25 set
+   contra el log de producción: el arranque del 22 set registró `Killa sembrado`, que es un
+   `save()` real, y el último `--read-only option` es del 12 set.
 
-Sin ninguna de las dos la aplicación sigue en pie: los reportes salen con el orden por omisión
-—que es el de siempre— y guardar responde 503 con el mensaje de la base. Falla a la vista, no
-en silencio.
+Así que falta solo el punto 1. Y si faltara cualquiera de los dos, la aplicación sigue en
+pie igual: los reportes salen con el orden por omisión —que es el de siempre— y guardar
+responde 503 con el mensaje de la base. Falla a la vista, no en silencio.
 
 ## Licencia
 
