@@ -37,6 +37,7 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
         "Nombre Receptor",
         "Total Excento",
         "Total Exonerado",
+        "Total No Sujeto",
         "Tarifa 0% Art.32",
         "Base Imponible 0% Art.32",
         "Impuesto 0.5%",
@@ -60,6 +61,7 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
         "Tarifa 0% sin crédito",
         "Base Imponible 0% sin crédito",
         "Base Imponible Devuelto",
+        "Impuesto Asumido Emisor Fábrica",
         "Total Otros Cargos",
         "Total Comprobante",
         "Clave",
@@ -103,6 +105,22 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
 
     @CsvBindByName(column = "Total Exonerado", locale = LOCALE_CODE)
     private BigDecimal totalExonerado;
+
+    /**
+     * Lo que queda fuera del impuesto, que no es lo mismo que estar gravado al 0 % ni
+     * exonerado de una tarifa que sí aplicaría. Nodo del resumen, no de las líneas: el
+     * desglose por tarifa no lo puede reconstruir. Existe desde la v4.4; en un comprobante
+     * anterior el adaptador devuelve null y acá queda en cero.
+     */
+    @CsvBindByName(column = "Total No Sujeto", locale = LOCALE_CODE)
+    private BigDecimal totalNoSujeto;
+
+    /**
+     * El impuesto que el emisor asumió por el comprador a nivel de fábrica. También del
+     * resumen, y también de la v4.4 en adelante.
+     */
+    @CsvBindByName(column = "Impuesto Asumido Emisor Fábrica", locale = LOCALE_CODE)
+    private BigDecimal impuestoAsumidoEmisorFabrica;
 
     @CsvBindByName(column = "Tarifa 0% Art.32", locale = LOCALE_CODE)
     private BigDecimal totalT01;
@@ -239,6 +257,10 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
                 .setTotalComprobante(preserveSign(preserve, exchangeRate, detailedDocument.getResumenFactura().getTotalComprobante()))
                 .setTotalExcento(preserveSign(preserve, exchangeRate, excento.subTotal))
                 .setTotalExonerado(preserveSign(preserve, exchangeRate, exonerado.subTotal))
+                .setTotalNoSujeto(preserveSign(preserve, exchangeRate,
+                        detailedDocument.getResumenFactura().getTotalNoSujeto()))
+                .setImpuestoAsumidoEmisorFabrica(preserveSign(preserve, exchangeRate,
+                        detailedDocument.getResumenFactura().getTotalImpAsumEmisorFabrica()))
                 .setTotalT01(preserveSign(preserve, exchangeRate, t01.taxed))
                 .setTotalT02(preserveSign(preserve, exchangeRate, t02.taxed))
                 .setTotalT03(preserveSign(preserve, exchangeRate, t03.taxed))
@@ -417,6 +439,24 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
 
     public BigDecimal getTotalExonerado() {
         return totalExonerado;
+    }
+
+    public BigDecimal getTotalNoSujeto() {
+        return totalNoSujeto;
+    }
+
+    public Voucher setTotalNoSujeto(BigDecimal totalNoSujeto) {
+        this.totalNoSujeto = totalNoSujeto;
+        return this;
+    }
+
+    public BigDecimal getImpuestoAsumidoEmisorFabrica() {
+        return impuestoAsumidoEmisorFabrica;
+    }
+
+    public Voucher setImpuestoAsumidoEmisorFabrica(BigDecimal impuestoAsumidoEmisorFabrica) {
+        this.impuestoAsumidoEmisorFabrica = impuestoAsumidoEmisorFabrica;
+        return this;
     }
 
     public Voucher setTotalComprobante(BigDecimal totalComprobante) {

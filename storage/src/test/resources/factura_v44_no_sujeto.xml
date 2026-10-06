@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--
+  Factura v4.4 con los dos nodos del resumen que sólo existen desde esa versión:
+  TotalNoSujeto y TotalImpAsumEmisorFabrica. El fixture de al lado
+  (factura_multi_tarifa.xml) es la otra mitad de la prueba: mismo esquema, sin esos
+  nodos, para que se vea que el adaptador devuelve null y el reporte lo deja en cero
+  en vez de reventar.
+
+  Las cifras: una línea gravada al 13 % (10.000 + 1.300) y una no sujeta (4.000), que
+  es lo que hace que el total no sujeto NO se pueda reconstruir desde el desglose por
+  tarifa — la línea no lleva nodo Impuesto. El impuesto asumido por el emisor a nivel
+  de fábrica (250) no se le cobra al comprador: por eso el total del comprobante es
+  14.000 + 1.300 = 15.300 y no 15.550.
+-->
+<FacturaElectronica xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/facturaElectronica">
+    <Clave>50610012000310231549000100004010000054357101884021</Clave>
+    <CodigoActividad>523402</CodigoActividad>
+    <NumeroConsecutivo>00100004010000040021</NumeroConsecutivo>
+    <FechaEmision>2026-02-10T00:00:00-06:00</FechaEmision>
+    <Emisor>
+        <Nombre>INVERSIONES ABC</Nombre>
+        <Identificacion>
+            <Tipo>02</Tipo>
+            <Numero>55102565590</Numero>
+        </Identificacion>
+        <NombreComercial>Example ABC</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>05</Distrito>
+            <Barrio>04</Barrio>
+            <OtrasSenas>Some where.</OtrasSenas>
+        </Ubicacion>
+        <Telefono>
+            <CodigoPais>506</CodigoPais>
+            <NumTelefono>12345678</NumTelefono>
+        </Telefono>
+        <CorreoElectronico>emmiter@test.com</CorreoElectronico>
+    </Emisor>
+    <Receptor>
+        <Nombre>Test Testing</Nombre>
+        <Identificacion>
+            <Tipo>01</Tipo>
+            <Numero>501230456</Numero>
+        </Identificacion>
+        <NombreComercial>ABC DEF GHI JIH</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>06</Distrito>
+            <Barrio>01</Barrio>
+            <OtrasSenas>No especificada</OtrasSenas>
+        </Ubicacion>
+        <CorreoElectronico>receptor@test.com</CorreoElectronico>
+    </Receptor>
+    <CondicionVenta>01</CondicionVenta>
+    <PlazoCredito>0</PlazoCredito>
+    <MedioPago>01</MedioPago>
+    <DetalleServicio>
+        <LineaDetalle>
+            <NumeroLinea>1</NumeroLinea>
+            <Cantidad>1</Cantidad>
+            <UnidadMedida>Unid</UnidadMedida>
+            <Detalle>Mercancia gravada al 13%</Detalle>
+            <PrecioUnitario>10000</PrecioUnitario>
+            <MontoTotal>10000</MontoTotal>
+            <SubTotal>10000</SubTotal>
+            <Impuesto>
+                <Codigo>01</Codigo>
+                <CodigoTarifaIVA>08</CodigoTarifaIVA>
+                <Tarifa>13</Tarifa>
+                <Monto>1300</Monto>
+            </Impuesto>
+            <ImpuestoNeto>1300</ImpuestoNeto>
+            <MontoTotalLinea>11300</MontoTotalLinea>
+        </LineaDetalle>
+        <LineaDetalle>
+            <NumeroLinea>2</NumeroLinea>
+            <Cantidad>1</Cantidad>
+            <UnidadMedida>Unid</UnidadMedida>
+            <Detalle>Mercancia no sujeta</Detalle>
+            <PrecioUnitario>4000</PrecioUnitario>
+            <MontoTotal>4000</MontoTotal>
+            <SubTotal>4000</SubTotal>
+            <MontoTotalLinea>4000</MontoTotalLinea>
+        </LineaDetalle>
+    </DetalleServicio>
+    <ResumenFactura>
+        <CodigoTipoMoneda>
+            <CodigoMoneda>CRC</CodigoMoneda>
+            <TipoCambio>1.0</TipoCambio>
+        </CodigoTipoMoneda>
+        <TotalMercanciasGravadas>10000</TotalMercanciasGravadas>
+        <TotalMercNoSujeta>4000</TotalMercNoSujeta>
+        <TotalGravado>10000</TotalGravado>
+        <TotalExento>0</TotalExento>
+        <TotalNoSujeto>4000</TotalNoSujeto>
+        <TotalVenta>14000</TotalVenta>
+        <TotalVentaNeta>14000</TotalVentaNeta>
+        <TotalImpuesto>1300</TotalImpuesto>
+        <TotalImpAsumEmisorFabrica>250</TotalImpAsumEmisorFabrica>
+        <TotalComprobante>15300</TotalComprobante>
+    </ResumenFactura>
+</FacturaElectronica>

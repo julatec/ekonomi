@@ -154,6 +154,70 @@ public interface Resumen extends CodigoTipoMoneda {
     }
 
     /**
+     * Exempted total services (added in v4.3).
+     *
+     * @return exempted total services.
+     */
+    default BigDecimal getTotalServExonerado() {
+        return null;
+    }
+
+    /**
+     * Non-subject total services (added in v4.4).
+     *
+     * @return non-subject total services.
+     */
+    default BigDecimal getTotalServNoSujeto() {
+        return null;
+    }
+
+    /**
+     * Exempted total merchandise (added in v4.3).
+     *
+     * @return exempted total merchandise.
+     */
+    default BigDecimal getTotalMercExonerada() {
+        return null;
+    }
+
+    /**
+     * Non-subject total merchandise (added in v4.4).
+     *
+     * @return non-subject total merchandise.
+     */
+    default BigDecimal getTotalMercNoSujeta() {
+        return null;
+    }
+
+    /**
+     * Exempted total (added in v4.3).
+     *
+     * @return exempted total.
+     */
+    default BigDecimal getTotalExonerado() {
+        return null;
+    }
+
+    /**
+     * Non-subject total (added in v4.4): what falls outside the tax altogether, as opposed
+     * to being taxed at 0 % or exempted from a rate that would otherwise apply.
+     *
+     * @return non-subject total.
+     */
+    default BigDecimal getTotalNoSujeto() {
+        return null;
+    }
+
+    /**
+     * Tax the issuer assumed on behalf of the buyer at the factory level (added in v4.4).
+     *
+     * @return tax assumed by the issuer.
+     */
+    default BigDecimal getTotalImpAsumEmisorFabrica() {
+        return null;
+    }
+
+    /**
      * Tax total.
      *
      * @return tax toal

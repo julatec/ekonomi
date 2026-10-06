@@ -41,8 +41,16 @@ class VoucherTest {
     @Value("classpath:factura_multi_tarifa.xml")
     Resource facturaMultiTarifa;
 
+    @Value("classpath:factura_v44_no_sujeto.xml")
+    Resource facturaNoSujeto;
+
     private Voucher voucherMultiTarifa() throws IOException {
         Optional<Documento> documento = documentoAdapterService.adapt(facturaMultiTarifa.getInputStream(), e -> fail());
+        return Voucher.of(documento.get());
+    }
+
+    private Voucher voucherNoSujeto() throws IOException {
+        Optional<Documento> documento = documentoAdapterService.adapt(facturaNoSujeto.getInputStream(), e -> fail());
         return Voucher.of(documento.get());
     }
 
@@ -122,6 +130,50 @@ class VoucherTest {
         for (String columna : columnasNuevas) {
             assertTrue(columnas.contains(columna), "falta la columna nueva: " + columna);
         }
+    }
+
+    @Test
+    void of_tomaDelResumenLoQueLasLineasNoPuedenDar() throws IOException {
+        // «No sujeto» no es una tarifa: la línea del fixture no lleva nodo Impuesto, así que
+        // el desglose por tarifa no lo ve. Si este dato no se leyera del resumen, se perdería
+        // sin que ninguna suma lo delate.
+        Voucher voucher = voucherNoSujeto();
+
+        assertEquals(0, new BigDecimal("4000").compareTo(voucher.getTotalNoSujeto()));
+        assertEquals(0, new BigDecimal("250").compareTo(voucher.getImpuestoAsumidoEmisorFabrica()));
+        // Y lo que sí viene por tarifa sigue viniendo por tarifa.
+        assertEquals(0, new BigDecimal("10000").compareTo(voucher.getTotalImpuestoT08()));
+        assertEquals(0, new BigDecimal("1300").compareTo(voucher.getTotalT08()));
+        assertEquals(0, new BigDecimal("15300").compareTo(voucher.getTotalComprobante()));
+    }
+
+    @Test
+    void of_conUnComprobanteSinEsosNodosDejaCeroYNoRevienta() throws IOException {
+        // La otra mitad: mismo esquema v4.4, sin TotalNoSujeto ni TotalImpAsumEmisorFabrica.
+        // El adaptador devuelve null para los dos —son `default` de la interfaz— y el reporte
+        // tiene que escribir cero, no explotar ni dejar la celda en nulo.
+        Voucher voucher = voucherMultiTarifa();
+
+        assertNotNull(voucher.getTotalNoSujeto());
+        assertNotNull(voucher.getImpuestoAsumidoEmisorFabrica());
+        assertEquals(0, BigDecimal.ZERO.compareTo(voucher.getTotalNoSujeto()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(voucher.getImpuestoAsumidoEmisorFabrica()));
+    }
+
+    @Test
+    void catalogo_incluyeLasDosColumnasNuevasYNoMueveLasViejas() throws Exception {
+        List<String> encabezado = encabezadoDe(Voucher.toWorkbook(List.of(voucherNoSujeto())));
+
+        assertTrue(encabezado.contains("Total No Sujeto"));
+        assertTrue(encabezado.contains("Impuesto Asumido Emisor Fábrica"));
+        // Los libros contables leen este archivo POR NOMBRE de columna: agregar no puede
+        // renombrar ni sacar nada de lo que ya existía.
+        assertEquals(List.of("Fecha", "Consecutivo", "Emisor", "Nombre Emisor", "Receptor",
+                        "Nombre Receptor", "Total Excento", "Total Exonerado"),
+                encabezado.subList(0, 8));
+        assertEquals("Total Comprobante", encabezado.get(encabezado.size() - 3));
+        assertEquals("Clave", encabezado.get(encabezado.size() - 2));
+        assertEquals("Moneda", encabezado.get(encabezado.size() - 1));
     }
 
     private static List<String> encabezadoDe(Workbook workbook) {
