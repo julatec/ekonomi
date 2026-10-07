@@ -48,6 +48,34 @@ public class ClienteController {
             int totalPaginas) {
     }
 
+    /**
+     * El mismo texto, listo para comparar contra la cédula.
+     * <p>
+     * Hacienda guarda la cédula <b>corrida</b> —{@code 3101591364}— y en Costa Rica se
+     * escribe con guiones. Buscando «3-101-591364» el {@code like} no encontraba nada y la
+     * sociedad parecía no existir en el sistema. La pantalla de comprobantes ya quitaba los
+     * guiones antes de buscar ({@code interpretarConsulta.js}); esta no, y esa asimetría es
+     * justo la que hace dudar de los datos en vez de del buscador.
+     * <p>
+     * Solo se compacta cuando lo escrito es <b>únicamente</b> dígitos y separadores. Un
+     * nombre con números adentro —«Taller 24/7»— se deja como está: si se le quitaran los
+     * caracteres no numéricos quedaría «247», que haría coincidir cédulas que nadie buscó.
+     *
+     * @param nombre lo que la persona escribió, tal cual.
+     * @param patron el patrón de nombre ya armado, que es lo que se devuelve cuando lo
+     *               escrito no parece una cédula.
+     */
+    static String patronDeCedula(String nombre, String patron) {
+        if (nombre == null || nombre.isBlank()) {
+            return patron;
+        }
+        final String compacto = nombre.trim().replaceAll("[\\s.\\-]", "");
+        if (compacto.isEmpty() || !compacto.chars().allMatch(Character::isDigit)) {
+            return patron;
+        }
+        return "%" + compacto + "%";
+    }
+
     @GetMapping("/api/clients")
     public PaginaDto clientes(
             Authentication authentication,
@@ -69,6 +97,7 @@ public class ClienteController {
         final String patron = nombre == null || nombre.isBlank()
                 ? "%"
                 : "%" + nombre.trim().toLowerCase() + "%";
+        final String patronCedula = patronDeCedula(nombre, patron);
 
         // El orden va en el Pageable, nunca en el SQL: si estuviera en los dos, el que pide
         // la interfaz quedaría de último desempate y no se notaría el efecto.
@@ -79,7 +108,7 @@ public class ClienteController {
 
         return accesoTenant.en(tenant, () -> {
             final Page<FacturaRepository.ClienteProyeccion> pagina =
-                    facturas.buscarClientes(patron, rango.lower, rango.upper, pageable);
+                    facturas.buscarClientes(patron, patronCedula, rango.lower, rango.upper, pageable);
             return new PaginaDto(
                     pagina.getContent().stream()
                             .map(c -> new ClienteDto(c.getNumero(), c.getNombre(),

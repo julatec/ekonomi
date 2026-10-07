@@ -45,6 +45,9 @@ public interface FacturaRepository extends MultiTenantRepository<Factura, String
      * solo por cédula, y las cinco tablas en vez de solo {@code factura}.
      *
      * @param patron patrón de {@code like} ya armado; {@code %} para no filtrar.
+     * @param patronCedula el mismo texto pero sin guiones ni espacios, para comparar contra
+     *                     la cédula —que Hacienda guarda corrida y en Costa Rica se escribe
+     *                     con guiones—. Ver {@code ClienteController.patronDeCedula}.
      * @param desde  límite inferior del rango de la barra superior, inclusive.
      * @param hasta  límite superior, inclusive — tiene que venir ya al final del día
      *               ({@code Workspace.getDateInterval()} lo entrega así), no a medianoche.
@@ -52,6 +55,7 @@ public interface FacturaRepository extends MultiTenantRepository<Factura, String
     @Query(value = ClientesSql.BUSCAR, countQuery = ClientesSql.CONTAR, nativeQuery = true)
     Page<ClienteProyeccion> buscarClientes(
             @Param("patron") String patron,
+            @Param("patronCedula") String patronCedula,
             @Param("desde") Date desde,
             @Param("hasta") Date hasta,
             Pageable pageable);

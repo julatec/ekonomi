@@ -122,7 +122,8 @@ final class ClientesSql {
                  group by receptor_numero, receptor_nombre
             ) v
             group by v.numero
-            having v.numero like :patron or max(v.nombre like :patron) = 1
+            having replace(replace(v.numero, '-', ''), ' ', '') like :patronCedula
+                or max(v.nombre like :patron) = 1
             """;
 
     /**
