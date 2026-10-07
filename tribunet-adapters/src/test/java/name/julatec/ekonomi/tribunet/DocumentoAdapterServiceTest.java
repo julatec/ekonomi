@@ -9,8 +9,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +45,103 @@ class DocumentoAdapterServiceTest {
 
     @Value("classpath:tiquete_v44_sin_receptor.xml")
     Resource tiqueteSinReceptor;
+
+    // ────────────────────────────────────────────────────────────────────────────────
+    // Basura pegada después del cierre de la raíz.
+    //
+    // El 30 set 2026 entró a `facturas.tribuconta@julatec.name` un comprobante que Xerces
+    // rechazaba con «Content is not allowed in trailing section» (línea 14, columna 4714).
+    // Reintentó cuatro veces al día durante una semana y nunca entró: la parte válida
+    // estaba completa, pero el documento se descartaba entero por lo que venía pegado
+    // DESPUÉS del cierre. Es el único documento que ha fallado al leerse.
+    // ────────────────────────────────────────────────────────────────────────────────
+
+    /** El mismo comprobante bueno, con algo pegado al final. */
+    private byte[] conBasuraAlFinal(Resource recurso, String basura) throws IOException {
+        final byte[] bueno = recurso.getInputStream().readAllBytes();
+        final byte[] cola = basura.getBytes(StandardCharsets.UTF_8);
+        final byte[] roto = new byte[bueno.length + cola.length];
+        System.arraycopy(bueno, 0, roto, 0, bueno.length);
+        System.arraycopy(cola, 0, roto, bueno.length, cola.length);
+        return roto;
+    }
+
+    @Test
+    void comprobanteConBasuraPegadaAlFinalSeRecupera() throws IOException {
+        final byte[] roto = conBasuraAlFinal(factura, "\n<<< basura del servidor de correo >>>\n");
+
+        final List<Throwable> errores = new ArrayList<>();
+        final Optional<Documento> documento =
+                documentoAdapterService.adapt(new ByteArrayInputStream(roto), errores::add);
+
+        assertTrue(errores.isEmpty(), () -> "no debería reportar error: " + errores);
+        assertTrue(documento.isPresent(), "el comprobante tenía que recuperarse");
+        // Y se recupera COMPLETO, no a medias: mismos datos que el fixture sano.
+        assertEquals("50610012000310231549000100004010000054357101884339", documento.get().getClave());
+        assertEquals(20, documento.get().getDetalleServicio().getLineaDetalle().count());
+        assertEquals(new BigDecimal("374741.69154"),
+                documento.get().getResumenFactura().getTotalComprobante());
+    }
+
+    @Test
+    void dosComprobantesConcatenadosSeQuedaConElPrimero() throws IOException {
+        // El otro modo en que aparece: dos documentos en un mismo archivo. Se corta en el
+        // PRIMER cierre; cortar en el último dejaría los dos y seguiría sin ser válido.
+        final String segundo = new String(
+                facturaCompra.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        final byte[] roto = conBasuraAlFinal(factura, segundo);
+
+        final List<Throwable> errores = new ArrayList<>();
+        final Optional<Documento> documento =
+                documentoAdapterService.adapt(new ByteArrayInputStream(roto), errores::add);
+
+        assertTrue(errores.isEmpty(), () -> "no debería reportar error: " + errores);
+        assertTrue(documento.isPresent());
+        assertEquals("50610012000310231549000100004010000054357101884339", documento.get().getClave());
+    }
+
+    @Test
+    void espaciosYSaltosAlFinalNoSonBasura() throws IOException {
+        // Un XML válido puede llevar espacios después del cierre. No hay nada que recuperar
+        // porque nunca falló — y el recorte no tiene que activarse.
+        final byte[] conEspacios = conBasuraAlFinal(factura, "\n\n   \t\n");
+        assertNull(DocumentoAdapterService.recortarTrasElCierreDeLaRaiz(conEspacios),
+                "solo espacios después del cierre no es basura que recortar");
+
+        final Optional<Documento> documento =
+                documentoAdapterService.adapt(new ByteArrayInputStream(conEspacios), e -> fail());
+        assertTrue(documento.isPresent());
+    }
+
+    @Test
+    void unXmlRotoDeVerdadSigueFallando() throws IOException {
+        // El recorte no puede convertirse en «acepta cualquier cosa»: si lo que está mal
+        // está ANTES del cierre, tiene que seguir fallando, y con el error original.
+        final byte[] roto = "<FacturaElectronica><sin cerrar</FacturaElectronica> basura"
+                .getBytes(StandardCharsets.UTF_8);
+
+        final List<Throwable> errores = new ArrayList<>();
+        final Optional<Documento> documento =
+                documentoAdapterService.adapt(new ByteArrayInputStream(roto), errores::add);
+
+        assertTrue(documento.isEmpty(), "un documento mal formado de verdad no se acepta");
+        assertEquals(1, errores.size(), "y reporta el error, uno solo");
+    }
+
+    @Test
+    void elRecorteRespetaLaCodificacionDelDocumento() {
+        // Se trabaja sobre bytes justamente para no recodificar. Un documento declarado en
+        // ISO-8859-1 con una eñe tiene que salir del recorte byte por byte idéntico.
+        final byte[] original =
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><Raiz><N>Pe\u00f1a</N></Raiz>"
+                        .getBytes(StandardCharsets.ISO_8859_1);
+        final byte[] roto = new byte[original.length + 7];
+        System.arraycopy(original, 0, roto, 0, original.length);
+        System.arraycopy("<basura".getBytes(StandardCharsets.US_ASCII), 0, roto, original.length, 7);
+
+        final byte[] recortado = DocumentoAdapterService.recortarTrasElCierreDeLaRaiz(roto);
+        assertArrayEquals(original, recortado);
+    }
 
     @Test
     void adaptFactura() throws IOException {
