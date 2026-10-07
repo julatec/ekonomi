@@ -73,6 +73,53 @@ class XmlAttachmentCommandTest {
     }
 
     @Test
+    @DisplayName("un comprobante con basura pegada después del cierre de la raíz se "
+            + "recupera: es el mensaje 134637 del buzón, atascado desde el 30 set 2026")
+    void colaPegadaDespuesDelCierreSeRecupera() {
+        final Logger logger = mock(Logger.class);
+        // «Content is not allowed in trailing section»: la parte válida está completa y bien
+        // formada, y lo que rompe el parseo viene DESPUÉS del cierre.
+        final byte[] conCola = concatenar(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><MensajeHacienda><Clave>1</Clave></MensajeHacienda>"
+                        .getBytes(StandardCharsets.UTF_8),
+                "\n<<< relleno del relé de correo >>>\n".getBytes(StandardCharsets.UTF_8));
+
+        comando(logger, conCola).run();
+
+        assertEquals(0, invocacionesDe(logger, "error"),
+                "la parte válida estaba completa: no debería registrarse como error");
+        assertEquals(1, invocacionesDe(logger, "warn"),
+                "pero sí debe quedar dicho que se descartaron bytes, no aceptarse en silencio");
+    }
+
+    @Test
+    @DisplayName("la cola pegada se recorta también cuando es OTRO documento completo")
+    void dosDocumentosConcatenadosSeQuedaConElPrimero() {
+        final Logger logger = mock(Logger.class);
+        final String uno = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><MensajeHacienda><Clave>1</Clave></MensajeHacienda>";
+        final byte[] dos = concatenar(uno.getBytes(StandardCharsets.UTF_8), uno.getBytes(StandardCharsets.UTF_8));
+
+        comando(logger, dos).run();
+
+        assertEquals(0, invocacionesDe(logger, "error"));
+        assertEquals(1, invocacionesDe(logger, "warn"));
+    }
+
+    @Test
+    @DisplayName("el recorte no convierte el parser en «acepta cualquier cosa»: lo que está "
+            + "mal ANTES del cierre sigue siendo error")
+    void loRotoAntesDelCierreSigueSiendoError() {
+        final Logger logger = mock(Logger.class);
+        final byte[] roto = "<MensajeHacienda><sin cerrar</MensajeHacienda> basura"
+                .getBytes(StandardCharsets.UTF_8);
+
+        comando(logger, roto).run();
+
+        assertEquals(1, invocacionesDe(logger, "error"),
+                "un documento mal formado de verdad se sigue registrando como error");
+    }
+
+    @Test
     @DisplayName("un adjunto que no arranca con '<' (el PDF que cayó en la rama de "
             + "octet-stream) no se intenta parsear como XML, y no ensucia el log con ERROR")
     void adjuntoQueNoEsXmlNoLogueaError() {

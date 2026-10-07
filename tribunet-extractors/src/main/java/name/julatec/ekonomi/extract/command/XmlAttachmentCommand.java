@@ -7,11 +7,13 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import name.julatec.ekonomi.tribunet.ColaXml;
+
 import jakarta.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -41,8 +43,7 @@ public class XmlAttachmentCommand extends BaseCommand<XmlAttachmentCommand> {
     }
 
     /**
-     * Ve si el InputStream arranca con {@code '<'} (saltando un BOM UTF-8 y espacios en
-     * blanco), sin consumirlo: usa {@code mark}/{@code reset} para dejarlo intacto.
+     * Ve si el adjunto arranca con {@code '<'}, saltando un BOM UTF-8 y espacios en blanco.
      * <p>
      * Existe porque {@code MessageCommand.processPart} le manda a este comando cualquier
      * adjunto que no supo identificar por content-type o extensión —esa es la rama que
@@ -56,35 +57,74 @@ public class XmlAttachmentCommand extends BaseCommand<XmlAttachmentCommand> {
      * bien—, así que basta con no intentar parsear lo que ya se ve que no es XML, en vez de
      * dejar que reviente el DocumentBuilder y loguee un ERROR por nada.
      */
-    private boolean pareceXml(InputStream stream) throws IOException {
-        stream.mark(64);
+    private boolean pareceXml(byte[] contenido) {
+        int i = 0;
+        if (contenido.length >= 3
+                && (contenido[0] & 0xFF) == 0xEF
+                && (contenido[1] & 0xFF) == 0xBB
+                && (contenido[2] & 0xFF) == 0xBF) {
+            i = 3;
+        }
+        while (i < contenido.length) {
+            final byte b = contenido[i];
+            if (b != ' ' && b != '\t' && b != '\r' && b != '\n') {
+                return b == '<';
+            }
+            i++;
+        }
+        return false;
+    }
+
+    /**
+     * Parsea el adjunto y, si truena, reintenta UNA vez descartando lo que venga pegado
+     * después del cierre de la raíz.
+     * <p>
+     * Acá es donde entran de verdad los comprobantes del correo: este comando tiene su propio
+     * {@code DocumentBuilderFactory} y NO pasa por
+     * {@code DocumentoAdapterService.adapt(InputStream, ...)}. El primer intento de arreglar
+     * esto (7 oct 2026) puso el salvamento solo allá, se desplegó, y el mensaje 134637 del
+     * buzón siguió fallando exactamente igual — el arreglo estaba en una ruta que ese
+     * documento nunca toma.
+     * <p>
+     * Si el recorte no cambia nada, o si el segundo intento también falla, se propaga el error
+     * ORIGINAL: el log tiene que mostrar el problema real y no uno derivado del salvamento.
+     */
+    private Document parsearTolerandoColaPegada(byte[] contenido)
+            throws ParserConfigurationException, IOException, SAXException {
+        final DocumentBuilder builder = dbFactory.newDocumentBuilder();
         try {
-            int b = stream.read();
-            if (b == 0xEF) {
-                stream.read(); // BB
-                stream.read(); // BF
-                b = stream.read();
+            return builder.parse(new ByteArrayInputStream(contenido));
+        } catch (SAXException primerIntento) {
+            final byte[] recortado = ColaXml.recortarTrasElCierreDeLaRaiz(contenido);
+            if (recortado == null) {
+                throw primerIntento;
             }
-            while (b == ' ' || b == '\t' || b == '\r' || b == '\n') {
-                b = stream.read();
+            try {
+                final Document document =
+                        dbFactory.newDocumentBuilder().parse(new ByteArrayInputStream(recortado));
+                getLogger().warn("[{}/{}] Documento aceptado tras descartar {} bytes pegados "
+                                + "después del cierre de la raíz. El original no era XML válido: {}",
+                        context.getAttribute(EMAIL_ATTRIBUTE),
+                        context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
+                        contenido.length - recortado.length, primerIntento.getMessage());
+                return document;
+            } catch (SAXException segundoIntento) {
+                primerIntento.addSuppressed(segundoIntento);
+                throw primerIntento;
             }
-            return b == '<';
-        } finally {
-            stream.reset();
         }
     }
 
     @Override
     public void run() {
         try {
-            final BufferedInputStream contenido = new BufferedInputStream(stream);
+            final byte[] contenido = stream.readAllBytes();
             if (!pareceXml(contenido)) {
                 getLogger().trace("[{}/{}] Adjunto descartado sin parsear: no arranca con '<'",
                         context.getAttribute(EMAIL_ATTRIBUTE), context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE));
                 return;
             }
-            final DocumentBuilder builder = dbFactory.newDocumentBuilder();
-            final Document document = builder.parse(contenido);
+            final Document document = parsearTolerandoColaPegada(contenido);
             final Runnable command = commandFactory.getCommand(this, document);
             if (command != null) {
                 for (int i = 1; i < 10; i++) {

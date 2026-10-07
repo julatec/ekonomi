@@ -105,7 +105,7 @@ class DocumentoAdapterServiceTest {
         // Un XML válido puede llevar espacios después del cierre. No hay nada que recuperar
         // porque nunca falló — y el recorte no tiene que activarse.
         final byte[] conEspacios = conBasuraAlFinal(factura, "\n\n   \t\n");
-        assertNull(DocumentoAdapterService.recortarTrasElCierreDeLaRaiz(conEspacios),
+        assertNull(ColaXml.recortarTrasElCierreDeLaRaiz(conEspacios),
                 "solo espacios después del cierre no es basura que recortar");
 
         final Optional<Documento> documento =
@@ -139,7 +139,7 @@ class DocumentoAdapterServiceTest {
         System.arraycopy(original, 0, roto, 0, original.length);
         System.arraycopy("<basura".getBytes(StandardCharsets.US_ASCII), 0, roto, original.length, 7);
 
-        final byte[] recortado = DocumentoAdapterService.recortarTrasElCierreDeLaRaiz(roto);
+        final byte[] recortado = ColaXml.recortarTrasElCierreDeLaRaiz(roto);
         assertArrayEquals(original, recortado);
     }
 
