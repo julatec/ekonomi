@@ -66,6 +66,9 @@ class DetailedDocumentTest {
     @Value("classpath:factura_v44_t10.xml")
     Resource facturaV44T10;
 
+    @Value("classpath:facturaExportacion_v44.xml")
+    Resource facturaExportacionV44;
+
     @Test
     void adaptFactura() throws IOException {
         // CodigoTarifa=08 (Tarifa general 13%) en las 20 líneas — antes se leía por el valor
@@ -251,6 +254,39 @@ class DetailedDocumentTest {
         assertTrue(impuestoV42 == null || impuestoV42.getCodigoTarifaResuelto() == null);
         assertEquals("09", impuestoV43.getCodigoTarifaResuelto());
         assertEquals("09", impuestoV44.getCodigoTarifaResuelto());
+    }
+
+    @Test
+    void facturaDeExportacionNoRevienta() throws IOException {
+        // Los dos esquemas de exportación —v4.3 y v4.4— son los únicos cuyo `Impuesto` no
+        // define `Exoneracion`: una exportación no puede llevarla. Para todos los demás el
+        // adaptador generado envuelve el nodo y devuelve un objeto aunque el XML no lo
+        // traiga; acá no hay nada que envolver y cae al `default` de la interfaz, que es
+        // null. `DetailedDocument.of` lo llamaba sin revisar y tiraba NPE.
+        //
+        // Costaba más de lo que parece: `DetailedDocument.of` lo usan `Voucher.of` (el
+        // .xlsx) y `ComprobanteResumen.tasasDe` (la pantalla), así que UNA exportación en
+        // el rango tumbaba el reporte entero, no solo esa fila.
+        final Documento documento =
+                documentoAdapterService.adapt(facturaExportacionV44.getInputStream(), e -> fail()).get();
+
+        final DetailedDocument detailedDocument =
+                assertDoesNotThrow(() -> DetailedDocument.of(documento));
+
+        // Sin exoneración, la línea clasifica por su propia tarifa, no como Exonerado.
+        assertFalse(detailedDocument.getTaxes().toNavigableMap().containsKey(FactorIVA.Exonerado),
+                "una exportación sin nodo Exoneracion no puede quedar clasificada como exonerada");
+    }
+
+    @Test
+    void elAdaptadorDeExportacionDevuelveExoneracionNula() throws IOException {
+        // La causa raíz, fijada aparte del síntoma: si algún día el generador empieza a
+        // emitir un envoltorio también para exportación, esta prueba falla y avisa que la
+        // guarda de DetailedDocument ya no es lo único que sostiene el caso.
+        final ImpuestoType impuesto = firstImpuesto(facturaExportacionV44);
+        assertNotNull(impuesto, "el fixture tiene que traer al menos un nodo Impuesto");
+        assertNull(impuesto.getExoneracion(),
+                "en exportación el adaptador cae al default de la interfaz");
     }
 
     private ImpuestoType firstImpuesto(Resource resource) throws IOException {

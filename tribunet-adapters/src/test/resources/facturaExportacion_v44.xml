@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--
+  Factura de exportación v4.4. El fixture que faltaba, y que por faltar dejó pasar un
+  NullPointerException a producción durante años.
+
+  Lo que lo hace distinto de cualquier otra factura: en los dos esquemas de exportación
+  —v4.3 y v4.4— el nodo `Impuesto` NO tiene `Exoneracion`. Una exportación no puede
+  llevar exoneración, así que Hacienda ni siquiera define el campo. El adaptador
+  generado, que para todos los demás esquemas envuelve el nodo y devuelve un objeto
+  aunque el XML venga sin él, acá no tiene nada que envolver y cae al `default` de la
+  interfaz: null. `DetailedDocument.of` lo llamaba sin revisar.
+
+  Una sola factura de exportación en el rango tumbaba la pantalla de comprobantes y el
+  .xlsx entero, para todos los comprobantes del rango, no solo para esta.
+-->
+<FacturaElectronicaExportacion
+        xmlns="https://cdn.comprobanteselectronicos.go.cr/xml-schemas/v4.4/facturaElectronicaExportacion">
+    <Clave>50610012000310231549000100004010000054357101884099</Clave>
+    <CodigoActividadEmisor>523402</CodigoActividadEmisor>
+    <NumeroConsecutivo>00100004010000040099</NumeroConsecutivo>
+    <FechaEmision>2026-03-18T00:00:00-06:00</FechaEmision>
+    <Emisor>
+        <Nombre>INVERSIONES ABC</Nombre>
+        <Identificacion>
+            <Tipo>02</Tipo>
+            <Numero>55102565590</Numero>
+        </Identificacion>
+        <NombreComercial>Example ABC</NombreComercial>
+        <Ubicacion>
+            <Provincia>3</Provincia>
+            <Canton>01</Canton>
+            <Distrito>05</Distrito>
+            <Barrio>04</Barrio>
+            <OtrasSenas>Some where.</OtrasSenas>
+        </Ubicacion>
+        <CorreoElectronico>emmiter@test.com</CorreoElectronico>
+    </Emisor>
+    <Receptor>
+        <Nombre>Overseas Buyer LLC</Nombre>
+        <OtrasSenasExtranjero>1234 Market St, Wilmington, Delaware, USA</OtrasSenasExtranjero>
+        <CorreoElectronico>buyer@example.com</CorreoElectronico>
+    </Receptor>
+    <CondicionVenta>01</CondicionVenta>
+    <PlazoCredito>0</PlazoCredito>
+    <DetalleServicio>
+        <LineaDetalle>
+            <NumeroLinea>1</NumeroLinea>
+            <Cantidad>1</Cantidad>
+            <UnidadMedida>Unid</UnidadMedida>
+            <Detalle>Mercancía exportada — el Impuesto NO lleva nodo Exoneracion</Detalle>
+            <PrecioUnitario>10000</PrecioUnitario>
+            <MontoTotal>10000</MontoTotal>
+            <SubTotal>10000</SubTotal>
+            <Impuesto>
+                <Codigo>01</Codigo>
+                <CodigoTarifaIVA>01</CodigoTarifaIVA>
+                <Tarifa>0</Tarifa>
+                <Monto>0</Monto>
+            </Impuesto>
+            <ImpuestoNeto>0</ImpuestoNeto>
+            <MontoTotalLinea>10000</MontoTotalLinea>
+        </LineaDetalle>
+    </DetalleServicio>
+    <ResumenFactura>
+        <TotalMercanciasExentas>10000</TotalMercanciasExentas>
+        <TotalGravado>0</TotalGravado>
+        <TotalExento>10000</TotalExento>
+        <TotalVenta>10000</TotalVenta>
+        <TotalVentaNeta>10000</TotalVentaNeta>
+        <TotalImpuesto>0</TotalImpuesto>
+        <TotalComprobante>10000</TotalComprobante>
+    </ResumenFactura>
+</FacturaElectronicaExportacion>

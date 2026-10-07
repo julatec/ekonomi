@@ -134,12 +134,20 @@ public class DetailedDocument implements Documento {
                 BigDecimal baseImponible = linea.getSubTotal();
                 BigDecimal impuesto = ZERO;
                 for (ImpuestoType impuestoType : linea.getImpuesto().collect(Collectors.toList())) {
-                    if (impuestoType.getExoneracion().getNumeroDocumento() != null) {
+                    // El adaptador generado normalmente envuelve el nodo, así que devuelve un
+                    // objeto aunque el XML no traiga `Exoneracion` — por eso esto sobrevivió
+                    // años. Pero los dos esquemas de FACTURA DE EXPORTACIÓN (v4.3 y v4.4) no
+                    // tienen ese nodo del todo —una exportación no puede llevar exoneración—,
+                    // así que ahí no hay override que generar y cae al `default` de la
+                    // interfaz, que es null. Una sola exportación en el rango tumbaba la
+                    // pantalla de comprobantes y el .xlsx completo.
+                    final ExoneracionType exoneracion = impuestoType.getExoneracion();
+                    if (exoneracion != null && exoneracion.getNumeroDocumento() != null) {
                         factorIVA = Exonerado;
                         buffer.add(Exonerado, new TaxAccumulated(
                                 ZERO,
                                 ZERO,
-                                impuestoType.getMonto().subtract(impuestoType.getExoneracion().getMontoExoneracion())));
+                                impuestoType.getMonto().subtract(exoneracion.getMontoExoneracion())));
                     } else {
                         // Preferido: código real de Hacienda (v4.3 CodigoTarifa / v4.4
                         // CodigoTarifaIVA, sin ambigüedad). Fallback: valor numérico de Tarifa,
