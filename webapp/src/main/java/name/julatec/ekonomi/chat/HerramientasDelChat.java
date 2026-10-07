@@ -40,7 +40,7 @@ public class HerramientasDelChat {
      * Quedan afuera, y por razones distintas:
      * <ul>
      *   <li>{@code reporte_compras} y {@code reporte_ventas} devuelven un .xlsx en base64. Un
-     *       adjunto de decenas de kilobytes no cabe en los 16.384 tokens de contexto del
+     *       adjunto de decenas de kilobytes no cabe en los 12.288 tokens de contexto del
      *       modelo local, y aunque cupiera no hay nada que el modelo pueda leer ahí.</li>
      *   <li>{@code consulta_sql} es demasiada superficie para una primera versión: acepta SQL
      *       que redacta el modelo a partir de texto que escribe cualquiera.</li>

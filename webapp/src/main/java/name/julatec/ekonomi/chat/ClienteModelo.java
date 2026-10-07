@@ -47,7 +47,7 @@ public class ClienteModelo {
      * Cuántas veces se le deja pedir herramientas antes de exigirle una respuesta.
      * <p>
      * Cuatro y no «las que haga falta»: cada vuelta agrega la pregunta, la llamada y su
-     * resultado al contexto, y el de pitia son 16.384 tokens. Un lazo sin tope no se cuelga —se
+     * resultado al contexto, y el de pitia son 12.288 tokens. Un lazo sin tope no se cuelga —se
      * queda sin ventana y empieza a responder cualquier cosa.
      */
     private static final int VUELTAS_MAXIMAS = 4;
@@ -62,7 +62,7 @@ public class ClienteModelo {
     @Value("${ekonomi.chat.base-url:http://172.16.13.117:8080}")
     private String baseUrl;
 
-    @Value("${ekonomi.chat.modelo:ministral}")
+    @Value("${ekonomi.chat.modelo:qwen3vl-8b}")
     private String modelo;
 
     @Value("${EKONOMI_PITIA_API_KEY:${ekonomi.chat.api-key:}}")
