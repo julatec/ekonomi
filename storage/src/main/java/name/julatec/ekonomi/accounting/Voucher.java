@@ -71,7 +71,7 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
 @Entity(name = Voucher.EXPORT_NAME)
 public class Voucher implements RecordComparable, Comparable<Voucher> {
 
-    public static final MappingStrategy MAPPING_STRATEGY = new MappingStrategy<>(Voucher.class);
+    public static final MappingStrategy<Voucher> MAPPING_STRATEGY = new MappingStrategy<>(Voucher.class);
     public static final String EXPORT_NAME = "manual_transaction";
     public static final String LOCALE_CODE = "es_CR";
     public static final String CRC = "CRC";
@@ -200,6 +200,11 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
     @CsvCustomBindByName(column = "Moneda", converter = CsvCurrencyConverter.class)
     private Currency currency = Currency.getInstance(Locale.getDefault());
 
+    // `this::getX` se pasa antes de que una subclase termine de inicializarse, pero `Record.Key`
+    // solo guarda los proveedores y los invoca después, al comparar: ningún estado a medio
+    // construir se lee aquí. La clase no puede ser `final` porque es entidad JPA y Hibernate
+    // necesita poder subclasearla.
+    @SuppressWarnings("this-escape")
     @Transient
     @CsvIgnore
     private final Record.Key key = new Record.Key(
@@ -310,7 +315,7 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
                 .map(DefaultSeparator::value)
                 .orElse(',');
         final InputStreamReader reader = new InputStreamReader(stream);
-        final CsvToBean<Voucher> csvToBean = new CsvToBeanBuilder(reader)
+        final CsvToBean<Voucher> csvToBean = new CsvToBeanBuilder<Voucher>(reader)
                 .withType(Voucher.class)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(separator)

@@ -11,6 +11,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+// El campo `c` está tipado como Comparator, que no es Serializable, pero todo lo que se le
+// asigna (ComparatorChain, FixedOrderComparator, NullComparator, ComparableComparator) sí lo es.
+@SuppressWarnings("serial")
 public class LiteralComparator<T extends Comparable<T>> implements Comparator<T>, Serializable {
     private static final long serialVersionUID = 1L;
     private Comparator<T> c;

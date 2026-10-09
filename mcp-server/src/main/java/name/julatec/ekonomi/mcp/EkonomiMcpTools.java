@@ -410,10 +410,13 @@ public class EkonomiMcpTools {
             if (comoArchivo) {
                 final byte[] xlsx = aXlsx(vouchers);
                 estructurado.put("bytes", xlsx.length);
+                // `meta` va en null de forma explícita: los constructores de tres y dos argumentos
+                // están deprecados y no hacían otra cosa que pasar null aquí.
                 resultado.addContent(new McpSchema.EmbeddedResource(null,
                         new McpSchema.BlobResourceContents(
                                 "ekonomi://reporte/" + nombre, XLSX,
-                                Base64.getEncoder().encodeToString(xlsx))));
+                                Base64.getEncoder().encodeToString(xlsx), null),
+                        null));
                 resultado.addTextContent(String.format(
                         "Reporte de %s de %s, %s a %s: %d filas, %d bytes de xlsx adjuntos como %s.",
                         compras ? "compras" : "ventas", cedula.trim(), desde, hasta,

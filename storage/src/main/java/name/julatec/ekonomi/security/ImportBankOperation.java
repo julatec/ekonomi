@@ -49,6 +49,10 @@ public class ImportBankOperation extends ImportTransaction<ImportBankOperation> 
         return this;
     }
 
+    // `clazz` solo se escribe desde `setClazz(Class<T>)`, con la misma cota, así que lo que
+    // guarda es siempre una subclase de BankOperation. El nombre pasa por texto en la base de datos, y
+    // eso es lo único que hace imposible comprobarlo en compilación.
+    @SuppressWarnings("unchecked")
     public <T extends BankOperation<T>> Class<T> getClazz() throws ClassNotFoundException {
         return (Class<T>) Class.forName(clazz);
     }
@@ -58,7 +62,7 @@ public class ImportBankOperation extends ImportTransaction<ImportBankOperation> 
         return this;
     }
 
-    public name.julatec.ekonomi.accounting.BankOperation of(name.julatec.ekonomi.report.bank.BankOperation<? extends name.julatec.ekonomi.report.bank.BankOperation> bankOperation) {
+    public name.julatec.ekonomi.accounting.BankOperation of(name.julatec.ekonomi.report.bank.BankOperation<?> bankOperation) {
         return new name.julatec.ekonomi.accounting.BankOperation()
                 .setDate(bankOperation.getDate())
                 .setDocumentNumber(bankOperation.getDocumentNumber())

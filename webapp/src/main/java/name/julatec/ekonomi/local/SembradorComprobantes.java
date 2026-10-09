@@ -95,6 +95,8 @@ public class SembradorComprobantes implements ApplicationRunner {
         this.notaDebitoRepository = notaDebitoRepository;
     }
 
+    // `ignorado` no se lee, y es a propósito: el scope fija el tenant y su `close()` lo restaura.
+    @SuppressWarnings("try")
     @Override
     public void run(ApplicationArguments args) throws Exception {
         final ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();

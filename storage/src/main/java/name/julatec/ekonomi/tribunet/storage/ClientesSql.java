@@ -68,57 +68,57 @@ final class ClientesSql {
             from (
                 select emisor_numero as numero, emisor_nombre as nombre, count(*) as c
                   from factura where emisor_numero is not null and emisor_nombre is not null
-                   """ + EN_RANGO + """
+            """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from factura_compra where emisor_numero is not null and emisor_nombre is not null
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_compra where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from factura_exportacion where emisor_numero is not null and emisor_nombre is not null
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from factura_exportacion where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from nota_credito where emisor_numero is not null and emisor_nombre is not null
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_credito where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
                 union all
                 select emisor_numero, emisor_nombre, count(*)
                   from nota_debito where emisor_numero is not null and emisor_nombre is not null
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by emisor_numero, emisor_nombre
                 union all
                 select receptor_numero, receptor_nombre, count(*)
                   from nota_debito where receptor_numero is not null and receptor_nombre is not null
                    and (emisor_numero is null or emisor_numero <> receptor_numero)
-                   """ + EN_RANGO + """
+                """ + EN_RANGO + """
                  group by receptor_numero, receptor_nombre
             ) v
             group by v.numero

@@ -28,7 +28,7 @@ public interface BankTransaction<T extends BankTransaction<T>> {
                 .map(DefaultSeparator::value)
                 .orElse(',');
         final InputStreamReader reader = new InputStreamReader(stream);
-        final CsvToBean<T> csvToBean = new CsvToBeanBuilder(reader)
+        final CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(reader)
                 .withType(clazz)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(separator)

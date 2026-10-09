@@ -13,6 +13,8 @@ import java.io.Serializable;
         })
 public class Account implements Serializable, Comparable<Account> {
 
+    private static final long serialVersionUID = 1L;
+
     private String guid;
     private String name;
     private String accountType;

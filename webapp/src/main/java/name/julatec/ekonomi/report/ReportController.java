@@ -57,7 +57,7 @@ public class ReportController {
     @Autowired
     PreferenciaColumnasService preferenciasDeColumnas;
 
-    public static String getUploadTransactionReportEndpoint(ImportTransaction importBankAccount) {
+    public static String getUploadTransactionReportEndpoint(ImportTransaction<?> importBankAccount) {
         return String.format("./upload/%s", uuidToString(importBankAccount.getAccount()));
     }
 

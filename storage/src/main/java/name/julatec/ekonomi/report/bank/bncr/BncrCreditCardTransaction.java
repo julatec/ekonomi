@@ -48,7 +48,7 @@ public class BncrCreditCardTransaction implements BankTransaction<BncrCreditCard
 
     public static Stream<BncrCreditCardTransaction> stream(InputStream stream) {
         final InputStreamReader reader = new InputStreamReader(stream);
-        CsvToBean<BncrCreditCardTransaction> csvToBean = new CsvToBeanBuilder(reader)
+        CsvToBean<BncrCreditCardTransaction> csvToBean = new CsvToBeanBuilder<BncrCreditCardTransaction>(reader)
                 .withType(BncrCreditCardTransaction.class)
                 .withIgnoreLeadingWhiteSpace(true)
                 .withSeparator(',')

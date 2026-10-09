@@ -47,6 +47,10 @@ public class ReportService {
         return comprobantes.sales(numero, workspace.getDateInterval());
     }
 
+    // `scope` no se lee en el cuerpo, y es a propósito: abrir el scope cambia la base de datos
+    // activa del hilo y su `close()` la devuelve a la anterior. Es el recurso lo que importa,
+    // no su valor.
+    @SuppressWarnings("try")
     public <T extends BankTransaction<T>> long upload(Workspace workspace, ImportBankTransaction account, Stream<T> stream) {
         try (var scope = bankTransactionRepository.openScope(account.getPersistenceUnit())) {
             return stream
@@ -64,6 +68,10 @@ public class ReportService {
         }
     }
 
+    // `scope` no se lee en el cuerpo, y es a propósito: abrir el scope cambia la base de datos
+    // activa del hilo y su `close()` la devuelve a la anterior. Es el recurso lo que importa,
+    // no su valor.
+    @SuppressWarnings("try")
     public <T extends BankOperation<T>> long upload(Workspace workspace, ImportBankOperation account, Stream<T> stream) {
         try (var scope = bankOperationRepository.openScope(account.getPersistenceUnit())) {
             return stream
@@ -81,6 +89,10 @@ public class ReportService {
         }
     }
 
+    // `scope` no se lee en el cuerpo, y es a propósito: abrir el scope cambia la base de datos
+    // activa del hilo y su `close()` la devuelve a la anterior. Es el recurso lo que importa,
+    // no su valor.
+    @SuppressWarnings("try")
     public long upload(Workspace workspace, ImportManualTransaction account, Stream<Voucher> stream) {
         try (var scope = voucherRepository.openScope(account.getPersistenceUnit())) {
             return stream

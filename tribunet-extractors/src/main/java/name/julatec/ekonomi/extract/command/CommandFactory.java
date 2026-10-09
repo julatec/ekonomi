@@ -55,7 +55,7 @@ public class CommandFactory {
         return context.getBean(XmlAttachmentCommand.class, parentCommand.context.<P>push(), stream);
     }
 
-    public <P extends BaseCommand<P>> DocumentCommand<? extends DocumentCommand>
+    public <P extends BaseCommand<P>> DocumentCommand<?>
     getCommand(BaseCommand<P> parentCommand, Document document) throws JAXBException {
         return documentoCommandFactory.getCommand(parentCommand, document);
     }

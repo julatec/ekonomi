@@ -25,13 +25,21 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
     @Column(name = "guid", nullable = false, length = 32)
     protected String guid;
 
+    // `A extends ImportTransaction<A>` obliga a que A sea la subclase concreta, así que `this`
+    // siempre es un A. `javac` no puede demostrarlo —es el idioma de «tipo propio» y no tiene
+    // forma verificable en Java—, por eso el cast se declara aquí una sola vez y no en cada setter.
+    @SuppressWarnings("unchecked")
+    private A self() {
+        return (A) this;
+    }
+
     public String getOwnerId() {
         return ownerId;
     }
 
     public A setOwnerId(String ownerId) {
         this.ownerId = ownerId;
-        return (A) this;
+        return self();
     }
 
     public String getOwnerName() {
@@ -40,7 +48,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setOwnerName(String ownerName) {
         this.ownerName = ownerName;
-        return (A) this;
+        return self();
     }
 
     public UUID getAccount() {
@@ -49,7 +57,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setAccount(UUID account) {
         this.guid = uuidToString(account);
-        return (A) this;
+        return self();
     }
 
     public Currency getDefaultCurrency() {
@@ -62,7 +70,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setDefaultCurrency(String defaultCurrency) {
         this.defaultCurrency = defaultCurrency;
-        return (A) this;
+        return self();
     }
 
     public String getRemoteId() {
@@ -71,7 +79,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setRemoteId(String remoteId) {
         this.remoteId = remoteId;
-        return (A) this;
+        return self();
     }
 
     public String getName() {
@@ -80,7 +88,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setName(String name) {
         this.name = name;
-        return (A) this;
+        return self();
     }
 
     public String getPersistenceUnit() {
@@ -89,7 +97,7 @@ public abstract class ImportTransaction<A extends ImportTransaction<A>> implemen
 
     public A setPersistenceUnit(String persistenceUnit) {
         this.persistenceUnit = persistenceUnit;
-        return (A) this;
+        return self();
     }
 
     @Override

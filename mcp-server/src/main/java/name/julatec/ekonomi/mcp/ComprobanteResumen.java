@@ -18,6 +18,15 @@ import java.util.Optional;
  * El {@code documento} guardado incluye el comprobante completo, que son decenas
  * de kilobytes por factura. Devolverlo en una búsqueda llenaría la ventana de
  * contexto sin aportar: para el detalle está {@code detalle_comprobante}.
+ *
+ * @param codigoActividadEmisor Código de actividad económica de 6 dígitos, del emisor y del receptor por
+ *     separado. Solo existe desde v4.3 de Hacienda; en un comprobante de v4.2
+ *     (2016/2017) los dos vienen {@code null}.
+ * @param impuestosPorTarifa El desglose por tarifa, igual que las columnas del Excel ({@code Voucher}). Viene
+ *     vacío en la fila recién armada por {@link #de}: exige reparsear el XML completo, así
+ *     que {@code BusquedaComprobantes} lo llena aparte con {@link #conImpuestos}, y solo
+ *     para las filas que de verdad se van a devolver — no para las que el límite descarta
+ *     al mezclar los cinco tipos de comprobante.
  */
 public record ComprobanteResumen(
         String tipo,
@@ -28,11 +37,6 @@ public record ComprobanteResumen(
         String emisorNombre,
         String receptorNumero,
         String receptorNombre,
-        /**
-         * Código de actividad económica de 6 dígitos, del emisor y del receptor por
-         * separado. Solo existe desde v4.3 de Hacienda; en un comprobante de v4.2
-         * (2016/2017) los dos vienen {@code null}.
-         */
         String codigoActividadEmisor,
         String codigoActividadReceptor,
         String moneda,
@@ -41,13 +45,6 @@ public record ComprobanteResumen(
         BigDecimal totalExento,
         BigDecimal totalImpuesto,
         BigDecimal totalComprobante,
-        /**
-         * El desglose por tarifa, igual que las columnas del Excel ({@code Voucher}). Viene
-         * vacío en la fila recién armada por {@link #de}: exige reparsear el XML completo, así
-         * que {@code BusquedaComprobantes} lo llena aparte con {@link #conImpuestos}, y solo
-         * para las filas que de verdad se van a devolver — no para las que el límite descarta
-         * al mezclar los cinco tipos de comprobante.
-         */
         List<TasaImpuesto> impuestosPorTarifa) {
 
     /** Una fila del desglose: la tarifa, y cuánto de esta factura cayó en ella. */

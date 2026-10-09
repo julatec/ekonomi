@@ -126,6 +126,30 @@
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.16.0</version>
             <configuration>
+                <showWarnings>true</showWarnings>
+                <!--
+                    Compilador pedante, a propósito: todos los avisos de javac (-Xlint:all) y ninguno
+                    se tolera (-Werror), en el código y en las pruebas.
+
+                    Lo que NO se arregla con suprimir: el código generado por AdapterProcessor
+                    (tribunet) lleva su propio @SuppressWarnings, emitido por el generador, porque el
+                    archivo se vuelve a escribir en cada build y editarlo a mano no sirve de nada.
+                    Eso significa que este build exige un tribunet con ese cambio instalado.
+
+                    Única categoría excluida: -processing. Avisa cuando ningún procesador «reclama» unas
+                    anotaciones, y aquí es por diseño: AdapterProcessor solo reclama @Adapt, mientras
+                    que @Service y @Autowired son de Spring. La alternativa sería que el procesador
+                    declare que reclama TODO, que es el truco que impide trabajar a cualquier otro
+                    procesador. No es un aviso sobre el código, sino sobre cómo se reparten las anotaciones.
+
+                    Si algo falla aquí, lo correcto es arreglar la causa. Una supresión
+                    (@SuppressWarnings) solo es válida con un comentario al lado que diga POR QUÉ el
+                    aviso no aplica; sin esa razón es solo callar al compilador.
+                -->
+                <compilerArgs>
+                    <arg>-Xlint:all,-processing</arg>
+                    <arg>-Werror</arg>
+                </compilerArgs>
                 <annotationProcessors>
                     <annotationProcessor>
                         name.julatec.ekonomi.tribunet.annotation.AdapterProcessor

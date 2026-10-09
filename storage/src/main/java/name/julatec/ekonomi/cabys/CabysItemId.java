@@ -17,6 +17,8 @@ import java.io.Serializable;
  */
 public class CabysItemId implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Column(length = 20)
     private String version;
 

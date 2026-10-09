@@ -117,7 +117,7 @@ public class HerramientasDelChat {
             return "{\"error\":\"No existe una herramienta llamada '" + nombre + "'.\"}";
         }
         final McpSchema.CallToolResult resultado = spec.callHandler()
-                .apply(null, new McpSchema.CallToolRequest(nombre, argumentos));
+                .apply(null, new McpSchema.CallToolRequest(nombre, argumentos, null));
         final StringBuilder salida = new StringBuilder();
         for (McpSchema.Content contenido : resultado.content()) {
             if (contenido instanceof McpSchema.TextContent texto) {

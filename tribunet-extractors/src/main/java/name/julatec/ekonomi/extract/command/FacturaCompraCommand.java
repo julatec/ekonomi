@@ -12,7 +12,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "SpringJavaInjectionPointsAutowiringInspection"})
-public class FacturaCompraCommand extends DocumentCommand {
+public class FacturaCompraCommand extends DocumentCommand<FacturaCompraCommand> {
 
     private final FacturaCompra factura;
 

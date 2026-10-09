@@ -77,7 +77,9 @@ public class ResumenComprobantes {
         // `Factura.key` al elegir la moneda del registro.
         final Expression<String> moneda = cb.coalesce(codigoMoneda, cb.literal(MONEDA_LOCAL));
 
-        consulta.multiselect(moneda, cb.count(root), cb.sum(total), cb.sum(impuesto)).groupBy(moneda);
+        // `multiselect` está deprecado en Jakarta Persistence 3.2. Con una consulta de Tuple es lo mismo
+        // que `select(cb.tuple(...))`, y las columnas siguen leyéndose por el mismo índice.
+        consulta.select(cb.tuple(moneda, cb.count(root), cb.sum(total), cb.sum(impuesto))).groupBy(moneda);
 
         final Predicate predicado = filtro.<T>aSpecification().toPredicate(root, consulta, cb);
         if (predicado != null) {

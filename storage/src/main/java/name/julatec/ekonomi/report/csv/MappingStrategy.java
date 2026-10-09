@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
+public final class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(MappingStrategy.class);
 
@@ -38,7 +38,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
 
         header = new String[numColumns];
 
-        BeanField beanField;
+        BeanField<T, String> beanField;
         for (int i = 0; i < numColumns; i++) {
             beanField = findField(i);
             String columnHeaderName = extractHeaderName(beanField);
@@ -59,7 +59,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
         super.loadFieldMap();
     }
 
-    private String extractHeaderName(final BeanField beanField) {
+    private String extractHeaderName(final BeanField<T, String> beanField) {
         if (beanField == null ||
                 beanField.getField() == null ||
                 beanField.getField().getDeclaredAnnotationsByType(CsvBindByName.class).length +
@@ -87,7 +87,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
             InvocationTargetException {
 
         final Map<Class<?>, Object> beanTree = createBean();
-        final T subordinateBean = (T) beanTree.get(type);
+        final T subordinateBean = type.cast(beanTree.get(type));
         if (line.getRowNum() == 0) {
             int col = 0;
             for (String ignored : generateHeader(subordinateBean)) {
@@ -103,7 +103,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                 writer.read(subordinateBean, beanField, cell, fieldAccesses.get(col));
             }
         }
-        return (T) beanTree.get(type);
+        return type.cast(beanTree.get(type));
     }
 
     public Stream<T> fromWorkbook(InputStream stream, BiConsumer<Row, Throwable> consumer) throws IOException {
@@ -224,10 +224,10 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         fieldAccess.setField(subordinateBean, null);
                         break;
                     case NUMERIC:
-                        ((FieldAccess<String>) fieldAccess).setField(subordinateBean, String.valueOf((long) cell.getNumericCellValue()));
+                        XlsxFieldWriter.<String>tipado(fieldAccess).setField(subordinateBean, String.valueOf((long) cell.getNumericCellValue()));
                         break;
                     default:
-                        ((FieldAccess<String>) fieldAccess).setField(subordinateBean, cell.getStringCellValue());
+                        XlsxFieldWriter.<String>tipado(fieldAccess).setField(subordinateBean, cell.getStringCellValue());
                         break;
                 }
             }
@@ -256,7 +256,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         fieldAccess.setField(subordinateBean, null);
                         break;
                     default:
-                        ((FieldAccess<Integer>) fieldAccess).setField(subordinateBean, Double.valueOf(cell.getNumericCellValue()).intValue());
+                        XlsxFieldWriter.<Integer>tipado(fieldAccess).setField(subordinateBean, Double.valueOf(cell.getNumericCellValue()).intValue());
                         break;
                 }
             }
@@ -285,7 +285,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         fieldAccess.setField(subordinateBean, null);
                         break;
                     default:
-                        ((FieldAccess<Long>) fieldAccess).setField(subordinateBean, Double.valueOf(cell.getNumericCellValue()).longValue());
+                        XlsxFieldWriter.<Long>tipado(fieldAccess).setField(subordinateBean, Double.valueOf(cell.getNumericCellValue()).longValue());
                         break;
                 }
             }
@@ -315,7 +315,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         fieldAccess.setField(subordinateBean, null);
                         break;
                     default:
-                        ((FieldAccess<Double>) fieldAccess).setField(subordinateBean, cell.getNumericCellValue());
+                        XlsxFieldWriter.<Double>tipado(fieldAccess).setField(subordinateBean, cell.getNumericCellValue());
                         break;
                 }
             }
@@ -348,10 +348,10 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         final String text = cell.getStringCellValue();
                         final double doubleValue = Double.valueOf(text);
                         BigDecimal bigDecimal = BigDecimal.valueOf(doubleValue);
-                        ((FieldAccess<BigDecimal>) fieldAccess).setField(subordinateBean, bigDecimal.compareTo(BigDecimal.ZERO) != 0 ? bigDecimal : null);
+                        XlsxFieldWriter.<BigDecimal>tipado(fieldAccess).setField(subordinateBean, bigDecimal.compareTo(BigDecimal.ZERO) != 0 ? bigDecimal : null);
                         break;
                     default:
-                        ((FieldAccess<BigDecimal>) fieldAccess).setField(subordinateBean, BigDecimal.valueOf(cell.getNumericCellValue()));
+                        XlsxFieldWriter.<BigDecimal>tipado(fieldAccess).setField(subordinateBean, BigDecimal.valueOf(cell.getNumericCellValue()));
                         break;
                 }
             }
@@ -376,7 +376,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
             public <T2> void read(T2 subordinateBean, BeanField<T2, String> beanField, Cell cell, FieldAccess<?> fieldAccess) throws CsvDataTypeMismatchException, CsvConstraintViolationException, CsvRequiredFieldEmptyException, CsvValidationException, IllegalAccessException, InvocationTargetException {
                 switch (cell.getCellType()) {
                     case NUMERIC:
-                        ((FieldAccess<Date>) fieldAccess).setField(subordinateBean, cell.getDateCellValue());
+                        XlsxFieldWriter.<Date>tipado(fieldAccess).setField(subordinateBean, cell.getDateCellValue());
                         break;
                     default:
                         fieldAccess.setField(subordinateBean, null);
@@ -409,7 +409,7 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
                         fieldAccess.setField(subordinateBean, null);
                         break;
                     default:
-                        ((FieldAccess<Boolean>) fieldAccess).setField(subordinateBean, cell.getBooleanCellValue());
+                        XlsxFieldWriter.<Boolean>tipado(fieldAccess).setField(subordinateBean, cell.getBooleanCellValue());
                         break;
                 }
             }
@@ -449,6 +449,17 @@ public class MappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
         };
 
         final Class<?> targetClass;
+
+        // La seguridad de tipos de todos los `read` descansa en `getWriter(campo.getType())`: cada
+        // constante solo se usa con campos del tipo que le corresponde (StringWriter con String,
+        // IntegerWriter con Integer...), así que el `FieldAccess<?>` que recibe es en realidad de
+        // ese tipo. `javac` no puede ver ese despacho; se declara aquí, una sola vez, en vez de
+        // repetir el cast sin verificar en cada constante.
+        @SuppressWarnings("unchecked")
+        private static <V> FieldAccess<V> tipado(FieldAccess<?> acceso) {
+            return (FieldAccess<V>) acceso;
+        }
+
 
         XlsxFieldWriter(Class<?> targetClass) {
             this.targetClass = targetClass;

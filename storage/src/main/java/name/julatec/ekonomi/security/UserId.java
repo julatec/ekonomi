@@ -9,6 +9,9 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 
 @Embeddable
+// Mismo criterio que `User`: viaja dentro de él, en la sesión, así que no se le fija un UID
+// distinto del calculado.
+@SuppressWarnings("serial")
 public class UserId implements Serializable, Comparable<UserId> {
 
     private String value;

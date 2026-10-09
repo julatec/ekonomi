@@ -10,8 +10,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@SuppressWarnings("JpaDataSourceORMInspection")
 @Entity(name = "user")
+// `serial` suprimido a propósito, y SIN añadir serialVersionUID: Spring Security guarda el
+// Authentication —con este User adentro— en la sesión HTTP, y Tomcat serializa las sesiones al
+// reiniciar. Fijar ahora un UID distinto del calculado invalidaría las sesiones vivas. Los
+// campos están tipados como Set<...>, que no es Serializable, pero en ejecución Hibernate los
+// reemplaza por PersistentSet, que sí lo es: el aviso es de tipado, no de un fallo real.
+@SuppressWarnings({"JpaDataSourceORMInspection", "serial"})
 public class User implements UserDetails {
 
     @Id

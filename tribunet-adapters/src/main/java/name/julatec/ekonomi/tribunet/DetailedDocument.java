@@ -154,6 +154,11 @@ public class DetailedDocument implements Documento {
                         // solo para documentos v4.2 que no tienen campo de código. Un código
                         // presente pero no reconocido (dato futuro o corrupto) cae en Otros,
                         // no en Exonerado — no es una exoneración legal.
+                        // `FactorIVA.valueOf(BigDecimal)` está marcado @Deprecated con el consejo de
+                        // preferir `fromCodigo` "cuando el documento tenga código". Acá el `or(...)` solo
+                        // se evalúa cuando NO lo tiene (v4.2): es el caso legado para el que el método
+                        // existe, no un uso olvidado.
+                        @SuppressWarnings("deprecation")
                         final FactorIVA impuestoFactor = Optional.ofNullable(impuestoType.getCodigoTarifaResuelto())
                                 .map(FactorIVA::fromCodigo)
                                 .or(() -> Optional.ofNullable(FactorIVA.valueOf(impuestoType.getTarifa())))

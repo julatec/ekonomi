@@ -17,12 +17,12 @@ import static name.julatec.ekonomi.extract.command.MessageCommand.MESSAGE_NUMBER
 @Service
 public class DocumentoCommandFactory {
 
-    private static final Map<Class<?>, Class<? extends DocumentCommand>> commands;
+    private static final Map<Class<?>, Class<? extends DocumentCommand<?>>> commands;
 
     private final DocumentoAdapterService adapterService;
 
     static {
-        final Map<Class<?>, Class<? extends DocumentCommand>> commandsMap = new HashMap<>();
+        final Map<Class<?>, Class<? extends DocumentCommand<?>>> commandsMap = new HashMap<>();
         commandsMap.put(Factura.class, FacturaCommand.class);
         commandsMap.put(FacturaCompra.class, FacturaCompraCommand.class);
         commandsMap.put(FacturaExportacion.class, FacturaExportacionCommand.class);
@@ -70,9 +70,9 @@ public class DocumentoCommandFactory {
                         parentCommand.context.getAttribute(MESSAGE_NUMBER_ATTRIBUTE),
                         namespace);
 
-                for (Map.Entry<Class<?>, Class<? extends DocumentCommand>> entry : commands.entrySet()) {
+                for (Map.Entry<Class<?>, Class<? extends DocumentCommand<?>>> entry : commands.entrySet()) {
                     if (entry.getKey().isInstance(documento.get())) {
-                        DocumentCommand command = context.getBean(
+                        DocumentCommand<?> command = context.getBean(
                                 entry.getValue(),
                                 parentCommand.context.push(),
                                 document, documento.get());

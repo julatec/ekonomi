@@ -7,7 +7,7 @@ import java.util.TreeMap;
 
 public class Context<T extends BaseCommand<T>> {
 
-    public final Context<? extends BaseCommand> parentContext;
+    public final Context<?> parentContext;
     public final Logger logger;
     private final TreeMap<String, Object> attributes = new TreeMap<>();
 
@@ -16,6 +16,11 @@ public class Context<T extends BaseCommand<T>> {
         this.logger = logger;
     }
 
+    // El cast no se puede verificar: `attributes` guarda cualquier cosa bajo clave de texto y
+    // quien llama decide el tipo `V` que espera, igual que un `Map<String, Object>` con acceso
+    // tipado. Es el contrato de este contenedor, no un descuido; si el tipo no coincide falla
+    // en el sitio de uso con ClassCastException, que es donde se puede diagnosticar.
+    @SuppressWarnings("unchecked")
     public <V> Optional<V> getAttribute(String attribute) {
         if (attributes.containsKey(attribute)) {
             return Optional.ofNullable((V) attributes.get(attribute));

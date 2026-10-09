@@ -1,7 +1,6 @@
 package name.julatec.ekonomi.storage;
 
 import name.julatec.ekonomi.tribunet.UuidFormatter;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
@@ -27,6 +26,10 @@ import java.util.UUID;
  * migración: sería dejar de encontrar las filas que ya están.
  */
 public class UuidHexUserType implements UserType<UUID> {
+
+    // Solo se implementan las variantes con `WrapperOptions`. Las que reciben la sesión están
+    // deprecadas para eliminación en Hibernate 7, y su `default` ya delega en estas con la misma
+    // sesión como `WrapperOptions` — que es lo que hacía aquí el override que se quitó.
 
     @Override
     public int getSqlType() {
@@ -55,12 +58,6 @@ public class UuidHexUserType implements UserType<UUID> {
     }
 
     @Override
-    public UUID nullSafeGet(ResultSet rs, int position,
-                            SharedSessionContractImplementor session, Object owner) throws SQLException {
-        return nullSafeGet(rs, position, (WrapperOptions) session);
-    }
-
-    @Override
     public void nullSafeSet(PreparedStatement st, UUID value, int index, WrapperOptions options)
             throws SQLException {
         if (value == null) {
@@ -68,11 +65,5 @@ public class UuidHexUserType implements UserType<UUID> {
         } else {
             st.setString(index, UuidFormatter.uuidToString(value));
         }
-    }
-
-    @Override
-    public void nullSafeSet(PreparedStatement st, UUID value, int index,
-                            SharedSessionContractImplementor session) throws SQLException {
-        nullSafeSet(st, value, index, (WrapperOptions) session);
     }
 }

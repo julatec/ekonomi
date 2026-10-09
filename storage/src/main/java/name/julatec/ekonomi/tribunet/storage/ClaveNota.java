@@ -11,6 +11,8 @@ import java.io.Serializable;
 @Embeddable
 public class ClaveNota implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "clave")
     protected String clave;
 

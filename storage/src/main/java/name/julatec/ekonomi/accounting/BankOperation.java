@@ -107,6 +107,11 @@ public class BankOperation implements
     /**
      * A record ky used to identify and sort this operation.
      */
+    // `this::getX` se pasa antes de que una subclase termine de inicializarse, pero `Record.Key`
+    // solo guarda los proveedores y los invoca después, al comparar: ningún estado a medio
+    // construir se lee aquí. La clase no puede ser `final` porque es entidad JPA y Hibernate
+    // necesita poder subclasearla.
+    @SuppressWarnings("this-escape")
     @Transient
     private final Record.Key key = new Record.Key(
             this::getDate,

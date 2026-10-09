@@ -15,20 +15,24 @@ import java.util.Date;
  * Todos son opcionales y se combinan con Y lógico. Ninguno solo es obligatorio,
  * pero una búsqueda sin ningún criterio devuelve el tope de filas y poco más,
  * así que las herramientas exigen al menos uno.
+ *
+ * @param emisor Una parte concreta del documento, por identificación exacta o por nombre.
+ *     <p>
+ *     {@code cedula} y {@code nombre} buscan en los dos lados a la vez, que es lo correcto
+ *     cuando se busca «todo lo de esta contraparte». Estos dos sirven para la pregunta
+ *     distinta —«lo que ME facturó fulano» contra «lo que YO le facturé»— que antes obligaba
+ *     a mirar la columna a ojo.
+ * @param codigoActividad Código de actividad económica de 6 dígitos, de cualquiera de las dos partes.
+ *     <p>
+ *     Existe desde v4.3 de Hacienda; los comprobantes de v4.2 (2016/2017) siempre dan
+ *     {@code null} acá, así que este filtro nunca los va a traer. Es una limitación del
+ *     formato, no de la búsqueda.
  */
 public record FiltroComprobantes(
         String clave,
         String consecutivo,
         String cedula,
         String nombre,
-        /**
-         * Una parte concreta del documento, por identificación exacta o por nombre.
-         * <p>
-         * {@code cedula} y {@code nombre} buscan en los dos lados a la vez, que es lo correcto
-         * cuando se busca «todo lo de esta contraparte». Estos dos sirven para la pregunta
-         * distinta —«lo que ME facturó fulano» contra «lo que YO le facturé»— que antes obligaba
-         * a mirar la columna a ojo.
-         */
         String emisor,
         String receptor,
         Date desde,
@@ -36,13 +40,6 @@ public record FiltroComprobantes(
         BigDecimal montoMinimo,
         BigDecimal montoMaximo,
         String moneda,
-        /**
-         * Código de actividad económica de 6 dígitos, de cualquiera de las dos partes.
-         * <p>
-         * Existe desde v4.3 de Hacienda; los comprobantes de v4.2 (2016/2017) siempre dan
-         * {@code null} acá, así que este filtro nunca los va a traer. Es una limitación del
-         * formato, no de la búsqueda.
-         */
         String codigoActividad) {
 
     public boolean vacio() {

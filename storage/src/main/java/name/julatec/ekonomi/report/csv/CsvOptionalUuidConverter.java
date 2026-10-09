@@ -19,8 +19,9 @@ public class CsvOptionalUuidConverter extends AbstractBeanField<Optional<UUID>, 
 
     @Override
     protected String convertToWrite(Object value) {
-        Optional<UUID> optionalUUID = (Optional<UUID>) value;
-        return optionalUUID.map(UuidFormatter::uuidToString).orElse(StringUtils.EMPTY);
+        // opencsv entrega `Object`. `UUID.class::cast` verifica cada elemento, a diferencia de un
+        // `(Optional<UUID>) value`, que el compilador no puede comprobar y deja pasar cualquier cosa.
+        return ((Optional<?>) value).map(UUID.class::cast).map(UuidFormatter::uuidToString).orElse(StringUtils.EMPTY);
     }
 
 }

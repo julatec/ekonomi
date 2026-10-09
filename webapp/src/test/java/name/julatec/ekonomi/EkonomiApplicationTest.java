@@ -15,6 +15,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +42,9 @@ class EkonomiApplicationTest {
     private Authentication autenticacionCon(boolean autenticado, GrantedAuthority... autoridades) {
         final Authentication auth = mock(Authentication.class);
         when(auth.isAuthenticated()).thenReturn(autenticado);
-        when(auth.getAuthorities()).thenReturn((Set) Set.of(autoridades));
+        // `getAuthorities()` devuelve `Collection<? extends GrantedAuthority>`: con `when(...)` la
+        // captura del comodín no deja devolver un Set sin un cast crudo. `doReturn` no tiene ese problema.
+        doReturn(Set.of(autoridades)).when(auth).getAuthorities();
         return auth;
     }
 

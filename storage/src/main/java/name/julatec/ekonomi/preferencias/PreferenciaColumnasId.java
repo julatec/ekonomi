@@ -20,6 +20,8 @@ import java.io.Serializable;
 @Embeddable
 public class PreferenciaColumnasId implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "username", length = 128, nullable = false)
     private String username;
 

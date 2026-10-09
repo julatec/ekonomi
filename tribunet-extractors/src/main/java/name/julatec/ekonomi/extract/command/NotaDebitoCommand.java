@@ -14,7 +14,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "SpringJavaInjectionPointsAutowiringInspection"})
-public class NotaDebitoCommand extends DocumentCommand {
+public class NotaDebitoCommand extends DocumentCommand<NotaDebitoCommand> {
 
     private final NotaDebito nota;
 

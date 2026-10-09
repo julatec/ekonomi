@@ -28,12 +28,18 @@ public interface MultiTenantRepository<T, ID, Self extends MultiTenantRepository
         currentTenant.remove();
     }
 
-    default <T> Map<String, T> forAll(Stream<String> tenants, Function<Self, T> function) {
+    // Se llama `mapAll` y no `forAll` para no solaparse con la variante de `Consumer`: con
+    // lambdas, `forAll(tenants, r -> r.save(x))` encaja en las dos y el compilador lo rechaza
+    // por ambiguo. Esta variante no tenía ningún llamador cuando se renombró.
+    default <T> Map<String, T> mapAll(Stream<String> tenants, Function<Self, T> function) {
         final String currentDB = getCurrentTenant();
         try {
             final Map<String, T> resultMap = tenants.map(s -> {
                 setCurrentDb(s);
-                final T result = function.apply((Self) this);
+                // `Self extends MultiTenantRepository<..., Self>` obliga a que `this` sea un Self;
+                // javac no puede demostrarlo (idioma de «tipo propio»).
+                @SuppressWarnings("unchecked") final Self self = (Self) this;
+                final T result = function.apply(self);
                 return Map.entry(s, result);
             }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             return resultMap;
@@ -47,7 +53,8 @@ public interface MultiTenantRepository<T, ID, Self extends MultiTenantRepository
         try {
             tenants.forEach(s -> {
                 setCurrentDb(s);
-                function.accept((Self) this);
+                @SuppressWarnings("unchecked") final Self self = (Self) this;
+                function.accept(self);
             });
         } finally {
             setCurrentDb(currentDB);

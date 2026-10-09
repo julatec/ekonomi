@@ -25,6 +25,8 @@ import java.io.Serializable;
 @Embeddable
 public class ColumnaSeleccionada implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "columna", length = 64, nullable = false)
     private String columna;
 

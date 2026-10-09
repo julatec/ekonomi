@@ -41,6 +41,11 @@ public class BankTransaction implements
 
     private Currency currency;
 
+    // `this::getX` se pasa antes de que una subclase termine de inicializarse, pero `Record.Key`
+    // solo guarda los proveedores y los invoca después, al comparar: ningún estado a medio
+    // construir se lee aquí. La clase no puede ser `final` porque es entidad JPA y Hibernate
+    // necesita poder subclasearla.
+    @SuppressWarnings("this-escape")
     @Transient
     private final Record.Key key = new Record.Key(
             this::getDate,
@@ -150,7 +155,7 @@ public class BankTransaction implements
     }
 
     public static BankTransaction of(
-            name.julatec.ekonomi.report.bank.BankTransaction<? extends name.julatec.ekonomi.report.bank.BankTransaction> bankTransaction) {
+            name.julatec.ekonomi.report.bank.BankTransaction<?> bankTransaction) {
         return new BankTransaction()
                 .setAccount(bankTransaction.getAccount())
                 .setAmount(bankTransaction.getAmount())

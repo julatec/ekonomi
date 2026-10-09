@@ -159,6 +159,24 @@ Así que falta solo el punto 1. Y si faltara cualquiera de los dos, la aplicaci�
 pie igual: los reportes salen con el orden por omisión —que es el de siempre— y guardar
 responde 503 con el mensaje de la base. Falla a la vista, no en silencio.
 
+### El compilador es pedante a propósito
+
+El build compila con `-Xlint:all` y `-Werror`, en el código **y** en las pruebas: un aviso de
+`javac` rompe el build. Está en el `pom.xml` raíz, con su explicación al lado.
+
+- **Una supresión (`@SuppressWarnings`) solo vale con un comentario que diga por qué el aviso no
+  aplica.** Sin esa razón es callar al compilador. Dos formas que sí han hecho falta: concentrar un
+  cast inevitable en un único ayudante con nombre (`XlsxFieldWriter.tipado`, `ImportTransaction.self`)
+  en vez de repetirlo, y convertir un cast ciego en uno verificado (`type.cast(...)`).
+- **Única categoría excluida: `-processing`.** Avisa cuando ningún procesador «reclama» unas
+  anotaciones; `AdapterProcessor` solo reclama `@Adapt`, y `@Service`/`@Autowired` son de Spring.
+- **Este build exige un `tribunet` con el `@SuppressWarnings` del generador instalado.** El código que
+  emite `AdapterProcessor` se reescribe en cada build, así que el aviso no se arregla editándolo: el
+  generador lo emite en el encabezado de cada clase. Con un `tribunet` anterior en `~/.m2`, el build de
+  `ekonomi` falla con ~97 avisos de archivos que no están en este repo.
+- **Si el gate «pasa» demasiado fácil, desconfía.** Se comprobó con un canario (un tipo crudo a
+  propósito, en código y en pruebas) que rompe donde debe; repetirlo si se toca la configuración.
+
 ## Licencia
 
 Apache 2.0 desde 2020 — el texto completo en [`LICENSE.txt`](LICENSE.txt), el aviso de

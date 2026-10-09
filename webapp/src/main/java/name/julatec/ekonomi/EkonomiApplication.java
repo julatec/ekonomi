@@ -120,7 +120,7 @@ public class EkonomiApplication {
         return esquema + "://" + request.getServerName() + (estandar ? "" : ":" + puerto);
     }
 
-    /**
+    /*
      * Autenticación únicamente por certificado de firma digital.
      * <p>
      * Aquí estuvo {@code .httpBasic(...)}, que junto con la contraseña fija de
