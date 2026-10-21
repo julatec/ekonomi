@@ -5,7 +5,6 @@ import name.julatec.ekonomi.session.Workspace;
 import name.julatec.ekonomi.session.WorkspaceService;
 import name.julatec.util.algebraic.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -41,9 +40,6 @@ public class ChatController {
 
     private ClienteModelo modelo;
     private WorkspaceService workspaceService;
-
-    @Value("${ekonomi.chat.base-url:http://172.16.13.117:8080}")
-    private String baseUrl;
 
     /** Lo que manda la interfaz. `historial` viaja completo desde el navegador: no hay sesión de chat en el servidor. */
     public record Pregunta(String mensaje, List<Map<String, String>> historial) {
@@ -122,7 +118,7 @@ public class ChatController {
     @GetMapping("/api/chat")
     public Map<String, Object> estado() {
         return Map.of(
-                "modelo", baseUrl,
+                "modelo", modelo.ubicacion(),
                 "herramientas", modelo.nombresDeHerramientas());
     }
 

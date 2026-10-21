@@ -177,6 +177,19 @@ El build compila con `-Xlint:all` y `-Werror`, en el código **y** en las prueba
 - **Si el gate «pasa» demasiado fácil, desconfía.** Se comprobó con un canario (un tipo crudo a
   propósito, en código y en pruebas) que rompe donde debe; repetirlo si se toca la configuración.
 
+### El chat encuentra el modelo por SRV (`srv:<capacidad>`)
+
+`ekonomi.chat.base-url` es una URL normal —el comportamiento de siempre— o `srv:<capacidad>`: el modelo se busca por DNS-SD (registros SRV) en
+el dominio de la casa, en vez de llevar la IP escrita.
+
+- **El valor por omisión no cambia:** desplegar el código no cambia nada hasta configurar `srv:<capacidad>`.
+- **`ekonomi.chat.base-url-respaldo`:** una URL fija **con IP literal** (con un nombre no sirve si lo que falla es el DNS) para cuando el descubrimiento
+  no puede elegir a nadie. Se usa siempre con un `WARN`.
+- **Una sola clase** toca la biblioteca de descubrimiento, `chat/UbicacionDelModelo`: si la biblioteca cambia de nombre, el cambio es de un archivo.
+- **Este build exige esa biblioteca (`name.julatec:descubrir`) en `~/.m2`**, el mismo acoplamiento que `tribunet` y `utils`. Es de un repositorio privado;
+  cómo instalarla está en la documentación privada de operaciones. Sin ella, `mvn` falla al resolverla.
+- **No detecta un servidor colgado:** la elección es solo por TCP. Y con un solo destino por capacidad no hay *failover* todavía.
+
 ## Licencia
 
 Apache 2.0 desde 2020 — el texto completo en [`LICENSE.txt`](LICENSE.txt), el aviso de

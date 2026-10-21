@@ -59,8 +59,7 @@ public class ClienteModelo {
     private final HerramientasDelChat herramientas;
     private final HttpClient http;
 
-    @Value("${ekonomi.chat.base-url:http://172.16.13.117:8080}")
-    private String baseUrl;
+    private final UbicacionDelModelo ubicacion;
 
     @Value("${ekonomi.chat.modelo:qwen3vl-8b}")
     private String modelo;
@@ -71,8 +70,9 @@ public class ClienteModelo {
     @Value("${ekonomi.chat.espera-segundos:120}")
     private int esperaSegundos;
 
-    public ClienteModelo(HerramientasDelChat herramientas) {
+    public ClienteModelo(HerramientasDelChat herramientas, UbicacionDelModelo ubicacion) {
         this.herramientas = herramientas;
+        this.ubicacion = ubicacion;
         this.http = HttpClient.newBuilder()
                 // Corto a propósito: si pitia está apagada se sabe en cinco segundos, no en dos
                 // minutos. La espera larga es la de la respuesta, que sí puede tardar.
@@ -126,8 +126,11 @@ public class ClienteModelo {
                             + "una respuesta. Probá con una pregunta más concreta.");
         } catch (java.net.http.HttpTimeoutException e) {
             return Respuesta.fallo("El modelo no respondió en " + esperaSegundos + " s.");
+        } catch (UbicacionDelModelo.Inalcanzable e) {
+            // Ya trae una causa por candidato, en palabras.
+            return Respuesta.fallo(e.getMessage());
         } catch (java.net.ConnectException e) {
-            return Respuesta.fallo("No se pudo conectar con el modelo en " + baseUrl + ".");
+            return Respuesta.fallo("No se pudo conectar con el modelo en " + ubicacion.descripcion() + ".");
         } catch (Exception e) {
             logger.warn("Falló la conversación con el modelo", e);
             return Respuesta.fallo("Falló la conversación con el modelo: " + e.getMessage());
@@ -216,8 +219,9 @@ public class ClienteModelo {
             cuerpo.put("tool_choice", "auto");
         }
 
+        // Se elige por petición: con `srv:` un preferido caído se deja de intentar apenas cae.
         final HttpRequest.Builder peticion = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/v1/chat/completions"))
+                .uri(URI.create(ubicacion.baseUrl() + "/v1/chat/completions"))
                 .timeout(Duration.ofSeconds(esperaSegundos))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(cuerpo)));
@@ -239,6 +243,11 @@ public class ClienteModelo {
 
     private static String recorte(String s) {
         return s == null ? "" : s.length() > 300 ? s.substring(0, 300) + "…" : s;
+    }
+
+    /** Lo configurado ({@code srv:llama} o una URL), para mostrarlo en el estado del chat. */
+    public String ubicacion() {
+        return ubicacion.descripcion();
     }
 
     public List<String> nombresDeHerramientas() {

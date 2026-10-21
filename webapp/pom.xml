@@ -14,6 +14,20 @@
   <description>Ekonomi - Finance Statistics Services</description>
   <dependencies>
     <!--
+      Descubrimiento de servicios por SRV (DNS-SD): el chat encuentra el modelo por capacidad en
+      vez de llevar la IP escrita. Biblioteca Java de un repositorio privado, SIN dependencias (el
+      lookup va por JNDI, que viene en el JDK), compilada para Java 17: corre en el 25 de Ekonomi.
+
+      Entra por ~/.m2, igual que tribunet y utils, así que el build de Ekonomi queda acoplado a
+      haberla instalado (cómo, en la documentación privada de operaciones). Solo la toca
+      `chat/UbicacionDelModelo`.
+    -->
+    <dependency>
+      <groupId>name.julatec</groupId>
+      <artifactId>descubrir</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <!--
       El contenedor de servlets lo pone Tomcat, no el WAR.
 
       `spring-boot-starter-tomcat` llega transitivamente por el starter web, en alcance
