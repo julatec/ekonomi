@@ -49,6 +49,8 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "account"))
     private Set<ImportBankTransaction> importBankAccounts;
 
+    // Retirada la subida de comprobantes manuales (22 oct 2026), nada lee esta relación; queda
+    // mapeada porque la tabla de unión existe en la base. Ver `ImportManualTransaction`.
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_import_manual_account",

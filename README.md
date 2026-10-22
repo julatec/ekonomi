@@ -190,6 +190,27 @@ el dominio de la casa, en vez de llevar la IP escrita.
   cómo instalarla está en la documentación privada de operaciones. Sin ella, `mvn` falla al resolverla.
 - **No detecta un servidor colgado:** la elección es solo por TCP. Y con un solo destino por capacidad no hay *failover* todavía.
 
+### La subida de comprobantes manuales se retiró (22 oct 2026)
+
+`POST /upload/{cuenta}` ya no recibe CSV de comprobantes: se quitó el caso de la cuenta de
+importación *manual* (`ReportService.upload` sobre `VoucherRepository`, que escribía en la tabla
+`manual_transaction`) junto con `Voucher.fromCsv`. Se retiró en vez de migrarla porque en
+producción esa tabla no tiene las 22 columnas `totalT*`/`totalImpuestoT*` que `Voucher` mapea desde
+el 4 set 2026 —la primera subida habría fallado con «Unknown column»—, en los 416 días de registro
+de acceso de Tomcat que se miraron no hay una sola subida, y nada leía la tabla.
+
+- **Sigue igual:** `POST /upload/{cuenta}` para estados de cuenta bancarios y operaciones, y
+  `Voucher` como modelo del reporte `.xlsx` (`Voucher.of`, `Voucher.toWorkbook`). Lo que cambió es
+  que `Voucher` ya **no es entidad JPA**: no mapea ninguna tabla ni tiene repositorio.
+- **Una cuenta manual que aún exista en la base** no entra al `Workspace`: no se ofrece en
+  `/api/session` y subir a su identificador da el 404 de `AccountNotConfigured`.
+- **No se tocó ningún esquema ni dato.** `ImportManualTransaction` y `User.importManualTransactions`
+  se dejaron mapeadas, así que `import_manual_transaction` y `user_import_manual_account` (base
+  primaria) se siguen consultando al cargar un usuario aunque ya nada use lo que traen. Quitar ese
+  mapeo es una decisión aparte: pide mirar primero qué hay en esas tablas, y cambia la forma de
+  `User`, que viaja serializado en la sesión HTTP. La tabla `manual_transaction` de cada tenant, si
+  existe, queda como está.
+
 ## Licencia
 
 Apache 2.0 desde 2020 — el texto completo en [`LICENSE.txt`](LICENSE.txt), el aviso de
