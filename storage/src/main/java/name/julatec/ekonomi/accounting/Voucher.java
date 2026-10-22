@@ -5,7 +5,6 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import name.julatec.ekonomi.report.csv.CsvBindByNameOrder;
 import name.julatec.ekonomi.report.csv.CsvCurrencyConverter;
-import name.julatec.ekonomi.report.csv.DefaultSeparator;
 import name.julatec.ekonomi.report.csv.MappingStrategy;
 import name.julatec.ekonomi.tribunet.CodigoTipoMoneda;
 import name.julatec.ekonomi.tribunet.DetailedDocument;
@@ -14,15 +13,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ZERO;
 import static name.julatec.ekonomi.tribunet.DetailedDocument.TaxAccumulated.empty;
@@ -67,17 +60,13 @@ import static name.julatec.ekonomi.tribunet.FactorIVA.*;
         "Clave",
         "Moneda"
 })
-@DefaultSeparator('\t')
-@Entity(name = Voucher.EXPORT_NAME)
 public class Voucher implements RecordComparable, Comparable<Voucher> {
 
     public static final MappingStrategy<Voucher> MAPPING_STRATEGY = new MappingStrategy<>(Voucher.class);
-    public static final String EXPORT_NAME = "manual_transaction";
     public static final String LOCALE_CODE = "es_CR";
     public static final String CRC = "CRC";
     public static final Currency CRC_CURRENCY = Currency.getInstance(CRC);
 
-    @Id
     @CsvBindByName(column = "Clave")
     private String clave;
 
@@ -202,10 +191,8 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
 
     // `this::getX` se pasa antes de que una subclase termine de inicializarse, pero `Record.Key`
     // solo guarda los proveedores y los invoca después, al comparar: ningún estado a medio
-    // construir se lee aquí. La clase no puede ser `final` porque es entidad JPA y Hibernate
-    // necesita poder subclasearla.
+    // construir se lee aquí.
     @SuppressWarnings("this-escape")
-    @Transient
     @CsvIgnore
     private final Record.Key key = new Record.Key(
             this::getFecha,
@@ -308,21 +295,6 @@ public class Voucher implements RecordComparable, Comparable<Voucher> {
                 .setEmisorNombre(bankTransaction.getDescription())
                 .setBankTransaction(Optional.of(bankTransaction.getId()))
                 ;
-    }
-
-    public static Stream<Voucher> fromCsv(InputStream stream, Optional<Currency> currency) {
-        final Character separator = Optional.ofNullable(Voucher.class.getAnnotation(DefaultSeparator.class))
-                .map(DefaultSeparator::value)
-                .orElse(',');
-        final InputStreamReader reader = new InputStreamReader(stream);
-        final CsvToBean<Voucher> csvToBean = new CsvToBeanBuilder<Voucher>(reader)
-                .withType(Voucher.class)
-                .withIgnoreLeadingWhiteSpace(true)
-                .withSeparator(separator)
-                .build();
-        return csvToBean
-                .stream()
-                .map(t -> currency.map(t::setCurrency).orElse(t));
     }
 
     public static Workbook toWorkbook(Iterable<Voucher> transactionList) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
