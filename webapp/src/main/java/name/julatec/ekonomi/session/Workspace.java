@@ -85,8 +85,9 @@ public class Workspace {
         this.importTransactionMap = user.getImportBankAccounts()
                 .stream()
                 .collect(Collectors.toMap(ImportBankTransaction::getAccount, importBankAccount -> importBankAccount));
-        user.getImportManualTransactions()
-                .forEach(transaction -> this.importTransactionMap.put(transaction.getAccount(), transaction));
+        // Las cuentas de importación manual (`User.getImportManualTransactions()`) ya no entran
+        // acá: la subida de comprobantes manuales se retiró el 22 oct 2026, así que ofrecerlas
+        // en la sesión sería publicar un endpoint que ya no existe. Ver `ImportManualTransaction`.
         user.getImportBankOperations()
                 .forEach(transaction -> this.importTransactionMap.put(transaction.getAccount(), transaction));
         this.importTransactionMap.values().forEach(

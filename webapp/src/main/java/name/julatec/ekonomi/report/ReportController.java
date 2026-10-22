@@ -9,7 +9,6 @@ import name.julatec.ekonomi.report.bank.BankOperation;
 import name.julatec.ekonomi.report.bank.BankTransaction;
 import name.julatec.ekonomi.security.ImportBankOperation;
 import name.julatec.ekonomi.security.ImportBankTransaction;
-import name.julatec.ekonomi.security.ImportManualTransaction;
 import name.julatec.ekonomi.security.ImportTransaction;
 import name.julatec.ekonomi.session.Workspace;
 import name.julatec.ekonomi.session.WorkspaceService;
@@ -120,6 +119,11 @@ public class ReportController {
      * La cuenta trae su propia unidad de persistencia, que no tiene por qué coincidir con el
      * tenant activo de la cookie; el cambio de ámbito lo hace {@link ReportService}, que es
      * quien tiene los repositorios.
+     * <p>
+     * Solo hay estados de cuenta bancarios ({@link ImportBankTransaction}) y operaciones
+     * ({@link ImportBankOperation}). La subida de comprobantes manuales se retiró el 22 oct 2026:
+     * una cuenta manual que aún exista en la base no entra al {@link Workspace}, así que cae en
+     * el 404 de {@code AccountNotConfigured}.
      */
     @PostMapping(value = "/upload/{account}")
     public ResponseEntity<Map<String, Object>> upload(
@@ -138,8 +142,6 @@ public class ReportController {
             final long imported = switch (importAccount) {
                 case ImportBankTransaction bank -> importTransactions(workspace, bank, input, account);
                 case ImportBankOperation operation -> importOperations(workspace, operation, input);
-                case ImportManualTransaction manual -> service.upload(workspace, manual,
-                        Voucher.fromCsv(input, Optional.of(manual.getDefaultCurrency())));
                 default -> throw new IllegalStateException(
                         "Tipo de cuenta de importación no soportado: " + importAccount.getClass().getName());
             };

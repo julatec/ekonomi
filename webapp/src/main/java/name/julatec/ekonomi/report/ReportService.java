@@ -3,12 +3,10 @@ package name.julatec.ekonomi.report;
 import name.julatec.ekonomi.accounting.BankOperationRepository;
 import name.julatec.ekonomi.accounting.BankTransactionRepository;
 import name.julatec.ekonomi.accounting.Voucher;
-import name.julatec.ekonomi.accounting.VoucherRepository;
 import name.julatec.ekonomi.report.bank.BankOperation;
 import name.julatec.ekonomi.report.bank.BankTransaction;
 import name.julatec.ekonomi.security.ImportBankOperation;
 import name.julatec.ekonomi.security.ImportBankTransaction;
-import name.julatec.ekonomi.security.ImportManualTransaction;
 import name.julatec.ekonomi.session.Workspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +32,6 @@ public class ReportService {
     ComprobanteReportService comprobantes;
 
     BankTransactionRepository bankTransactionRepository;
-
-    VoucherRepository voucherRepository;
 
     BankOperationRepository bankOperationRepository;
 
@@ -89,27 +85,6 @@ public class ReportService {
         }
     }
 
-    // `scope` no se lee en el cuerpo, y es a propósito: abrir el scope cambia la base de datos
-    // activa del hilo y su `close()` la devuelve a la anterior. Es el recurso lo que importa,
-    // no su valor.
-    @SuppressWarnings("try")
-    public long upload(Workspace workspace, ImportManualTransaction account, Stream<Voucher> stream) {
-        try (var scope = voucherRepository.openScope(account.getPersistenceUnit())) {
-            return stream
-                    .filter(transaction -> transaction.getClave() != null)
-                    .map(voucherRepository::saveAndFlush)
-                    .map(transaction -> {
-                        logger.info("Imported {}", transaction);
-                        return transaction;
-                    })
-                    .count();
-        } catch (Exception e) {
-            final String message = workspace.getLocalizedMessage(Message.UnableToUploadReport, e.getMessage());
-            logger.error(message, e);
-            throw new IllegalArgumentException(message, e);
-        }
-    }
-
     @Autowired
     ReportService setComprobantes(ComprobanteReportService comprobantes) {
         this.comprobantes = comprobantes;
@@ -119,12 +94,6 @@ public class ReportService {
     @Autowired
     ReportService setBankTransactionRepository(BankTransactionRepository bankTransactionRepository) {
         this.bankTransactionRepository = bankTransactionRepository;
-        return this;
-    }
-
-    @Autowired
-    ReportService setTransactionRepository(VoucherRepository voucherRepository) {
-        this.voucherRepository = voucherRepository;
         return this;
     }
 

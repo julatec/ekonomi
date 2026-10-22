@@ -32,7 +32,6 @@ class RangoDesdeCookieTest {
         final User user = mock(User.class);
         when(user.getDatasources()).thenReturn(new LinkedHashSet<>(Set.of(datasources)));
         when(user.getImportBankAccounts()).thenReturn(Set.of());
-        when(user.getImportManualTransactions()).thenReturn(Set.of());
         when(user.getImportBankOperations()).thenReturn(Set.of());
         return user;
     }
